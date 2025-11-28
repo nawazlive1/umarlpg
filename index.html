@@ -8,19 +8,19 @@
   <style>
     :root { 
         /* --- GLOBAL THEME --- */
-        --bg-color: #F8FAFC;       
-        --card-bg: #FFFFFF;     
-        --border: #E2E8F0;   
+        --bg-color: #F8FAFC;        
+        --card-bg: #FFFFFF;      
+        --border: #E2E8F0;    
         --ink: #0F172A;      
         --muted: #64748B;    
         --brand: #2563EB;    /* Professional Blue */
         --brand-dark: #1E40AF;
         --header-bg: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
         --rashid-bg: linear-gradient(135deg, #10B981 0%, #059669 100%);
-        --danger: #EF4444;   
+        --danger: #EF4444;    
         --success: #10B981;
         
-        --radius: 10px;       
+        --radius: 10px;        
         --shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
     
@@ -772,7 +772,20 @@
             document.getElementById('fileInput').addEventListener('change', async (ev)=>{ const f=ev.target.files[0]; if(!f)return; try{ store=JSON.parse(await f.text()||'{}'); repairIdsInStore(store); await saveStore(); initMonthYearOptions(); render(); alert('Imported'); }catch(e){alert(e);} });
 
             function getFixedInitialData() { return { "2025-11": { "transactions": [ {"id": 11, "date": "2025-10-29", "type": "buy", "cylinders": 6, "totalPrice": 55836}, {"id": 14, "date": "2025-11-01", "type": "sell", "cylinders": 3, "totalPrice": 32400}, {"id": 16, "date": "2025-11-02", "type": "buy", "cylinders": 11, "totalPrice": 101508} ] } }; }
+            
             setTimeout(()=> { if(Object.keys(store).length === 0) { initMonthYearOptions(); render(); } }, 600);
+
+            // --- ADDED FOR APPMYSITE TAB SWITCHING ---
+            // URL se ?tab=xyz check karega aur wo tab khol dega
+            const urlParams = new URLSearchParams(window.location.search);
+            const tabName = urlParams.get('tab'); // e.g., ?tab=sales
+            if(tabName){
+                const targetBtn = document.querySelector(`nav.tabs button[data-tab="${tabName}"]`);
+                if(targetBtn) {
+                    setTimeout(() => targetBtn.click(), 100);
+                }
+            }
+            // ------------------------------------------
 
         } catch (error) {
             console.error("Critical Init Error", error);
