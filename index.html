@@ -642,9 +642,21 @@
                 const dateFrom = document.getElementById('filterDateFrom').value;
                 const dateTo = document.getElementById('filterDateTo').value;
                 const text = document.getElementById('filterText').value.toLowerCase();
+                
                 if(dateFrom) filtered = filtered.filter(t=> t.date.split('T')[0] >= dateFrom);
                 if(dateTo) filtered = filtered.filter(t=> t.date.split('T')[0] <= dateTo);
-                if(text) filtered = filtered.filter(t=> ((t.note||'') + (t.customer||'') + (t.supplier||'') + (t.type==='buy' ? '' : '')).toLowerCase().includes(text));
+                if(text) {
+                    filtered = filtered.filter(t=> {
+                        const searchStr = [
+                            t.note,
+                            t.customer,
+                            t.supplier,
+                            t.type,
+                            t.totalPrice
+                        ].map(f => (f||'').toString().toLowerCase()).join(' ');
+                        return searchStr.includes(text);
+                    });
+                }
 
                 const purchases = filtered.filter(t=>t.type==='buy').sort((a,b)=> asDate(a.date)-asDate(b.date));
                 const sales = filtered.filter(t=>t.type==='sell').sort((a,b)=> asDate(a.date)-asDate(b.date));
@@ -716,7 +728,21 @@
                 html += `</div>`; td.innerHTML = html; expandedTr.appendChild(td); tr.parentNode.insertBefore(expandedTr, tr.nextSibling); 
             });
 
-            document.querySelectorAll('nav.tabs button').forEach(btn=>{ btn.addEventListener('click', ()=>{ document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); const t = btn.dataset.tab; document.querySelectorAll('main > section').forEach(s=> s.classList.add('hidden')); document.getElementById(`tab-${t}`).classList.remove('hidden'); }); });
+            document.querySelectorAll('nav.tabs button').forEach(btn=>{ 
+                btn.addEventListener('click', ()=>{ 
+                    document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.remove('active')); 
+                    btn.classList.add('active'); 
+                    const t = btn.dataset.tab; 
+                    
+                    // --- UPDATE URL (New Feature) ---
+                    const newUrl = new URL(window.location);
+                    newUrl.searchParams.set('tab', t);
+                    window.history.pushState({}, '', newUrl);
+
+                    document.querySelectorAll('main > section').forEach(s=> s.classList.add('hidden')); 
+                    document.getElementById(`tab-${t}`).classList.remove('hidden'); 
+                }); 
+            });
             monthSelect.addEventListener('change', render); yearSelect.addEventListener('change', render);
 
             function clearForms(){ ['pDate','pCyl','pUnit','pTotal','pSupplier','sDate','sCyl','sUnit','sTotal','sNote','sCustomer','eDate','eNote','eAmount'].forEach(id=> document.getElementById(id).value=''); editingId = null; }
@@ -738,8 +764,15 @@
             bindCalc({ qtyEl: document.getElementById('sCyl'), unitEl: document.getElementById('sUnit'), totalEl: document.getElementById('sTotal') });
 
             document.getElementById('btnToggleFilter').onclick = () => { toggle(document.getElementById('filter-bar'), !document.getElementById('filter-bar').classList.contains('hidden')); }; 
+            
+            // --- ENHANCED FILTER LISTENERS ---
             document.getElementById('btnApplyFilter').onclick = render;
             document.getElementById('btnResetFilter').onclick = () => { document.getElementById('filterDateFrom').value = ''; document.getElementById('filterDateTo').value = ''; document.getElementById('filterText').value = ''; render(); };
+            // Live Search
+            document.getElementById('filterText').addEventListener('input', render);
+            document.getElementById('filterDateFrom').addEventListener('change', render);
+            document.getElementById('filterDateTo').addEventListener('change', render);
+
             
             document.getElementById('pSave').onclick = async ()=>{
               const d = document.getElementById('pDate').value || new Date().toISOString(); const cyl = Number(document.getElementById('pCyl').value || 0); const total = Number(document.getElementById('pTotal').value || 0); const supplier = document.getElementById('pSupplier').value || '';
