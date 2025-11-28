@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Umar LPG Manager (Mobile)</title>
   
-  <!-- System Fonts for speed and clarity -->
   <style>
     :root { 
         /* --- GLOBAL THEME --- */
@@ -31,6 +30,9 @@
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         margin: 0;
         background-color: var(--bg-color);
+        /* Background Pattern Restored */
+        background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+        background-size: 20px 20px;
         color: var(--ink);
         padding-bottom: 120px;
         font-size: 15px; 
@@ -83,6 +85,7 @@
         text-shadow: 0 1px 2px rgba(0,0,0,0.1);
     }
     
+    /* Toolbar Default (Desktop) */
     .toolbar { 
         display: flex; 
         gap: 8px; 
@@ -98,7 +101,7 @@
         padding: 8px;
         border-radius: 6px;
         font-weight: 600;
-        flex: 1; /* Equal width on mobile */
+        min-width: 100px;
     }
     .toolbar button {
         background: rgba(255,255,255,0.2);
@@ -115,8 +118,8 @@
         gap: 8px; 
         padding: 12px; 
         background: white;
-        flex-wrap: wrap; /* Wrap allowed */
-        justify-content: center; /* CENTER ALIGNMENT */
+        flex-wrap: wrap; 
+        justify-content: center; 
         border-bottom: 1px solid var(--border);
         box-shadow: 0 1px 2px rgba(0,0,0,0.03);
         position: relative;
@@ -178,7 +181,7 @@
     /* --- TABLES / CARDS --- */
     .table-container { width: 100%; }
 
-    /* Desktop View (Hidden on Mobile usually via media query logic) */
+    /* Desktop View */
     table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: var(--shadow); }
     th, td { padding: 12px; border-bottom: 1px solid var(--border); text-align: left; }
     th { background: #F8FAFC; font-weight: 600; font-size: 12px; text-transform: uppercase; color: var(--muted); }
@@ -186,10 +189,8 @@
     .text-right { text-align: right; }
     .text-center { text-align: center; }
     
-    /* Actions */
     .action-btn { background: #F1F5F9; border: none; padding: 6px; border-radius: 4px; margin-left: 4px; color: var(--muted); width: auto; }
     
-    /* Status Banner */
     #status-banner {
         padding: 8px; text-align: center; font-size: 13px; font-weight: 600;
         display: none; width: 100%;
@@ -202,30 +203,26 @@
     .grid.cols-3, .grid.cols-5 { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
     .row-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
 
-    /* FAB (Floating Button) */
+    /* FAB */
     .add-btn-desktop {
         background: var(--brand); color: white; border: none;
         padding: 8px 16px; border-radius: 6px; font-weight: 600;
     }
 
     .form-panel { background: white; border: 1px solid var(--border); padding: 16px; border-radius: 12px; margin-bottom: 16px; box-shadow: var(--shadow); }
-    
-    /* Summary Cards */
     .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
     .stat-card { background: white; border: 1px solid var(--border); padding: 16px; border-radius: 12px; text-align: center; box-shadow: var(--shadow); }
     .stat-label { font-size: 12px; color: var(--muted); text-transform: uppercase; font-weight: 600; margin-bottom: 4px; }
     .stat-val { font-size: 20px; font-weight: 700; color: var(--ink); }
     
-    /* Login Overlay */
     #login-overlay {
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
         background: rgba(255,255,255,0.95); z-index: 1000;
         display: flex; align-items: center; justify-content: center;
     }
 
-    /* --- MOBILE RESPONSIVE (Cards) --- */
+    /* --- MOBILE RESPONSIVE --- */
     @media (max-width: 768px) {
-        /* FAB */
         .add-btn-desktop {
             position: fixed; bottom: 24px; right: 24px;
             width: 56px; height: 56px; border-radius: 50%;
@@ -235,10 +232,32 @@
             color: transparent; box-shadow: 0 4px 12px rgba(37,99,235,0.4); z-index: 999;
         }
 
-        /* Tabs centered */
+        /* --- Toolbar Layout for Mobile (Fixed Month/Year Visibility) --- */
+        .toolbar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            width: 100%;
+        }
+        
+        /* Row 1: Action Buttons */
+        #btnToggleFilter { grid-column: span 1; }
+        #btnPrint { grid-column: span 1; }
+        #btnImport { grid-column: span 1; }
+        #btnExport { grid-column: span 1; }
+        
+        /* Row 2: Month, Year, Logout */
+        #monthSelect { grid-column: span 1; min-width: 0; font-size: 13px; padding: 8px 4px; }
+        #yearSelect { grid-column: span 1; min-width: 0; font-size: 13px; padding: 8px 4px; }
+        #btnLogout { 
+            grid-column: span 2; 
+            background: rgba(239, 68, 68, 0.2); 
+            border: 1px solid rgba(239, 68, 68, 0.4); 
+            color: #fff;
+        }
+
         nav.tabs { justify-content: center; }
         
-        /* Table as Cards */
         table, thead, tbody, tr, td { display: block; width: 100%; }
         thead { display: none; }
         tr {
@@ -259,7 +278,6 @@
             border-top: 1px solid #f1f5f9; margin-top: 8px; padding-top: 12px; justify-content: flex-end;
         }
         tfoot { display: none; }
-        
         .grid.cols-3, .grid.cols-5 { grid-template-columns: 1fr; }
     }
   </style>
@@ -293,11 +311,10 @@
         <select id="monthSelect"></select>
         <select id="yearSelect"></select>
         <button id="btnToggleFilter">Filter</button>
+        <button id="btnPrint">Print</button>
+        <button id="btnImport">Import</button>
+        <button id="btnExport">Export</button>
         <button id="btnLogout">Logout</button>
-        <!-- Less used buttons hidden in simple mobile toolbar to save space, visible in logic -->
-        <button id="btnExport" style="display:none;">Exp</button>
-        <button id="btnImport" style="display:none;">Imp</button>
-        <button id="btnPrint" style="display:none;">Prt</button>
         <input class="hidden" type="file" id="fileInput" accept="application/json" />
       </div>
     </div>
@@ -312,7 +329,6 @@
   </nav>
 
   <main>
-    
     <!-- FILTER -->
     <section id="filter-bar" class="form-panel hidden">
       <div class="grid cols-3">
@@ -410,7 +426,6 @@
     // Safeguard for JS errors
     window.onerror = function(msg, url, line) {
        console.error("Error: " + msg);
-       // alert("App Error: " + msg); // Uncomment to debug on mobile
     };
 
     const ICON_EDIT = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
@@ -426,7 +441,6 @@
       measurementId: "G-JD7EL91XMB"
     };
 
-    // Ensure DOM is ready before attaching listeners
     document.addEventListener('DOMContentLoaded', () => {
         try {
             firebase.initializeApp(firebaseConfig);
@@ -538,7 +552,6 @@
               } catch(e){ alert("Save Failed: " + e.message); }
             }
 
-            // --- HELPERS ---
             function repairIdsInStore(data) { Object.keys(data).forEach(key => { if (data[key].transactions) { data[key].transactions.forEach(t => { if (!t.id) t.id = Date.now() + Math.floor(Math.random() * 100000); if(t.date && typeof t.date === 'string' && t.date.startsWith("2S025")) t.date = t.date.replace("2S025", "2025"); }); } }); }
             function ymd(date){ return (date ?? '').split('T')[0]; }
             function asDate(v){ return new Date(v); }
@@ -607,7 +620,6 @@
                 });
             }
 
-            // UI LOGIC
             const monthSelect = document.getElementById('monthSelect'); const yearSelect = document.getElementById('yearSelect');
             function initMonthYearOptions(){
                 const years = new Set(); const now = new Date(); const currentYear = now.getFullYear();
@@ -639,7 +651,6 @@
                 const expenses = filtered.filter(t=>t.type==='expense').sort((a,b)=> asDate(a.date)-asDate(b.date));
                 const fmt = (n) => Number(n||0).toLocaleString();
 
-                /* Purchase Table */
                 let pRows = ''; let pTotalCyl=0, pTotalAmt=0;
                 purchases.forEach(p=>{ 
                     const unit = (p.cylinders>0) ? Math.round((p.totalPrice||0)/p.cylinders) : 0; 
@@ -648,7 +659,6 @@
                 });
                 document.getElementById('purchaseTable').innerHTML = table(['Date','Supplier','Cylinders','Unit Price','Total Price','Actions'], pRows, `<tfoot><tr><td colspan="2">TOTAL</td><td class="text-center">${pTotalCyl}</td><td class="text-right"></td><td class="text-right">${fmt(pTotalAmt)}</td><td></td></tr></tfoot>`);
 
-                /* Sales Table */
                 let sRows=''; let sTotalCyl=0, sTotalSale=0, sTotalCOGS=0, sTotalProfit=0;
                 sales.forEach(s=>{
                   const computed = fifo.salesCOGS.get(s.id); const cogs = Number((computed !== undefined) ? computed : (s.cogs ?? 0));
@@ -658,12 +668,10 @@
                 });
                 document.getElementById('salesTable').innerHTML = table(['Date','Customer','Cyl','Sale','COGS','Profit','Stock','Note','Actions'], sRows, `<tfoot><tr><td colspan="2">TOTAL</td><td class="text-center">${sTotalCyl}</td><td class="text-right">${fmt(sTotalSale)}</td><td class="text-right">${fmt(sTotalCOGS)}</td><td class="text-right">${fmt(sTotalProfit)}</td><td colspan="3"></td></tr></tfoot>`);
 
-                /* Expense Table */
                 let eRows=''; let eTotal=0;
                 expenses.forEach(e=>{ eTotal += Number(e.totalPrice||0); eRows += `<tr><td data-label="Date">${ymd(e.date)}</td><td data-label="Description">${e.note||''}</td><td data-label="Amount" class="text-right font-mono">${fmt(e.totalPrice)}</td><td data-label="Actions" class="text-right"><button class="action-btn" onclick="window.editEntry(${e.id})">${ICON_EDIT}</button><button class="action-btn del" onclick="window.deleteEntry(${e.id})">${ICON_TRASH}</button></td></tr>`; });
                 document.getElementById('expensesTable').innerHTML = table(['Date','Description','Amount','Actions'], eRows, `<tfoot><tr><td colspan="2">TOTAL</td><td class="text-right">${fmt(eTotal)}</td><td></td></tr></tfoot>`);
 
-                /* Summary & Daily */
                 const mS = summarizeForKey(key, filtered);
                 document.getElementById('summaryBox').innerHTML = `<div class="summary-grid"><div class="stat-card"><div class="stat-label">Sales Revenue</div><div class="stat-val">${fmt(mS.totalSaleRevenue)}</div></div><div class="stat-card"><div class="stat-label">COGS</div><div class="stat-val">${fmt(mS.totalCOGS)}</div></div><div class="stat-card"><div class="stat-label">Expenses</div><div class="stat-val" style="color:var(--danger)">${fmt(mS.totalExpenses)}</div></div><div class="stat-card" style="border-color:var(--success); background:#F0FDF4;"><div class="stat-label">Net Profit</div><div class="stat-val green">${fmt(mS.grossProfit)}</div></div><div class="stat-card"><div class="stat-label">Stock Remaining</div><div class="stat-val" style="color:var(--brand)">${mS.remainingCylinders} cyl</div></div></div>`;
                 
@@ -673,7 +681,6 @@
               } catch (err) { console.error(err); }
             }
 
-            // Expose to Window for HTML onclick
             let editingId = null;
             window.editEntry = function(id){
               clearForms(); const { transaction } = findTransactionById(id); if(!transaction) return alert('Not found'); editingId = id;
@@ -730,13 +737,9 @@
             bindCalc({ qtyEl: document.getElementById('pCyl'), unitEl: document.getElementById('pUnit'), totalEl: document.getElementById('pTotal') });
             bindCalc({ qtyEl: document.getElementById('sCyl'), unitEl: document.getElementById('sUnit'), totalEl: document.getElementById('sTotal') });
 
-            document.getElementById('btnToggleFilter').onclick = () => { toggle(document.getElementById('filter-bar'), !document.getElementById('filter-bar').classList.contains('hidden')); }; // Fixed toggle logic
+            document.getElementById('btnToggleFilter').onclick = () => { toggle(document.getElementById('filter-bar'), !document.getElementById('filter-bar').classList.contains('hidden')); }; 
             document.getElementById('btnApplyFilter').onclick = render;
             document.getElementById('btnResetFilter').onclick = () => { document.getElementById('filterDateFrom').value = ''; document.getElementById('filterDateTo').value = ''; document.getElementById('filterText').value = ''; render(); };
-            
-            const handleSave = async (prefix, type) => {
-               // Generic save logic to prevent code duplication errors
-            };
             
             document.getElementById('pSave').onclick = async ()=>{
               const d = document.getElementById('pDate').value || new Date().toISOString(); const cyl = Number(document.getElementById('pCyl').value || 0); const total = Number(document.getElementById('pTotal').value || 0); const supplier = document.getElementById('pSupplier').value || '';
