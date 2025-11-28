@@ -18,11 +18,11 @@
         --border: #E2E8F0;   /* Light Grey Border */
         --ink: #0F172A;      /* Deep Blue/Black Text */
         --muted: #64748B;    /* Slate Grey */
-        --brand: #2563EB;    /* Primary Blue */
+        --brand: #2563EB;    /* Primary Blue (Default) */
         --danger: #EF4444;   
         --success: #10B981;
         
-        --radius: 8px;       /* Tighter radius for professional look */
+        --radius: 8px;       
         --shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
     
@@ -36,18 +36,18 @@
         padding-bottom: 100px; /* Space for FAB */
         font-size: 14px;
         line-height: 1.5;
-        overflow-x: hidden; /* Prevent horizontal scroll globally */
+        overflow-x: hidden;
     }
     
-    /* --- HEADER (NON-STICKY) --- */
+    /* --- HEADER --- */
     header { 
         background: var(--card);
         padding: 16px;
         border-bottom: 1px solid var(--border);
-        /* ABSOLUTELY NOT STICKY - Scrolls away */
         position: relative; 
         width: 100%;
         z-index: 10;
+        border-top: 4px solid var(--brand); /* Brand Color Indicator */
     }
     
     .header-content { 
@@ -64,6 +64,7 @@
         font-weight: 700; 
         color: var(--ink);
         text-align: center;
+        transition: color 0.3s;
     }
     
     .toolbar { 
@@ -80,7 +81,6 @@
         gap: 8px; 
         padding: 12px 16px; 
         background: var(--bg);
-        /* Changed from overflow-x: auto to wrap for better mobile visibility */
         flex-wrap: wrap; 
         justify-content: center;
         border-bottom: 1px solid var(--border);
@@ -123,7 +123,7 @@
     input:focus, select:focus { border-color: var(--brand); box-shadow: 0 0 0 2px rgba(37,99,235,0.1); }
     
     /* --- BUTTONS --- */
-    button { cursor: pointer; }
+    button { cursor: pointer; transition: background 0.2s, color 0.2s; }
     
     .btn-primary {
         background: var(--brand); color: white; border: none;
@@ -135,6 +135,18 @@
         background: transparent; color: var(--muted); border: 1px solid var(--border);
         padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 500;
     }
+
+    /* Switch App Button Style */
+    #btnSwitchApp {
+        border: 2px solid var(--brand);
+        color: var(--brand);
+        font-weight: 700;
+        background: #fff;
+    }
+    #btnSwitchApp:hover {
+        background: var(--brand);
+        color: #fff;
+    }
     
     /* --- TABLE DESIGN (DESKTOP) --- */
     .table-container {
@@ -142,20 +154,20 @@
         border-radius: var(--radius);
         box-shadow: var(--shadow);
         overflow-x: auto;
-        border: 1px solid var(--border); /* Full border around table */
+        border: 1px solid var(--border);
         width: 100%;
     }
 
     table { 
         width: 100%; 
-        border-collapse: collapse; /* Essential for full borders */
-        min-width: 600px; /* Prevent squishing ON DESKTOP */
+        border-collapse: collapse; 
+        min-width: 600px; 
     }
 
     th, td {
         padding: 0 12px;
-        height: 48px; /* Fixed compact height */
-        border: 1px solid var(--border); /* Borders everywhere */
+        height: 48px; 
+        border: 1px solid var(--border); 
         font-size: 13px;
         vertical-align: middle;
     }
@@ -170,12 +182,10 @@
         text-align: left;
     }
 
-    /* Alignment Rules */
     .text-right { text-align: right; }
     .text-center { text-align: center; }
     .font-mono { font-family: monospace; font-size: 13px; }
 
-    /* Action Icons */
     .action-btn {
         background: transparent; border: none; padding: 4px;
         color: var(--muted); border-radius: 4px;
@@ -189,7 +199,6 @@
         background: #F8FAFC;
     }
 
-    /* --- STATUS & ALERTS --- */
     #status-banner {
         padding: 8px; text-align: center; font-size: 12px; font-weight: 600;
         display: none; width: 100%;
@@ -197,20 +206,17 @@
     }
     #status-banner.error { background: var(--danger); color: white; }
 
-    /* --- UTILS --- */
     .hidden { display: none !important; }
     .grid { display: grid; gap: 12px; }
     .grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
     .row-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
 
-    /* Add Button (Desktop Default) */
     .add-btn-desktop {
         background: var(--brand); color: white; border: none;
         padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 13px;
         display: inline-flex; align-items: center; gap: 6px;
     }
 
-    /* --- FORM CONTAINER --- */
     .form-panel {
         background: #F8FAFC;
         border: 1px solid var(--border);
@@ -219,7 +225,6 @@
         margin-bottom: 20px;
     }
 
-    /* --- SUMMARY CARDS --- */
     .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
     .stat-card {
         background: var(--card); border: 1px solid var(--border); padding: 16px; border-radius: var(--radius);
@@ -228,7 +233,6 @@
     .stat-val { font-size: 20px; font-weight: 700; color: var(--ink); }
     .stat-val.green { color: var(--success); }
     
-    /* --- LOGIN --- */
     #login-overlay {
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
         background: rgba(255,255,255,0.95); z-index: 1000;
@@ -236,127 +240,77 @@
     }
     .login-box { width: 90%; max-width: 350px; text-align: center; }
 
-    /* --- MOBILE RESPONSIVE (Strict Rules) --- */
+    /* --- PRINT STYLES --- */
+    @media print {
+        body { background: white; color: black; }
+        header, .tabs, .add-btn-desktop, #filter-bar, .action-btn, .btn-primary, .btn-ghost { display: none !important; }
+        .table-container { box-shadow: none; border: 1px solid #ccc; }
+        table { width: 100% !important; min-width: 100% !important; display: table !important; }
+        thead, tbody, tr, td, th { display: table-row-group !important; }
+        tr { display: table-row !important; }
+        td, th { display: table-cell !important; border: 1px solid #ddd; }
+        thead { display: table-header-group !important; }
+    }
+
+    /* --- MOBILE RESPONSIVE --- */
     @media (max-width: 768px) {
-        
         main { padding: 12px; width: 100%; overflow-x: hidden; }
-        
-        /* 1. Header Changes */
         header { padding: 12px; }
         .header-content h1 { font-size: 18px; }
         .toolbar select { font-size: 12px; padding: 8px; width: 100%; margin-bottom: 4px; }
         .toolbar button { font-size: 12px; padding: 8px 12px; flex: 1; }
         .toolbar { gap: 8px; }
 
-        /* Tabs Wrap fix */
-        nav.tabs {
-            flex-wrap: wrap;
-            justify-content: space-evenly;
-            padding: 10px;
-        }
-        nav.tabs button {
-            flex: 1 1 30%; /* Wrap buttons nicely */
-            margin-bottom: 6px;
-            font-size: 12px;
-            padding: 8px;
-        }
+        nav.tabs { flex-wrap: wrap; justify-content: space-evenly; padding: 10px; }
+        nav.tabs button { flex: 1 1 30%; margin-bottom: 6px; font-size: 12px; padding: 8px; }
         
-        /* 2. Floating Action Button (FAB) */
         .add-btn-desktop {
-            position: fixed;
-            bottom: 24px; right: 24px;
-            width: 56px; height: 56px;
-            border-radius: 50%;
-            background: var(--brand);
-            color: transparent; /* Hide text */
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
-            z-index: 999;
+            position: fixed; bottom: 24px; right: 24px;
+            width: 56px; height: 56px; border-radius: 50%;
+            background: var(--brand); color: transparent;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4); z-index: 999;
             padding: 0; margin: 0;
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='12' y1='5' x2='12' y2='19'%3E%3C/line%3E%3Cline x1='5' y1='12' x2='19' y2='12'%3E%3C/line%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: center;
+            background-repeat: no-repeat; background-position: center;
         }
 
-        /* 3. Filter Bar */
         #filter-bar .grid { grid-template-columns: 1fr; }
-        
-        /* 4. Form Layout */
         .grid.cols-4, .grid.cols-5, .grid.cols-3 { grid-template-columns: 1fr; gap: 16px; }
         
-        /* 5. TABLE TO COMPACT CARDS TRANSFORMATION */
         .table-container { border: none; background: transparent; box-shadow: none; width: 100%; overflow: visible; }
-        
-        /* IMPORTANT: Reset table min-width for mobile to prevent horizontal scroll */
         table { min-width: 0; width: 100%; display: block; }
-        
         thead, tbody, th, td, tr { display: block; width: 100%; }
-        thead { display: none; } /* Hide Header */
+        thead { display: none; }
         
         tr {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            margin-bottom: 12px;
-            padding: 12px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.03);
-            display: flex; 
-            flex-direction: column;
-            gap: 8px;
-            width: 100%; /* Ensure card fits container */
+            background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+            margin-bottom: 12px; padding: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+            display: flex; flex-direction: column; gap: 8px; width: 100%;
         }
         
         td {
-            border: none; 
-            padding: 4px 0; 
-            height: auto;
-            font-size: 14px; 
-            color: var(--ink);
-            text-align: right;
-            display: flex; 
-            justify-content: space-between;
-            align-items: flex-start; /* Align top if text wraps */
-            width: 100%;
-            border-bottom: 1px solid #f1f5f9;
+            border: none; padding: 4px 0; height: auto; font-size: 14px; 
+            color: var(--ink); text-align: right; display: flex; 
+            justify-content: space-between; align-items: flex-start;
+            width: 100%; border-bottom: 1px solid #f1f5f9;
         }
-
         td:last-child { border-bottom: none; }
         
         td:before { 
-            content: attr(data-label); 
-            font-weight: 600; 
-            color: var(--muted); 
-            font-size: 13px;
-            text-align: left;
-            margin-right: 12px;
-            min-width: 80px; 
-            flex-shrink: 0; /* Don't shrink label */
+            content: attr(data-label); font-weight: 600; color: var(--muted); 
+            font-size: 13px; text-align: left; margin-right: 12px;
+            min-width: 80px; flex-shrink: 0;
         }
-
-        /* Value part (the actual text) */
-        td {
-             word-break: break-word; /* Wrap long words */
-             white-space: normal;    /* Allow wrapping */
-        }
-
-        /* Specific Mobile Field Styling */
+        td { word-break: break-word; white-space: normal; }
+        
         td[data-label="Date"] { 
-            font-weight: 700; 
-            color: var(--brand); 
-            font-size: 14px; 
-            border-bottom: 2px solid var(--border); 
-            padding-bottom: 8px; 
-            margin-bottom: 4px;
+            font-weight: 700; color: var(--brand); font-size: 14px; 
+            border-bottom: 2px solid var(--border); padding-bottom: 8px; margin-bottom: 4px;
         }
-        
         td[data-label="Actions"] { 
-            border-top: 1px solid var(--border); 
-            margin-top: 4px; 
-            padding-top: 12px; 
-            justify-content: flex-end; 
-            gap: 12px;
+            border-top: 1px solid var(--border); margin-top: 4px; 
+            padding-top: 12px; justify-content: flex-end; gap: 12px;
         }
-        
-        /* Hide Tfoot on mobile */
         tfoot { display: none; }
     }
   </style>
@@ -382,16 +336,21 @@
   
   <header>
     <div class="header-content">
-      <h1>Umar LPG</h1>
+      <h1 id="appTitle">Umar LPG</h1>
       <div class="toolbar">
         <select id="monthSelect"></select>
         <select id="yearSelect"></select>
         <button class="btn-ghost" id="btnToggleFilter">Filter</button>
+        
+        <!-- NEW SWITCH BUTTON -->
+        <button class="btn-ghost" id="btnSwitchApp">Rashid LPG</button>
+        
+        <button class="btn-ghost" id="btnPrint">Print</button>
+        <button class="btn-ghost" id="btnImport">Import</button>
+        <button class="btn-ghost" id="btnExport">Export</button>
         <button class="btn-ghost" id="btnLogout">Logout</button>
-        <!-- Hidden Utils -->
+        
         <input class="hidden" type="file" id="fileInput" accept="application/json" />
-        <button class="hidden" id="btnImport">Imp</button>
-        <button class="hidden" id="btnExport">Exp</button>
       </div>
     </div>
   </header>
@@ -531,7 +490,12 @@
     
     const db = firebase.firestore();
     const auth = firebase.auth();
-    const ledgerDocRef = db.collection('ledger').doc('store');
+    
+    // APP MODE STATE
+    let currentAppMode = 'umar'; // 'umar' or 'rashid'
+    let ledgerDocRef = db.collection('ledger').doc('store');
+    let unsubscribe = null;
+    
     const CLIENT_ID = 'c' + Math.floor(Math.random()*1e9);
 
     const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
@@ -590,23 +554,59 @@
         if(confirm("Log out now?")) { await auth.signOut(); window.location.reload(); }
     };
     
+    // --- APP SWITCHING LOGIC ---
+    document.getElementById('btnSwitchApp').onclick = () => {
+        if(currentAppMode === 'umar'){
+            // Switch to Rashid
+            currentAppMode = 'rashid';
+            document.getElementById('appTitle').innerText = 'Rashid LPG';
+            document.documentElement.style.setProperty('--brand', '#10B981'); // Green
+            document.getElementById('btnSwitchApp').innerText = 'Umar LPG';
+        } else {
+            // Switch to Umar
+            currentAppMode = 'umar';
+            document.getElementById('appTitle').innerText = 'Umar LPG';
+            document.documentElement.style.setProperty('--brand', '#2563EB'); // Blue
+            document.getElementById('btnSwitchApp').innerText = 'Rashid LPG';
+        }
+        
+        // Reset View
+        store = emptyStore();
+        render(); // clear table UI
+        
+        // Re-connect
+        setupSnapshotListener();
+    };
+
     function setupSnapshotListener(){
-      ledgerDocRef.onSnapshot(async (docSnap) => {
+      // Detach previous listener if exists
+      if(unsubscribe) { unsubscribe(); unsubscribe = null; }
+
+      // Determine correct doc based on Mode
+      const docId = (currentAppMode === 'umar') ? 'store' : 'store_rashid';
+      const storageKey = (currentAppMode === 'umar') ? 'lpg_ledger_v19' : 'lpg_ledger_rashid';
+      
+      ledgerDocRef = db.collection('ledger').doc(docId);
+
+      unsubscribe = ledgerDocRef.onSnapshot(async (docSnap) => {
         updateStatusBanner("🟢 Sync Active", false);
         if(!docSnap.exists){
+          // If doc doesn't exist, create it (safe default)
           try { await ledgerDocRef.set({ data: getFixedInitialData(), updatedAt: firebase.firestore.FieldValue.serverTimestamp() }); } catch(e){}
           return;
         }
         const remote = docSnap.data();
         if(!remote) return;
         const remoteData = remote.data || {};
+        
         try {
           if(JSON.stringify(store) === JSON.stringify(remoteData)) { render(); return; }
         } catch(e){}
+        
         isApplyingRemote = true;
         store = remoteData;
         repairIdsInStore(store);
-        localStorage.setItem('lpg_ledger_v19', JSON.stringify(store));
+        localStorage.setItem(storageKey, JSON.stringify(store));
         initMonthYearOptions();
         render();
         setTimeout(()=> { isApplyingRemote = false; }, 300);
@@ -617,9 +617,13 @@
     async function saveStore(){
       if(isApplyingRemote || saveLock) return;
       if(!currentUser) return alert("Please login.");
-      localStorage.setItem('lpg_ledger_v19', JSON.stringify(store));
+      
+      const storageKey = (currentAppMode === 'umar') ? 'lpg_ledger_v19' : 'lpg_ledger_rashid';
+      localStorage.setItem(storageKey, JSON.stringify(store));
+      
       saveLock = true;
       try {
+        // ledgerDocRef is already updated in setupSnapshotListener
         await ledgerDocRef.set({
           data: store,
           updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
