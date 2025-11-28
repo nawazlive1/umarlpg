@@ -5,35 +5,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Umar LPG Manager</title>
   
-  <!-- FONT: Inter (Standard for Fintech/Business apps) -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
   <style>
     :root { 
         /* --- GLOBAL THEME --- */
-        --bg: #F8FAFC;       /* Light Dashboard Background */
+        --bg: #F8FAFC;       
         --card: #FFFFFF;     
-        --border: #E2E8F0;   /* Light Grey Border */
-        --ink: #0F172A;      /* Deep Blue/Black Text */
-        --muted: #64748B;    /* Slate Grey */
-        --brand: #2563EB;    /* Primary Blue (Default) */
+        --border: #E2E8F0;   
+        --ink: #0F172A;      
+        --muted: #64748B;    
+        --brand: #2563EB;    /* Primary Blue */
         --danger: #EF4444;   
         --success: #10B981;
         
-        --radius: 8px;       
-        --shadow: 0 1px 3px rgba(0,0,0,0.05);
+        --radius: 6px;       
+        --shadow: 0 1px 2px rgba(0,0,0,0.05);
     }
     
     * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
     
     body {
-        font-family: 'Inter', sans-serif;
+        /* Reverted to System Fonts for a clean, professional, native look */
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         margin: 0;
         background: var(--bg);
         color: var(--ink);
-        padding-bottom: 100px; /* Space for FAB */
+        padding-bottom: 100px;
         font-size: 14px;
         line-height: 1.5;
         overflow-x: hidden;
@@ -42,29 +38,47 @@
     /* --- HEADER --- */
     header { 
         background: var(--card);
-        padding: 16px;
+        padding: 12px;
         border-bottom: 1px solid var(--border);
-        position: relative; 
         width: 100%;
-        z-index: 10;
-        border-top: 4px solid var(--brand); /* Brand Color Indicator */
+        border-top: 4px solid var(--brand);
+    }
+
+    /* Top Bar for Switch Button to prevent Overlap */
+    .top-bar {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 8px;
     }
     
+    /* Switch App Button - Red & Prominent */
+    #btnSwitchApp {
+        background: #DC2626; /* Red */
+        color: white;
+        border: none;
+        font-weight: 700;
+        font-size: 12px;
+        padding: 6px 14px;
+        border-radius: 20px;
+        box-shadow: 0 2px 4px rgba(220, 38, 38, 0.2);
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+    #btnSwitchApp:active { transform: translateY(1px); }
+
     .header-content { 
         max-width: 1000px; 
         margin: 0 auto; 
-        display: flex; 
-        flex-direction: column; 
-        gap: 12px;
     }
     
     header h1 { 
-        margin: 0; 
-        font-size: 20px; 
+        margin: 0 0 12px 0; 
+        font-size: 22px; 
         font-weight: 700; 
         color: var(--ink);
         text-align: center;
-        transition: color 0.3s;
     }
     
     .toolbar { 
@@ -105,7 +119,7 @@
         box-shadow: var(--shadow);
     } 
 
-    main { padding: 20px; max-width: 1000px; margin: 0 auto; width: 100%; }
+    main { padding: 15px; max-width: 1000px; margin: 0 auto; width: 100%; }
     
     h2 { font-size: 18px; margin: 0 0 16px 0; font-weight: 600; }
 
@@ -118,12 +132,12 @@
         color: var(--ink);
         font-size: 14px;
         width: 100%;
-        font-family: 'Inter', sans-serif;
+        font-family: inherit;
     }
     input:focus, select:focus { border-color: var(--brand); box-shadow: 0 0 0 2px rgba(37,99,235,0.1); }
     
     /* --- BUTTONS --- */
-    button { cursor: pointer; transition: background 0.2s, color 0.2s; }
+    button { cursor: pointer; font-family: inherit; }
     
     .btn-primary {
         background: var(--brand); color: white; border: none;
@@ -133,22 +147,10 @@
     
     .btn-ghost {
         background: transparent; color: var(--muted); border: 1px solid var(--border);
-        padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 500;
+        padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600;
     }
 
-    /* Switch App Button Style */
-    #btnSwitchApp {
-        border: 2px solid var(--brand);
-        color: var(--brand);
-        font-weight: 700;
-        background: #fff;
-    }
-    #btnSwitchApp:hover {
-        background: var(--brand);
-        color: #fff;
-    }
-    
-    /* --- TABLE DESIGN (DESKTOP) --- */
+    /* --- TABLE (Desktop) --- */
     .table-container {
         background: var(--card);
         border-radius: var(--radius);
@@ -158,46 +160,19 @@
         width: 100%;
     }
 
-    table { 
-        width: 100%; 
-        border-collapse: collapse; 
-        min-width: 600px; 
-    }
-
-    th, td {
-        padding: 0 12px;
-        height: 48px; 
-        border: 1px solid var(--border); 
-        font-size: 13px;
-        vertical-align: middle;
-    }
-
-    th {
-        background: #F1F5F9;
-        color: var(--muted);
-        font-weight: 600;
-        text-transform: uppercase;
-        font-size: 11px;
-        letter-spacing: 0.5px;
-        text-align: left;
-    }
+    table { width: 100%; border-collapse: collapse; min-width: 600px; }
+    th, td { padding: 10px 12px; border: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
+    th { background: #F1F5F9; color: var(--muted); font-weight: 700; text-transform: uppercase; font-size: 11px; text-align: left; }
 
     .text-right { text-align: right; }
     .text-center { text-align: center; }
     .font-mono { font-family: monospace; font-size: 13px; }
 
-    .action-btn {
-        background: transparent; border: none; padding: 4px;
-        color: var(--muted); border-radius: 4px;
-        display: inline-flex; align-items: center; justify-content: center;
-    }
-    .action-btn:hover { background: #F1F5F9; color: var(--ink); }
-    .action-btn.del:hover { background: #FEF2F2; color: var(--danger); }
+    .action-btn { background: transparent; border: none; padding: 4px; color: var(--muted); }
+    .action-btn:hover { color: var(--ink); }
+    .action-btn.del:hover { color: var(--danger); }
     
-    tfoot td {
-        font-weight: 700;
-        background: #F8FAFC;
-    }
+    tfoot td { font-weight: 700; background: #F8FAFC; }
 
     #status-banner {
         padding: 8px; text-align: center; font-size: 12px; font-weight: 600;
@@ -208,7 +183,7 @@
 
     .hidden { display: none !important; }
     .grid { display: grid; gap: 12px; }
-    .grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
+    .grid.cols-3, .grid.cols-5 { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
     .row-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
 
     .add-btn-desktop {
@@ -217,18 +192,9 @@
         display: inline-flex; align-items: center; gap: 6px;
     }
 
-    .form-panel {
-        background: #F8FAFC;
-        border: 1px solid var(--border);
-        padding: 20px;
-        border-radius: var(--radius);
-        margin-bottom: 20px;
-    }
-
+    .form-panel { background: #F8FAFC; border: 1px solid var(--border); padding: 20px; border-radius: var(--radius); margin-bottom: 20px; }
     .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
-    .stat-card {
-        background: var(--card); border: 1px solid var(--border); padding: 16px; border-radius: var(--radius);
-    }
+    .stat-card { background: var(--card); border: 1px solid var(--border); padding: 16px; border-radius: var(--radius); }
     .stat-label { font-size: 12px; color: var(--muted); text-transform: uppercase; margin-bottom: 4px; }
     .stat-val { font-size: 20px; font-weight: 700; color: var(--ink); }
     .stat-val.green { color: var(--success); }
@@ -238,78 +204,64 @@
         background: rgba(255,255,255,0.95); z-index: 1000;
         display: flex; align-items: center; justify-content: center;
     }
-    .login-box { width: 90%; max-width: 350px; text-align: center; }
-
+    
     /* --- PRINT STYLES --- */
     @media print {
-        body { background: white; color: black; }
-        header, .tabs, .add-btn-desktop, #filter-bar, .action-btn, .btn-primary, .btn-ghost { display: none !important; }
+        header, .tabs, .add-btn-desktop, #filter-bar, .action-btn { display: none !important; }
         .table-container { box-shadow: none; border: 1px solid #ccc; }
-        table { width: 100% !important; min-width: 100% !important; display: table !important; }
-        thead, tbody, tr, td, th { display: table-row-group !important; }
-        tr { display: table-row !important; }
-        td, th { display: table-cell !important; border: 1px solid #ddd; }
+        table, thead, tbody, tr, td, th { display: table-cell !important; width: 100%; } 
+        /* Reset table display for print specifically */
+        table { display: table !important; }
         thead { display: table-header-group !important; }
+        tbody { display: table-row-group !important; }
+        tr { display: table-row !important; }
+        td, th { display: table-cell !important; }
     }
 
     /* --- MOBILE RESPONSIVE --- */
     @media (max-width: 768px) {
-        main { padding: 12px; width: 100%; overflow-x: hidden; }
-        header { padding: 12px; }
-        .header-content h1 { font-size: 18px; }
-        .toolbar select { font-size: 12px; padding: 8px; width: 100%; margin-bottom: 4px; }
-        .toolbar button { font-size: 12px; padding: 8px 12px; flex: 1; }
-        .toolbar { gap: 8px; }
-
-        nav.tabs { flex-wrap: wrap; justify-content: space-evenly; padding: 10px; }
-        nav.tabs button { flex: 1 1 30%; margin-bottom: 6px; font-size: 12px; padding: 8px; }
+        main { padding: 12px; }
         
         .add-btn-desktop {
             position: fixed; bottom: 24px; right: 24px;
             width: 56px; height: 56px; border-radius: 50%;
-            background: var(--brand); color: transparent;
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4); z-index: 999;
             padding: 0; margin: 0;
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='12' y1='5' x2='12' y2='19'%3E%3C/line%3E%3Cline x1='5' y1='12' x2='19' y2='12'%3E%3C/line%3E%3C/svg%3E");
             background-repeat: no-repeat; background-position: center;
+            color: transparent;
+            z-index: 999;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
 
-        #filter-bar .grid { grid-template-columns: 1fr; }
-        .grid.cols-4, .grid.cols-5, .grid.cols-3 { grid-template-columns: 1fr; gap: 16px; }
-        
-        .table-container { border: none; background: transparent; box-shadow: none; width: 100%; overflow: visible; }
-        table { min-width: 0; width: 100%; display: block; }
-        thead, tbody, th, td, tr { display: block; width: 100%; }
+        .table-container { border: none; background: transparent; box-shadow: none; overflow: visible; }
+        table { display: block; min-width: 0; }
         thead { display: none; }
+        tbody, tr, td { display: block; width: 100%; }
         
         tr {
             background: var(--card); border: 1px solid var(--border); border-radius: 8px;
             margin-bottom: 12px; padding: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.03);
-            display: flex; flex-direction: column; gap: 8px; width: 100%;
+            display: flex; flex-direction: column; gap: 8px;
         }
         
         td {
-            border: none; padding: 4px 0; height: auto; font-size: 14px; 
-            color: var(--ink); text-align: right; display: flex; 
-            justify-content: space-between; align-items: flex-start;
-            width: 100%; border-bottom: 1px solid #f1f5f9;
+            border: none; padding: 4px 0; text-align: right; 
+            display: flex; justify-content: space-between; align-items: flex-start;
+            border-bottom: 1px solid #f1f5f9;
         }
         td:last-child { border-bottom: none; }
         
         td:before { 
             content: attr(data-label); font-weight: 600; color: var(--muted); 
-            font-size: 13px; text-align: left; margin-right: 12px;
-            min-width: 80px; flex-shrink: 0;
+            text-align: left; margin-right: 12px; min-width: 80px;
         }
-        td { word-break: break-word; white-space: normal; }
         
         td[data-label="Date"] { 
-            font-weight: 700; color: var(--brand); font-size: 14px; 
-            border-bottom: 2px solid var(--border); padding-bottom: 8px; margin-bottom: 4px;
+            font-weight: 700; color: var(--brand); 
+            border-bottom: 2px solid var(--border); padding-bottom: 8px;
         }
         td[data-label="Actions"] { 
-            border-top: 1px solid var(--border); margin-top: 4px; 
-            padding-top: 12px; justify-content: flex-end; gap: 12px;
+            border-top: 1px solid var(--border); margin-top: 4px; padding-top: 12px; justify-content: flex-end; gap: 10px;
         }
         tfoot { display: none; }
     }
@@ -317,9 +269,8 @@
 </head>
 <body>
 
-  <!-- LOGIN OVERLAY -->
   <div id="login-overlay">
-      <div class="login-box">
+      <div class="login-box" style="width:90%; max-width:350px; text-align:center;">
           <div style="background:white; padding:30px; border-radius:12px; box-shadow:0 10px 25px rgba(0,0,0,0.1); border:1px solid #eee;">
             <h2 style="margin-top:0;">🔐 Login</h2>
             <div id="login-error" style="color:var(--danger); display:none; margin-bottom:10px; font-size:12px;">Incorrect credentials.</div>
@@ -336,20 +287,21 @@
   
   <header>
     <div class="header-content">
+      <!-- Top Bar for Corner Button -->
+      <div class="top-bar">
+        <button id="btnSwitchApp">Go to Rashid LPG</button>
+      </div>
+
       <h1 id="appTitle">Umar LPG</h1>
+      
       <div class="toolbar">
         <select id="monthSelect"></select>
         <select id="yearSelect"></select>
         <button class="btn-ghost" id="btnToggleFilter">Filter</button>
-        
-        <!-- NEW SWITCH BUTTON -->
-        <button class="btn-ghost" id="btnSwitchApp">Rashid LPG</button>
-        
         <button class="btn-ghost" id="btnPrint">Print</button>
         <button class="btn-ghost" id="btnImport">Import</button>
         <button class="btn-ghost" id="btnExport">Export</button>
         <button class="btn-ghost" id="btnLogout">Logout</button>
-        
         <input class="hidden" type="file" id="fileInput" accept="application/json" />
       </div>
     </div>
@@ -367,14 +319,13 @@
     
     <!-- FILTER BAR -->
     <section id="filter-bar" class="form-panel hidden">
-      <h3 style="margin:0 0 12px 0; font-size:14px; color:var(--muted);">FILTER RECORDS</h3>
       <div class="grid cols-3">
           <input type="date" id="filterDateFrom" />
           <input type="date" id="filterDateTo" />
           <input type="text" id="filterText" placeholder="Search..." />
       </div>
       <div style="margin-top:12px; display:flex; gap:10px;">
-          <button id="btnApplyFilter" class="btn-primary" style="flex:1;">Apply Filter</button>
+          <button id="btnApplyFilter" class="btn-primary" style="flex:1;">Apply</button>
           <button id="btnResetFilter" class="btn-ghost" style="flex:1;">Clear</button>
       </div>
     </section>
@@ -383,7 +334,7 @@
     <section id="tab-purchases">
       <div class="row-header">
         <h2>Purchases</h2>
-        <button id="addPurchase" class="add-btn-desktop">+ Add Purchase</button>
+        <button id="addPurchase" class="add-btn-desktop">+ Add</button>
       </div>
       
       <div id="purchaseForm" class="form-panel hidden">
@@ -396,7 +347,7 @@
             <input type="number" id="pTotal" placeholder="Total" min="0" />
         </div>
         <div style="margin-top:16px; display:flex; gap:10px;">
-            <button id="pSave" class="btn-primary" style="flex:1;">Save Record</button>
+            <button id="pSave" class="btn-primary" style="flex:1;">Save</button>
             <button id="pCancel" class="btn-ghost" style="flex:1;">Cancel</button>
         </div>
       </div>
@@ -408,7 +359,7 @@
     <section id="tab-sales" class="hidden">
       <div class="row-header">
         <h2>Sales</h2>
-        <button id="addSale" class="add-btn-desktop">+ Add Sale</button>
+        <button id="addSale" class="add-btn-desktop">+ Add</button>
       </div>
       
       <div id="saleForm" class="form-panel hidden">
@@ -422,7 +373,7 @@
             <input type="text" id="sNote" placeholder="Note" />
         </div>
         <div style="margin-top:16px; display:flex; gap:10px;">
-            <button id="sSave" class="btn-primary" style="flex:1;">Save Record</button>
+            <button id="sSave" class="btn-primary" style="flex:1;">Save</button>
             <button id="sCancel" class="btn-ghost" style="flex:1;">Cancel</button>
         </div>
       </div>
@@ -434,7 +385,7 @@
     <section id="tab-expenses" class="hidden">
       <div class="row-header">
         <h2>Expenses</h2>
-        <button id="addExpense" class="add-btn-desktop">+ Add Expense</button>
+        <button id="addExpense" class="add-btn-desktop">+ Add</button>
       </div>
       
       <div id="expenseForm" class="form-panel hidden">
@@ -445,7 +396,7 @@
             <input type="number" id="eAmount" placeholder="Amount" />
         </div>
         <div style="margin-top:16px; display:flex; gap:10px;">
-            <button id="eSave" class="btn-primary" style="flex:1;">Save Record</button>
+            <button id="eSave" class="btn-primary" style="flex:1;">Save</button>
             <button id="eCancel" class="btn-ghost" style="flex:1;">Cancel</button>
         </div>
       </div>
@@ -471,11 +422,9 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
   <script>
-    /* --- ICONS SVG (Modern UI) --- */
-    const ICON_EDIT = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
-    const ICON_TRASH = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
+    const ICON_EDIT = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
+    const ICON_TRASH = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
 
-    /* --- LOGIC (UNCHANGED BACKEND) --- */
     const firebaseConfig = {
       apiKey: "AIzaSyCMkXvwJ_T6-Y6d3PiyhAW80oO9k0tspBw",
       authDomain: "lpg-ledger-shah.firebaseapp.com",
@@ -491,20 +440,26 @@
     const db = firebase.firestore();
     const auth = firebase.auth();
     
-    // APP MODE STATE
-    let currentAppMode = 'umar'; // 'umar' or 'rashid'
+    let currentAppMode = 'umar'; 
     let ledgerDocRef = db.collection('ledger').doc('store');
     let unsubscribe = null;
-    
     const CLIENT_ID = 'c' + Math.floor(Math.random()*1e9);
-
-    const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-    let store = emptyStore();
+    const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    let store = {};
     let isApplyingRemote = false;
     let currentUser = null;
 
-    initAuthMonitor();
-    function emptyStore(){ return {}; }
+    auth.onAuthStateChanged((user) => {
+        if (user) {
+            currentUser = user;
+            document.getElementById('login-overlay').style.display = 'none';
+            setupSnapshotListener();
+        } else {
+            currentUser = null;
+            document.getElementById('login-overlay').style.display = 'flex';
+            updateStatusBanner("Waiting for Login...");
+        }
+    });
 
     function updateStatusBanner(status, isError=false) {
         const banner = document.getElementById('status-banner');
@@ -513,95 +468,57 @@
         banner.className = isError ? 'error' : '';
     }
 
-    function initAuthMonitor() {
-        auth.onAuthStateChanged((user) => {
-            if (user) {
-                currentUser = user;
-                document.getElementById('login-overlay').style.display = 'none';
-                setupSnapshotListener();
-            } else {
-                currentUser = null;
-                document.getElementById('login-overlay').style.display = 'flex';
-                updateStatusBanner("Waiting for Login...");
-            }
-        });
-    }
-
     document.getElementById('btnLogin').onclick = async () => {
         const email = document.getElementById('txtEmail').value;
         const pass = document.getElementById('txtPassword').value;
         const errDiv = document.getElementById('login-error');
-        
-        if(!email || !pass) {
-            errDiv.innerText = "Enter credentials";
-            errDiv.style.display = 'block';
-            return;
-        }
+        if(!email || !pass) return;
         document.getElementById('btnLogin').innerText = "Logging in...";
         document.getElementById('btnLogin').disabled = true;
-
         try {
             await auth.signInWithEmailAndPassword(email, pass);
         } catch(e) {
-            errDiv.innerText = e.message;
-            errDiv.style.display = 'block';
+            errDiv.innerText = e.message; errDiv.style.display = 'block';
             document.getElementById('btnLogin').innerText = "Sign In";
             document.getElementById('btnLogin').disabled = false;
         }
     };
+    document.getElementById('btnLogout').onclick = async () => { if(confirm("Log out?")) { await auth.signOut(); window.location.reload(); } };
 
-    document.getElementById('btnLogout').onclick = async () => {
-        if(confirm("Log out now?")) { await auth.signOut(); window.location.reload(); }
-    };
-    
-    // --- APP SWITCHING LOGIC ---
+    // --- APP SWITCH LOGIC ---
     document.getElementById('btnSwitchApp').onclick = () => {
         if(currentAppMode === 'umar'){
-            // Switch to Rashid
             currentAppMode = 'rashid';
             document.getElementById('appTitle').innerText = 'Rashid LPG';
             document.documentElement.style.setProperty('--brand', '#10B981'); // Green
-            document.getElementById('btnSwitchApp').innerText = 'Umar LPG';
+            document.getElementById('btnSwitchApp').innerText = 'Go to Umar LPG';
+            document.getElementById('btnSwitchApp').style.background = '#2563EB'; // Blue button to go back
         } else {
-            // Switch to Umar
             currentAppMode = 'umar';
             document.getElementById('appTitle').innerText = 'Umar LPG';
             document.documentElement.style.setProperty('--brand', '#2563EB'); // Blue
-            document.getElementById('btnSwitchApp').innerText = 'Rashid LPG';
+            document.getElementById('btnSwitchApp').innerText = 'Go to Rashid LPG';
+            document.getElementById('btnSwitchApp').style.background = '#DC2626'; // Red button to switch
         }
-        
-        // Reset View
-        store = emptyStore();
-        render(); // clear table UI
-        
-        // Re-connect
-        setupSnapshotListener();
+        store = {}; render(); setupSnapshotListener();
     };
 
     function setupSnapshotListener(){
-      // Detach previous listener if exists
       if(unsubscribe) { unsubscribe(); unsubscribe = null; }
-
-      // Determine correct doc based on Mode
       const docId = (currentAppMode === 'umar') ? 'store' : 'store_rashid';
       const storageKey = (currentAppMode === 'umar') ? 'lpg_ledger_v19' : 'lpg_ledger_rashid';
-      
       ledgerDocRef = db.collection('ledger').doc(docId);
-
+      
       unsubscribe = ledgerDocRef.onSnapshot(async (docSnap) => {
         updateStatusBanner("🟢 Sync Active", false);
         if(!docSnap.exists){
-          // If doc doesn't exist, create it (safe default)
           try { await ledgerDocRef.set({ data: getFixedInitialData(), updatedAt: firebase.firestore.FieldValue.serverTimestamp() }); } catch(e){}
           return;
         }
         const remote = docSnap.data();
         if(!remote) return;
         const remoteData = remote.data || {};
-        
-        try {
-          if(JSON.stringify(store) === JSON.stringify(remoteData)) { render(); return; }
-        } catch(e){}
+        if(JSON.stringify(store) === JSON.stringify(remoteData)) { render(); return; }
         
         isApplyingRemote = true;
         store = remoteData;
@@ -613,32 +530,21 @@
       }, (err) => { updateStatusBanner("⚠️ Access Denied", true); });
     }
 
-    let saveLock = false;
     async function saveStore(){
-      if(isApplyingRemote || saveLock) return;
+      if(isApplyingRemote) return;
       if(!currentUser) return alert("Please login.");
-      
       const storageKey = (currentAppMode === 'umar') ? 'lpg_ledger_v19' : 'lpg_ledger_rashid';
       localStorage.setItem(storageKey, JSON.stringify(store));
-      
-      saveLock = true;
       try {
-        // ledgerDocRef is already updated in setupSnapshotListener
-        await ledgerDocRef.set({
-          data: store,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-          updatedBy: CLIENT_ID
-        });
-      } catch(e){ alert("Save Failed: " + e.message); } finally { setTimeout(()=> { saveLock = false; }, 400); }
+        await ledgerDocRef.set({ data: store, updatedAt: firebase.firestore.FieldValue.serverTimestamp(), updatedBy: CLIENT_ID });
+      } catch(e){ alert("Save Failed: " + e.message); }
     }
 
     function repairIdsInStore(data) {
-        const allIds = new Set();
         Object.keys(data).forEach(key => {
             if (data[key].transactions) {
                 data[key].transactions.forEach(t => {
-                    if (!t.id || allIds.has(t.id)) t.id = Date.now() + Math.floor(Math.random() * 100000);
-                    allIds.add(t.id);
+                    if (!t.id) t.id = Date.now() + Math.floor(Math.random() * 100000);
                     if(t.date && typeof t.date === 'string' && t.date.startsWith("2S025")) t.date = t.date.replace("2S025", "2025");
                 });
             }
@@ -680,9 +586,7 @@
         }
         stockLevelAfter.set(t.id, layers.reduce((s,L)=> s+L.qty, 0));
       }
-      const remaining = layers.reduce((s,L)=> s+L.qty,0);
-      const remainingValue = Math.round(layers.reduce((s,L)=> s+L.qty*L.unitCost,0));
-      return { salesCOGS, remaining, remainingValue, stockLevelAfter };
+      return { salesCOGS, remaining: layers.reduce((s,L)=> s+L.qty,0), remainingValue: Math.round(layers.reduce((s,L)=> s+L.qty*L.unitCost,0)), stockLevelAfter };
     }
 
     function summarizeForKey(key, filteredTx){
@@ -696,8 +600,7 @@
         if(t.type==='buy'){ tBC += Number(t.cylinders||0); tBV += Number(t.totalPrice||0); }
         else if(t.type==='sell'){
             tSC += Number(t.cylinders||0); tSR += Number(t.totalPrice||0);
-            const c = fifo.salesCOGS.get(t.id);
-            tCOGS += Number((c !== undefined) ? c : (t.cogs ?? 0));
+            const c = fifo.salesCOGS.get(t.id); tCOGS += Number((c !== undefined) ? c : (t.cogs ?? 0));
         }
         else if(t.type==='expense'){ tExp += Number(t.totalPrice||0); }
       }
@@ -724,36 +627,17 @@
     }
 
     const monthSelect = document.getElementById('monthSelect'); const yearSelect = document.getElementById('yearSelect');
-
     function initMonthYearOptions(){
-        const years = new Set(); 
-        const now = new Date(); 
-        const currentYear = now.getFullYear();
-
-        // Add range: 2 years back to 5 years forward
-        for(let y = currentYear - 2; y <= currentYear + 5; y++) {
-            years.add(y);
-        }
-
-        // Add any years existing in data
+        const years = new Set(); const now = new Date(); const currentYear = now.getFullYear();
+        for(let y = currentYear - 2; y <= currentYear + 5; y++) years.add(y);
         Object.keys(store).forEach(k=>{ years.add(Number(k.split('-')[0])); });
-        
-        const ys = Array.from(years).sort((a,b)=>a-b);
-        yearSelect.innerHTML = ys.map(y=>`<option value="${y}">${y}</option>`).join('');
+        yearSelect.innerHTML = Array.from(years).sort((a,b)=>a-b).map(y=>`<option value="${y}">${y}</option>`).join('');
         monthSelect.innerHTML = MONTHS.map((m,i)=>`<option value="${i+1}">${m}</option>`).join('');
-        
-        // Default to current selection
-        yearSelect.value = currentYear; 
-        monthSelect.value = String(now.getMonth()+1);
-        
-        // If data only exists for one month (rare case logic, simplified)
-        const keys = Object.keys(store); 
-        if(keys.length===1){ const [y,m]=keys[0].split('-'); yearSelect.value = y; monthSelect.value = String(Number(m)); }
+        yearSelect.value = currentYear; monthSelect.value = String(now.getMonth()+1);
+        if(Object.keys(store).length===1){ const [y,m]=Object.keys(store)[0].split('-'); yearSelect.value = y; monthSelect.value = String(Number(m)); }
     }
-
     function activeKey(){ return `${yearSelect.value}-${String(monthSelect.value).padStart(2,'0')}`; }
     function table(headers, rowsHtml, tfootHtml=''){ return `<table><thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${rowsHtml||''}</tbody>${tfootHtml}</table>`; }
-    
     function applyFilters(transactions){
         const dateFrom = document.getElementById('filterDateFrom').value;
         const dateTo = document.getElementById('filterDateTo').value;
@@ -769,13 +653,14 @@
       try {
         const key = activeKey(); ensureMonth(key); const allTxForMonth = [...store[key].transactions];
         const [y,m] = key.split('-').map(Number); const fifo = computeFIFO(new Date(y,m,0,23,59,59,999));
-
         const filteredTx = applyFilters(allTxForMonth);
         const purchases = filteredTx.filter(t=>t.type==='buy').sort((a,b)=> asDate(a.date)-asDate(b.date));
         const sales = filteredTx.filter(t=>t.type==='sell').sort((a,b)=> asDate(a.date)-asDate(b.date));
         const expenses = filteredTx.filter(t=>t.type==='expense').sort((a,b)=> asDate(a.date)-asDate(b.date));
         
-        /* PURCHASE TABLE (REDESIGNED) */
+        const fmt = (n) => Number(n||0).toLocaleString();
+        
+        /* PURCHASE TABLE */
         let pRows = ''; let pTotalCyl=0, pTotalAmt=0;
         purchases.forEach(p=>{ 
             const unit = (p.cylinders>0) ? Math.round((p.totalPrice||0)/p.cylinders) : 0; 
@@ -784,174 +669,100 @@
                 <td data-label="Date">${ymd(p.date)}</td>
                 <td data-label="Supplier">${p.supplier || '-'}</td>
                 <td data-label="Cylinders" class="text-center">${p.cylinders}</td>
-                <td data-label="Unit Price" class="text-right font-mono">${unit.toLocaleString()}</td>
-                <td data-label="Total Price" class="text-right font-mono">${Number(p.totalPrice||0).toLocaleString()}</td>
-                <td data-label="Actions" class="text-right">
-                  <button class="action-btn" onclick="editEntry(${p.id})">${ICON_EDIT}</button>
-                  <button class="action-btn del" onclick="deleteEntry(${p.id})">${ICON_TRASH}</button>
-                </td>
+                <td data-label="Unit Price" class="text-right font-mono">${fmt(unit)}</td>
+                <td data-label="Total Price" class="text-right font-mono">${fmt(p.totalPrice)}</td>
+                <td data-label="Actions" class="text-right"><button class="action-btn" onclick="editEntry(${p.id})">${ICON_EDIT}</button><button class="action-btn del" onclick="deleteEntry(${p.id})">${ICON_TRASH}</button></td>
             </tr>`; 
         });
-        const pFoot = `<tfoot><tr><td colspan="2">TOTAL</td><td class="text-center">${pTotalCyl}</td><td class="text-right"></td><td class="text-right">${pTotalAmt.toLocaleString()}</td><td></td></tr></tfoot>`;
+        const pFoot = `<tfoot><tr><td colspan="2">TOTAL</td><td class="text-center">${pTotalCyl}</td><td class="text-right"></td><td class="text-right">${fmt(pTotalAmt)}</td><td></td></tr></tfoot>`;
         document.getElementById('purchaseTable').innerHTML = table(['Date','Supplier','Cylinders','Unit Price','Total Price','Actions'], pRows, pFoot);
 
-        /* SALES TABLE (REDESIGNED) */
+        /* SALES TABLE */
         let sRows=''; let sTotalCyl=0, sTotalSale=0, sTotalCOGS=0, sTotalProfit=0;
         sales.forEach(s=>{
           const computed = fifo.salesCOGS.get(s.id);
           const cogs = Number((computed !== undefined) ? computed : (s.cogs ?? 0));
           const profit = Number(s.totalPrice||0) - cogs;
           sTotalCyl += Number(s.cylinders||0); sTotalSale += Number(s.totalPrice||0); sTotalCOGS += Number(cogs||0); sTotalProfit += Number(profit||0);
-          const stockRem = fifo.stockLevelAfter.get(s.id) || 0;
           
           sRows += `<tr>
             <td data-label="Date">${ymd(s.date)}</td>
             <td data-label="Customer">${s.customer || '-'}</td>
             <td data-label="Cylinders" class="text-center">${s.cylinders}</td>
-            <td data-label="Sale" class="text-right font-mono">${Number(s.totalPrice||0).toLocaleString()}</td>
-            <td data-label="COGS" class="text-right font-mono" style="color:var(--muted)">${Number(cogs).toLocaleString()}</td>
-            <td data-label="Profit" class="text-right font-mono" style="font-weight:600;color:${profit>=0? 'var(--success)':'var(--danger)'}">${profit.toLocaleString()}</td>
-            <td data-label="Stock" class="text-center" style="color:var(--brand);">${stockRem}</td>
+            <td data-label="Sale" class="text-right font-mono">${fmt(s.totalPrice)}</td>
+            <td data-label="COGS" class="text-right font-mono" style="color:var(--muted)">${fmt(cogs)}</td>
+            <td data-label="Profit" class="text-right font-mono" style="font-weight:600;color:${profit>=0? 'var(--success)':'var(--danger)'}">${fmt(profit)}</td>
+            <td data-label="Stock" class="text-center" style="color:var(--brand);">${fifo.stockLevelAfter.get(s.id)||0}</td>
             <td data-label="Note">${s.note||''}</td>
-            <td data-label="Actions" class="text-right">
-              <button class="action-btn" onclick="editEntry(${s.id})">${ICON_EDIT}</button>
-              <button class="action-btn del" onclick="deleteEntry(${s.id})">${ICON_TRASH}</button>
-            </td>
+            <td data-label="Actions" class="text-right"><button class="action-btn" onclick="editEntry(${s.id})">${ICON_EDIT}</button><button class="action-btn del" onclick="deleteEntry(${s.id})">${ICON_TRASH}</button></td>
           </tr>`;
         });
-        const sFoot = `<tfoot><tr><td colspan="2">TOTAL</td><td class="text-center">${sTotalCyl}</td><td class="text-right">${sTotalSale.toLocaleString()}</td><td class="text-right">${sTotalCOGS.toLocaleString()}</td><td class="text-right">${sTotalProfit.toLocaleString()}</td><td colspan="3"></td></tr></tfoot>`;
+        const sFoot = `<tfoot><tr><td colspan="2">TOTAL</td><td class="text-center">${sTotalCyl}</td><td class="text-right">${fmt(sTotalSale)}</td><td class="text-right">${fmt(sTotalCOGS)}</td><td class="text-right">${fmt(sTotalProfit)}</td><td colspan="3"></td></tr></tfoot>`;
         document.getElementById('salesTable').innerHTML = table(['Date','Customer','Cyl','Sale','COGS','Profit','Stock','Note','Actions'], sRows, sFoot);
 
-        /* EXPENSE TABLE (REDESIGNED) */
+        /* EXPENSE TABLE */
         let eRows=''; let eTotal=0;
         expenses.forEach(e=>{ 
             eTotal += Number(e.totalPrice||0); 
-            eRows += `<tr>
-                <td data-label="Date">${ymd(e.date)}</td>
-                <td data-label="Description">${e.note||''}</td>
-                <td data-label="Amount" class="text-right font-mono">${Number(e.totalPrice||0).toLocaleString()}</td>
-                <td data-label="Actions" class="text-right">
-                  <button class="action-btn" onclick="editEntry(${e.id})">${ICON_EDIT}</button>
-                  <button class="action-btn del" onclick="deleteEntry(${e.id})">${ICON_TRASH}</button>
-                </td>
-            </tr>`; 
+            eRows += `<tr><td data-label="Date">${ymd(e.date)}</td><td data-label="Description">${e.note||''}</td><td data-label="Amount" class="text-right font-mono">${fmt(e.totalPrice)}</td><td data-label="Actions" class="text-right"><button class="action-btn" onclick="editEntry(${e.id})">${ICON_EDIT}</button><button class="action-btn del" onclick="deleteEntry(${e.id})">${ICON_TRASH}</button></td></tr>`; 
         });
-        const eFoot = `<tfoot><tr><td colspan="2">TOTAL</td><td class="text-right">${eTotal.toLocaleString()}</td><td></td></tr></tfoot>`;
+        const eFoot = `<tfoot><tr><td colspan="2">TOTAL</td><td class="text-right">${fmt(eTotal)}</td><td></td></tr></tfoot>`;
         document.getElementById('expensesTable').innerHTML = table(['Date','Description','Amount','Actions'], eRows, eFoot);
 
-        /* SUMMARY (CARDS LAYOUT) */
+        /* SUMMARY */
         const mS = summarizeForKey(key, filteredTx);
-        let sHtml = `<div class="summary-grid">
-           <div class="stat-card">
-              <div class="stat-label">Sales Revenue</div>
-              <div class="stat-val">${mS.totalSaleRevenue.toLocaleString()}</div>
-           </div>
-           <div class="stat-card">
-              <div class="stat-label">COGS</div>
-              <div class="stat-val">${mS.totalCOGS.toLocaleString()}</div>
-           </div>
-           <div class="stat-card">
-              <div class="stat-label">Expenses</div>
-              <div class="stat-val" style="color:var(--danger)">${mS.totalExpenses.toLocaleString()}</div>
-           </div>
-           <div class="stat-card" style="border-color:var(--success); background:#F0FDF4;">
-              <div class="stat-label">Net Profit</div>
-              <div class="stat-val green">${mS.grossProfit.toLocaleString()}</div>
-           </div>
-           <div class="stat-card">
-              <div class="stat-label">Stock Remaining</div>
-              <div class="stat-val" style="color:var(--brand)">${mS.remainingCylinders} cyl</div>
-           </div>
+        document.getElementById('summaryBox').innerHTML = `<div class="summary-grid">
+           <div class="stat-card"><div class="stat-label">Sales Revenue</div><div class="stat-val">${fmt(mS.totalSaleRevenue)}</div></div>
+           <div class="stat-card"><div class="stat-label">COGS</div><div class="stat-val">${fmt(mS.totalCOGS)}</div></div>
+           <div class="stat-card"><div class="stat-label">Expenses</div><div class="stat-val" style="color:var(--danger)">${fmt(mS.totalExpenses)}</div></div>
+           <div class="stat-card" style="border-color:var(--success); background:#F0FDF4;"><div class="stat-label">Net Profit</div><div class="stat-val green">${fmt(mS.grossProfit)}</div></div>
+           <div class="stat-card"><div class="stat-label">Stock Remaining</div><div class="stat-val" style="color:var(--brand)">${mS.remainingCylinders} cyl</div></div>
         </div>`;
-        document.getElementById('summaryBox').innerHTML = sHtml;
 
-        /* DAILY BREAKDOWN */
-        const dBD = generateDailyBreakdown(allTxForMonth, fifo.salesCOGS);
-        const dRows = dBD.map(d=>{ 
-            const gc = d.grossProfit>=0? 'text-success':'text-danger'; 
-            const nc = d.netProfit>=0? 'text-success':'text-danger';
-            return `<tr data-day="${d.date}" style="cursor:pointer;" title="Tap to view">
-                <td data-label="Date">${d.date}</td>
-                <td data-label="Sold" class="text-center">${d.soldCyl}</td>
-                <td data-label="Sale" class="text-right">${d.saleRevenue.toLocaleString()}</td>
-                <td data-label="COGS" class="text-right">${d.cogs.toLocaleString()}</td>
-                <td data-label="Gross" class="text-right ${gc}">${d.grossProfit.toLocaleString()}</td>
-                <td data-label="Exp" class="text-right">${d.expenses.toLocaleString()}</td>
-                <td data-label="Net" class="text-right ${nc}" style="font-weight:700;">${d.netProfit.toLocaleString()}</td>
-            </tr>`; 
+        /* DAILY */
+        const dRows = generateDailyBreakdown(allTxForMonth, fifo.salesCOGS).map(d=>{ 
+            const gc = d.grossProfit>=0? 'text-success':'text-danger'; const nc = d.netProfit>=0? 'text-success':'text-danger';
+            return `<tr data-day="${d.date}" style="cursor:pointer;" title="Tap to view"><td data-label="Date">${d.date}</td><td data-label="Sold" class="text-center">${d.soldCyl}</td><td data-label="Sale" class="text-right">${fmt(d.saleRevenue)}</td><td data-label="COGS" class="text-right">${fmt(d.cogs)}</td><td data-label="Gross" class="text-right ${gc}">${fmt(d.grossProfit)}</td><td data-label="Exp" class="text-right">${fmt(d.expenses)}</td><td data-label="Net" class="text-right ${nc}" style="font-weight:700;">${fmt(d.netProfit)}</td></tr>`; 
         }).join('');
         document.getElementById('dailyTable').innerHTML = table(['Date','Sold','Sale','COGS','Gross','Exp','Net Profit'], dRows);
 
       } catch (err) { console.error(err); }
     }
 
-    function getEntriesForDate(dayString){ const key = activeKey(); ensureMonth(key); const allTxForMonth = [...store[key].transactions]; return allTxForMonth.filter(t=> ymd(t.date) === dayString).sort((a,b)=> asDate(a.date)-asDate(b.date)); }
-
-    /* DETAIL VIEW */
-    function renderDetailsHtmlForDay(dayString){ 
-      const entries = getEntriesForDate(dayString);
-      if(entries.length===0) return `<div style="padding:15px;text-align:center;color:#999;">No entries</div>`;
-      
-      const [year, month] = activeKey().split('-').map(Number);
-      const cutoff = new Date(`${dayString}T23:59:59`);
-      const fifo = computeFIFO(cutoff);
-
-      let html = `<div style="display:grid; gap:8px;">`;
-      entries.forEach(e => {
-          const timePart = e.date.includes('T')? e.date.split('T')[1] : '';
-          let cogs = 0; if(e.type === 'sell'){ const val = fifo.salesCOGS.get(e.id); cogs = (val !== undefined) ? val : (e.cogs ?? 0); }
-          
-          let clr='black'; let typeLabel='?';
-          if(e.type==='buy') { typeLabel='PURCHASE'; clr='var(--danger)'; }
-          else if(e.type==='sell') { typeLabel='SALE'; clr='var(--success)'; }
-          else if(e.type==='expense') { typeLabel='EXPENSE'; clr='var(--danger)'; }
-
-          html += `
-          <div style="background:#F8FAFC; border:1px solid #E2E8F0; padding:10px; border-radius:6px; font-size:13px; display:flex; justify-content:space-between; align-items:center;">
-             <div>
-                <div style="font-weight:700; font-size:11px; color:#64748B;">${typeLabel} <span style="font-weight:400; margin-left:5px;">${timePart}</span></div>
-                <div style="margin-top:2px;">${e.note || e.customer || e.supplier || ''}</div>
-                ${e.cylinders ? `<div style="font-size:11px; color:#64748B;">Qty: ${e.cylinders}</div>` : ''}
-             </div>
-             <div style="font-weight:600; font-size:14px; color:${clr};">
-                ${Number(e.totalPrice).toLocaleString()}
-             </div>
-          </div>`;
-      });
-      html += `</div>`;
-      return `<div style="padding:15px;">${html}</div>`;
-    }
-
+    /* DETAILS ROW LOGIC */
     document.addEventListener('click', function(ev){ 
-        const tr = ev.target.closest('tr[data-day]'); 
-        if(!tr) return; 
-        const next = tr.nextElementSibling; 
-        if(next && next.classList.contains('expanded-row')){ next.remove(); return; } 
+        const tr = ev.target.closest('tr[data-day]'); if(!tr) return; 
+        const next = tr.nextElementSibling; if(next && next.classList.contains('expanded-row')){ next.remove(); return; } 
         document.querySelectorAll('tr.expanded-row').forEach(r=> r.remove()); 
         
         const day = tr.getAttribute('data-day'); 
-        const detailsHtml = renderDetailsHtmlForDay(day); 
-        const expandedTr = document.createElement('tr'); 
-        expandedTr.className = 'expanded-row'; 
-        const td = document.createElement('td'); 
-        td.colSpan = 7; 
-        td.innerHTML = detailsHtml; 
-        
-        // Mobile layout adjustment
-        if(window.innerWidth <= 768) td.style.display = 'block';
+        const entries = store[activeKey()].transactions.filter(t=> ymd(t.date) === day).sort((a,b)=> asDate(a.date)-asDate(b.date));
+        if(!entries.length) return;
 
-        expandedTr.appendChild(td); 
-        tr.parentNode.insertBefore(expandedTr, tr.nextSibling); 
+        const expandedTr = document.createElement('tr'); expandedTr.className = 'expanded-row'; 
+        const td = document.createElement('td'); td.colSpan = 7; 
+        
+        let html = `<div style="display:grid; gap:8px; padding:10px; background:#f8fafc;">`;
+        entries.forEach(e => {
+            let clr='black'; let typeLabel='?';
+            if(e.type==='buy') { typeLabel='PURCHASE'; clr='var(--danger)'; }
+            else if(e.type==='sell') { typeLabel='SALE'; clr='var(--success)'; }
+            else if(e.type==='expense') { typeLabel='EXPENSE'; clr='var(--danger)'; }
+            html += `<div style="background:white; border:1px solid #e2e8f0; padding:8px; border-radius:6px; display:flex; justify-content:space-between; align-items:center;">
+               <div><div style="font-size:11px; font-weight:700; color:#64748b;">${typeLabel}</div><div>${e.note || e.customer || e.supplier || ''}</div></div>
+               <div style="font-weight:700; color:${clr};">${Number(e.totalPrice).toLocaleString()}</div>
+            </div>`;
+        });
+        html += `</div>`;
+        td.innerHTML = html; if(window.innerWidth <= 768) td.style.display = 'block';
+        expandedTr.appendChild(td); tr.parentNode.insertBefore(expandedTr, tr.nextSibling); 
     });
 
     document.querySelectorAll('nav.tabs button').forEach(btn=>{ btn.addEventListener('click', ()=>{ document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); const t = btn.dataset.tab; document.querySelectorAll('main > section').forEach(s=> s.classList.add('hidden')); document.getElementById(`tab-${t}`).classList.remove('hidden'); }); });
     monthSelect.addEventListener('change', render); yearSelect.addEventListener('change', render);
 
     function clearForms(){
-        document.getElementById('pDate').value=''; document.getElementById('pCyl').value=''; document.getElementById('pUnit').value=''; document.getElementById('pTotal').value=''; document.getElementById('pSupplier').value='';
-        document.getElementById('sDate').value=''; document.getElementById('sCyl').value=''; document.getElementById('sUnit').value=''; document.getElementById('sTotal').value=''; document.getElementById('sNote').value=''; document.getElementById('sCustomer').value='';
-        document.getElementById('eDate').value=''; document.getElementById('eNote').value=''; document.getElementById('eAmount').value='';
-        editingId = null;
+        ['pDate','pCyl','pUnit','pTotal','pSupplier','sDate','sCyl','sUnit','sTotal','sNote','sCustomer','eDate','eNote','eAmount'].forEach(id=> document.getElementById(id).value=''); editingId = null;
     }
     function toggle(el, show){ el.classList.toggle('hidden', !show); }
 
@@ -961,80 +772,58 @@
     document.getElementById('sCancel').onclick = ()=>{ toggle(document.getElementById('saleForm'), false); clearForms(); };
     document.getElementById('addExpense').onclick = ()=>{ clearForms(); toggle(document.getElementById('expenseForm'), true); };
     document.getElementById('eCancel').onclick = ()=>{ toggle(document.getElementById('expenseForm'), false); clearForms(); };
-
     bindCalc({ qtyEl: document.getElementById('pCyl'), unitEl: document.getElementById('pUnit'), totalEl: document.getElementById('pTotal') });
     bindCalc({ qtyEl: document.getElementById('sCyl'), unitEl: document.getElementById('sUnit'), totalEl: document.getElementById('sTotal') });
 
     let editingId = null;
     function editEntry(id){
-      clearForms(); const { transaction, key } = findTransactionById(id); if(!transaction) return alert('Error: Entry not found.'); editingId = id;
+      clearForms(); const { transaction } = findTransactionById(id); if(!transaction) return alert('Not found'); editingId = id;
       if(transaction.type==='buy'){
-          document.getElementById('pDate').value = transaction.date; document.getElementById('pCyl').value = transaction.cylinders; document.getElementById('pTotal').value = transaction.totalPrice; 
-          document.getElementById('pSupplier').value = transaction.supplier || ''; 
-          document.getElementById('pUnit').dispatchEvent(new Event('input')); toggle(document.getElementById('purchaseForm'), true);
+          document.getElementById('pDate').value = transaction.date; document.getElementById('pCyl').value = transaction.cylinders; document.getElementById('pTotal').value = transaction.totalPrice; document.getElementById('pSupplier').value = transaction.supplier || ''; document.getElementById('pUnit').dispatchEvent(new Event('input')); toggle(document.getElementById('purchaseForm'), true);
       } else if(transaction.type==='sell'){
-          document.getElementById('sDate').value = transaction.date; document.getElementById('sCyl').value = transaction.cylinders; document.getElementById('sTotal').value = transaction.totalPrice; document.getElementById('sNote').value = transaction.note||''; 
-          document.getElementById('sCustomer').value = transaction.customer || '';
-          document.getElementById('sTotal').dispatchEvent(new Event('input')); toggle(document.getElementById('saleForm'), true);
+          document.getElementById('sDate').value = transaction.date; document.getElementById('sCyl').value = transaction.cylinders; document.getElementById('sTotal').value = transaction.totalPrice; document.getElementById('sNote').value = transaction.note||''; document.getElementById('sCustomer').value = transaction.customer || ''; document.getElementById('sTotal').dispatchEvent(new Event('input')); toggle(document.getElementById('saleForm'), true);
       } else if(transaction.type==='expense'){
           document.getElementById('eDate').value = transaction.date; document.getElementById('eNote').value = transaction.note||''; document.getElementById('eAmount').value = transaction.totalPrice; toggle(document.getElementById('expenseForm'), true);
       }
     }
 
-    async function deleteEntry(id) {
-        if(!confirm("Delete this?")) return;
-        const { transaction, key } = findTransactionById(id);
-        if(transaction && key) {
-            const bucket = store[key]; const idx = bucket.transactions.indexOf(transaction);
-            if(idx > -1) { bucket.transactions.splice(idx, 1); await saveStore(); render(); }
-        }
-    }
+    async function deleteEntry(id) { if(!confirm("Delete?")) return; const { transaction, key } = findTransactionById(id); if(transaction) { store[key].transactions.splice(store[key].transactions.indexOf(transaction), 1); await saveStore(); render(); } }
 
     document.getElementById('btnToggleFilter').onclick = () => { document.getElementById('filter-bar').classList.toggle('hidden'); };
     document.getElementById('btnApplyFilter').onclick = render;
     document.getElementById('btnResetFilter').onclick = () => { document.getElementById('filterDateFrom').value = ''; document.getElementById('filterDateTo').value = ''; document.getElementById('filterText').value = ''; render(); };
     
     document.getElementById('pSave').onclick = async ()=>{
-      const d = document.getElementById('pDate').value || new Date().toISOString();
-      const cyl = Number(document.getElementById('pCyl').value || 0);
-      const total = Number(document.getElementById('pTotal').value || 0);
-      const supplier = document.getElementById('pSupplier').value || '';
+      const d = document.getElementById('pDate').value || new Date().toISOString(); const cyl = Number(document.getElementById('pCyl').value || 0); const total = Number(document.getElementById('pTotal').value || 0); const supplier = document.getElementById('pSupplier').value || '';
       if(!cyl || !total) return alert('Enter data');
       const key = `${new Date(d).getFullYear()}-${String(new Date(d).getMonth()+1).padStart(2,'0')}`; ensureMonth(key);
       if(editingId){ const { transaction } = findTransactionById(editingId); transaction.date = d; transaction.type='buy'; transaction.cylinders = cyl; transaction.totalPrice = total; transaction.supplier = supplier; } 
       else { store[key].transactions.push({ id: nextId(), date: d, type: 'buy', cylinders: cyl, totalPrice: total, supplier }); }
-      saveStore(); toggle(document.getElementById('purchaseForm'), false); clearForms();
+      await saveStore(); toggle(document.getElementById('purchaseForm'), false); clearForms(); render();
     };
-
     document.getElementById('sSave').onclick = async ()=>{
-      const d = document.getElementById('sDate').value || new Date().toISOString();
-      const cyl = Number(document.getElementById('sCyl').value || 0);
-      const total = Number(document.getElementById('sTotal').value || 0);
-      const note = document.getElementById('sNote').value || '';
-      const customer = document.getElementById('sCustomer').value || '';
+      const d = document.getElementById('sDate').value || new Date().toISOString(); const cyl = Number(document.getElementById('sCyl').value || 0); const total = Number(document.getElementById('sTotal').value || 0); const note = document.getElementById('sNote').value || ''; const customer = document.getElementById('sCustomer').value || '';
       if(!cyl || !total) return alert('Enter data');
       const key = `${new Date(d).getFullYear()}-${String(new Date(d).getMonth()+1).padStart(2,'0')}`; ensureMonth(key);
       if(editingId){ const { transaction } = findTransactionById(editingId); transaction.date = d; transaction.type='sell'; transaction.cylinders = cyl; transaction.totalPrice = total; transaction.note = note; transaction.customer = customer; } 
       else { store[key].transactions.push({ id: nextId(), date: d, type: 'sell', cylinders: cyl, totalPrice: total, note, customer }); }
-      saveStore(); toggle(document.getElementById('saleForm'), false); clearForms();
+      await saveStore(); toggle(document.getElementById('saleForm'), false); clearForms(); render();
     };
-
     document.getElementById('eSave').onclick = async ()=>{
-      const d = document.getElementById('eDate').value || new Date().toISOString();
-      const amt = Number(document.getElementById('eAmount').value || 0);
-      const note = document.getElementById('eNote').value || '';
+      const d = document.getElementById('eDate').value || new Date().toISOString(); const amt = Number(document.getElementById('eAmount').value || 0); const note = document.getElementById('eNote').value || '';
       if(!amt) return alert('Enter amount');
       const key = `${new Date(d).getFullYear()}-${String(new Date(d).getMonth()+1).padStart(2,'0')}`; ensureMonth(key);
       if(editingId){ const { transaction } = findTransactionById(editingId); transaction.date = d; transaction.type='expense'; transaction.totalPrice = amt; transaction.note = note; } 
       else { store[key].transactions.push({ id: nextId(), date: d, type: 'expense', cylinders: 0, totalPrice: amt, note }); }
-      saveStore(); toggle(document.getElementById('expenseForm'), false); clearForms();
+      await saveStore(); toggle(document.getElementById('expenseForm'), false); clearForms(); render();
     };
     
+    document.getElementById('btnPrint').onclick = () => window.print();
     document.getElementById('btnExport').onclick = ()=>{ const b=new Blob([JSON.stringify(store,null,2)],{type:'application/json'}); const u=URL.createObjectURL(b); const a=document.createElement('a'); a.href=u; a.download='ledger.json'; a.click(); };
     document.getElementById('btnImport').onclick = ()=> document.getElementById('fileInput').click();
     document.getElementById('fileInput').addEventListener('change', async (ev)=>{ const f=ev.target.files[0]; if(!f)return; try{ store=JSON.parse(await f.text()||'{}'); repairIdsInStore(store); await saveStore(); initMonthYearOptions(); render(); alert('Imported'); }catch(e){alert(e);} });
 
-    function getFixedInitialData() { return { "2025-11": { "transactions": [ {"id": 11, "date": "2025-10-29", "type": "buy", "cylinders": 6, "totalPrice": 55836}, {"id": 14, "date": "2025-11-01", "type": "sell", "cylinders": 3, "totalPrice": 32400, "cogs": 27918}, {"id": 23, "date": "2025-11-01T15:27", "type": "expense", "cylinders": 0, "totalPrice": 120, "note": "Faqeer"}, {"id": 13, "date": "2025-11-01T21:36", "type": "sell", "cylinders": 2, "totalPrice": 18612, "cogs": 18612, "note": "Rashid Ko Diye", "customer": "Rashid"}, {"id": 16, "date": "2025-11-02", "type": "buy", "cylinders": 11, "totalPrice": 101508}, {"id": 18, "date": "2025-11-02", "type": "sell", "cylinders": 3, "totalPrice": 32400, "cogs": 27762} ] } }; }
+    function getFixedInitialData() { return { "2025-11": { "transactions": [ {"id": 11, "date": "2025-10-29", "type": "buy", "cylinders": 6, "totalPrice": 55836}, {"id": 14, "date": "2025-11-01", "type": "sell", "cylinders": 3, "totalPrice": 32400}, {"id": 16, "date": "2025-11-02", "type": "buy", "cylinders": 11, "totalPrice": 101508} ] } }; }
     setTimeout(()=> { if(Object.keys(store).length === 0) { initMonthYearOptions(); render(); } }, 600);
   </script>
 </body>
