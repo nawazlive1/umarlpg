@@ -8,19 +8,19 @@
   <style>
     :root { 
         /* --- GLOBAL THEME --- */
-        --bg-color: #F8FAFC;        
-        --card-bg: #FFFFFF;      
-        --border: #E2E8F0;    
+        --bg-color: #F8FAFC;       
+        --card-bg: #FFFFFF;     
+        --border: #E2E8F0;   
         --ink: #0F172A;      
         --muted: #64748B;    
         --brand: #2563EB;    /* Professional Blue */
         --brand-dark: #1E40AF;
         --header-bg: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
         --rashid-bg: linear-gradient(135deg, #10B981 0%, #059669 100%);
-        --danger: #EF4444;    
+        --danger: #EF4444;   
         --success: #10B981;
         
-        --radius: 10px;        
+        --radius: 10px;       
         --shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
     
@@ -30,7 +30,6 @@
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         margin: 0;
         background-color: var(--bg-color);
-        /* Background Pattern Restored */
         background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
         background-size: 20px 20px;
         color: var(--ink);
@@ -85,7 +84,7 @@
         text-shadow: 0 1px 2px rgba(0,0,0,0.1);
     }
     
-    /* Toolbar Default (Desktop) */
+    /* Toolbar */
     .toolbar { 
         display: flex; 
         gap: 8px; 
@@ -232,7 +231,7 @@
             color: transparent; box-shadow: 0 4px 12px rgba(37,99,235,0.4); z-index: 999;
         }
 
-        /* --- Toolbar Layout for Mobile (Fixed Month/Year Visibility) --- */
+        /* --- Toolbar Layout for Mobile --- */
         .toolbar {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -642,21 +641,9 @@
                 const dateFrom = document.getElementById('filterDateFrom').value;
                 const dateTo = document.getElementById('filterDateTo').value;
                 const text = document.getElementById('filterText').value.toLowerCase();
-                
                 if(dateFrom) filtered = filtered.filter(t=> t.date.split('T')[0] >= dateFrom);
                 if(dateTo) filtered = filtered.filter(t=> t.date.split('T')[0] <= dateTo);
-                if(text) {
-                    filtered = filtered.filter(t=> {
-                        const searchStr = [
-                            t.note,
-                            t.customer,
-                            t.supplier,
-                            t.type,
-                            t.totalPrice
-                        ].map(f => (f||'').toString().toLowerCase()).join(' ');
-                        return searchStr.includes(text);
-                    });
-                }
+                if(text) filtered = filtered.filter(t=> ((t.note||'') + (t.customer||'') + (t.supplier||'') + (t.type==='buy' ? '' : '')).toLowerCase().includes(text));
 
                 const purchases = filtered.filter(t=>t.type==='buy').sort((a,b)=> asDate(a.date)-asDate(b.date));
                 const sales = filtered.filter(t=>t.type==='sell').sort((a,b)=> asDate(a.date)-asDate(b.date));
@@ -728,25 +715,24 @@
                 html += `</div>`; td.innerHTML = html; expandedTr.appendChild(td); tr.parentNode.insertBefore(expandedTr, tr.nextSibling); 
             });
 
-            document.querySelectorAll('nav.tabs button').forEach(btn=>{ 
-                btn.addEventListener('click', ()=>{ 
-                    document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.remove('active')); 
-                    btn.classList.add('active'); 
-                    const t = btn.dataset.tab; 
-                    
-                    // --- UPDATE URL (New Feature) ---
-                    const newUrl = new URL(window.location);
-                    newUrl.searchParams.set('tab', t);
-                    window.history.pushState({}, '', newUrl);
-
-                    document.querySelectorAll('main > section').forEach(s=> s.classList.add('hidden')); 
-                    document.getElementById(`tab-${t}`).classList.remove('hidden'); 
-                }); 
-            });
+            document.querySelectorAll('nav.tabs button').forEach(btn=>{ btn.addEventListener('click', ()=>{ document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); const t = btn.dataset.tab; document.querySelectorAll('main > section').forEach(s=> s.classList.add('hidden')); document.getElementById(`tab-${t}`).classList.remove('hidden'); }); });
             monthSelect.addEventListener('change', render); yearSelect.addEventListener('change', render);
 
             function clearForms(){ ['pDate','pCyl','pUnit','pTotal','pSupplier','sDate','sCyl','sUnit','sTotal','sNote','sCustomer','eDate','eNote','eAmount'].forEach(id=> document.getElementById(id).value=''); editingId = null; }
-            function toggle(el, show){ if(el) el.classList.toggle('hidden', !show); }
+            
+            // Updated toggle function with Auto-Scroll
+            function toggle(el, show){ 
+                if(el) {
+                    el.classList.toggle('hidden', !show); 
+                    if(show) {
+                        // This scrolls the window to the form automatically
+                        setTimeout(() => {
+                            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }, 100);
+                    }
+                }
+            }
+
             function bindCalc({qtyEl, unitEl, totalEl}){
               const n=(v)=>Number(v||0); const fmt=(v)=>isFinite(v)?Math.round(v):0;
               const onChange=()=>{ const q=n(qtyEl.value), u=n(unitEl.value); if(q>0 && u>=0) totalEl.value = fmt(q*u); };
@@ -763,16 +749,13 @@
             bindCalc({ qtyEl: document.getElementById('pCyl'), unitEl: document.getElementById('pUnit'), totalEl: document.getElementById('pTotal') });
             bindCalc({ qtyEl: document.getElementById('sCyl'), unitEl: document.getElementById('sUnit'), totalEl: document.getElementById('sTotal') });
 
-            document.getElementById('btnToggleFilter').onclick = () => { toggle(document.getElementById('filter-bar'), !document.getElementById('filter-bar').classList.contains('hidden')); }; 
-            
-            // --- ENHANCED FILTER LISTENERS ---
+            document.getElementById('btnToggleFilter').onclick = () => { 
+                const fb = document.getElementById('filter-bar');
+                toggle(fb, fb.classList.contains('hidden')); 
+            }; 
+
             document.getElementById('btnApplyFilter').onclick = render;
             document.getElementById('btnResetFilter').onclick = () => { document.getElementById('filterDateFrom').value = ''; document.getElementById('filterDateTo').value = ''; document.getElementById('filterText').value = ''; render(); };
-            // Live Search
-            document.getElementById('filterText').addEventListener('input', render);
-            document.getElementById('filterDateFrom').addEventListener('change', render);
-            document.getElementById('filterDateTo').addEventListener('change', render);
-
             
             document.getElementById('pSave').onclick = async ()=>{
               const d = document.getElementById('pDate').value || new Date().toISOString(); const cyl = Number(document.getElementById('pCyl').value || 0); const total = Number(document.getElementById('pTotal').value || 0); const supplier = document.getElementById('pSupplier').value || '';
@@ -801,24 +784,16 @@
             
             document.getElementById('btnPrint').onclick = () => window.print();
             document.getElementById('btnExport').onclick = ()=>{ const b=new Blob([JSON.stringify(store,null,2)],{type:'application/json'}); const u=URL.createObjectURL(b); const a=document.createElement('a'); a.href=u; a.download='ledger.json'; a.click(); };
-            document.getElementById('btnImport').onclick = ()=> document.getElementById('fileInput').click();
+            
+            document.getElementById('btnImport').onclick = () => {
+                if(confirm(`IMPORT WARNING:\n\nYou are currently in "${currentAppMode === 'umar' ? 'Umar LPG' : 'Rashid LPG'}" mode.\n\nImporting data will OVERWRITE all existing data for this mode.\n\nAre you sure you want to proceed?`)) {
+                    document.getElementById('fileInput').click();
+                }
+            };
             document.getElementById('fileInput').addEventListener('change', async (ev)=>{ const f=ev.target.files[0]; if(!f)return; try{ store=JSON.parse(await f.text()||'{}'); repairIdsInStore(store); await saveStore(); initMonthYearOptions(); render(); alert('Imported'); }catch(e){alert(e);} });
 
             function getFixedInitialData() { return { "2025-11": { "transactions": [ {"id": 11, "date": "2025-10-29", "type": "buy", "cylinders": 6, "totalPrice": 55836}, {"id": 14, "date": "2025-11-01", "type": "sell", "cylinders": 3, "totalPrice": 32400}, {"id": 16, "date": "2025-11-02", "type": "buy", "cylinders": 11, "totalPrice": 101508} ] } }; }
-            
             setTimeout(()=> { if(Object.keys(store).length === 0) { initMonthYearOptions(); render(); } }, 600);
-
-            // --- ADDED FOR APPMYSITE TAB SWITCHING ---
-            // URL se ?tab=xyz check karega aur wo tab khol dega
-            const urlParams = new URLSearchParams(window.location.search);
-            const tabName = urlParams.get('tab'); // e.g., ?tab=sales
-            if(tabName){
-                const targetBtn = document.querySelector(`nav.tabs button[data-tab="${tabName}"]`);
-                if(targetBtn) {
-                    setTimeout(() => targetBtn.click(), 100);
-                }
-            }
-            // ------------------------------------------
 
         } catch (error) {
             console.error("Critical Init Error", error);
