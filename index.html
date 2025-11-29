@@ -30,6 +30,7 @@
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         margin: 0;
         background-color: var(--bg-color);
+        /* Background Pattern Restored */
         background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
         background-size: 20px 20px;
         color: var(--ink);
@@ -39,8 +40,8 @@
         overflow-x: hidden;
     }
     
-    /* --- HEADER --- */
-    header { 
+    /* --- MAIN HEADER (Renamed from <header> to avoid App auto-hide) --- */
+    #main-header { 
         background: var(--header-bg);
         padding: 12px 16px;
         width: 100%;
@@ -48,6 +49,7 @@
         box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
         position: relative;
         z-index: 50;
+        display: block !important; /* Force display */
     }
 
     /* Top Bar for Switch Button */
@@ -75,16 +77,17 @@
 
     .header-content { max-width: 1000px; margin: 0 auto; }
     
-    header h1 { 
+    #appTitle { 
         margin: 0 0 12px 0; 
         font-size: 22px; 
         font-weight: 700; 
         color: white;
         text-align: center;
         text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        display: block;
     }
     
-    /* Toolbar */
+    /* Toolbar Default (Desktop) */
     .toolbar { 
         display: flex; 
         gap: 8px; 
@@ -279,6 +282,19 @@
         tfoot { display: none; }
         .grid.cols-3, .grid.cols-5 { grid-template-columns: 1fr; }
     }
+    
+    /* Force Print Visibility */
+    @media print {
+        #main-header, .tabs, .add-btn-desktop, #filter-bar, .action-btn { display: none !important; }
+        .table-container { box-shadow: none; border: 1px solid #ccc; background: white; }
+        table, thead, tbody, tr, td, th { display: table-cell !important; width: 100%; } 
+        table { display: table !important; }
+        thead { display: table-header-group !important; }
+        tbody { display: table-row-group !important; }
+        tr { display: table-row !important; }
+        td, th { display: table-cell !important; }
+        body { background: white; }
+    }
   </style>
 </head>
 <body>
@@ -300,7 +316,8 @@
 
   <div id="status-banner">Connecting...</div>
   
-  <header>
+  <!-- REPLACED <header> WITH DIV to fix AppMySite hiding issue -->
+  <div id="main-header">
     <div class="header-content">
       <div class="top-bar">
         <button id="btnSwitchApp">Go to Rashid LPG</button>
@@ -317,7 +334,7 @@
         <input class="hidden" type="file" id="fileInput" accept="application/json" />
       </div>
     </div>
-  </header>
+  </div>
 
   <nav class="tabs">
     <button data-tab="purchases" class="active">Purchases</button>
@@ -497,7 +514,7 @@
             };
 
             document.getElementById('btnSwitchApp').onclick = () => {
-                const header = document.querySelector('header');
+                const header = document.getElementById('main-header'); // Use ID selector
                 if(currentAppMode === 'umar'){
                     currentAppMode = 'rashid';
                     document.getElementById('appTitle').innerText = 'Rashid LPG';
@@ -719,13 +736,10 @@
             monthSelect.addEventListener('change', render); yearSelect.addEventListener('change', render);
 
             function clearForms(){ ['pDate','pCyl','pUnit','pTotal','pSupplier','sDate','sCyl','sUnit','sTotal','sNote','sCustomer','eDate','eNote','eAmount'].forEach(id=> document.getElementById(id).value=''); editingId = null; }
-            
-            // Updated toggle function with Auto-Scroll
             function toggle(el, show){ 
                 if(el) {
                     el.classList.toggle('hidden', !show); 
                     if(show) {
-                        // This scrolls the window to the form automatically
                         setTimeout(() => {
                             el.scrollIntoView({ behavior: 'smooth', block: 'start' });
                         }, 100);
@@ -753,7 +767,7 @@
                 const fb = document.getElementById('filter-bar');
                 toggle(fb, fb.classList.contains('hidden')); 
             }; 
-
+            
             document.getElementById('btnApplyFilter').onclick = render;
             document.getElementById('btnResetFilter').onclick = () => { document.getElementById('filterDateFrom').value = ''; document.getElementById('filterDateTo').value = ''; document.getElementById('filterText').value = ''; render(); };
             
