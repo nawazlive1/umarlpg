@@ -569,7 +569,19 @@
             function asDate(v){ return new Date(v); }
             function ensureMonth(key){ if(!store[key]) store[key] = { transactions: [] }; }
             function nextId(){ return Date.now() + Math.floor(Math.random() * 1000); }
-            function findTransactionById(id){ for(const key of Object.keys(store)){ const bucket = store[key]; if(bucket && bucket.transactions){ const tx = bucket.transactions.find(t=>t.id===id); if(tx) return { transaction: tx, key }; } } return { transaction: null, key: null }; }
+            
+            // --- UPDATED FIND FUNCTION (Robust for string/number ID mismatch) ---
+            function findTransactionById(id){ 
+                for(const key of Object.keys(store)){ 
+                    const bucket = store[key]; 
+                    if(bucket && bucket.transactions){ 
+                        // Use string comparison to match IDs even if type differs
+                        const tx = bucket.transactions.find(t => String(t.id) === String(id)); 
+                        if(tx) return { transaction: tx, key }; 
+                    } 
+                } 
+                return { transaction: null, key: null }; 
+            }
 
             function computeFIFO(cutoffDate){
               const all = [];
@@ -663,11 +675,12 @@
                 const expenses = filtered.filter(t=>t.type==='expense').sort((a,b)=> asDate(a.date)-asDate(b.date));
                 const fmt = (n) => Number(n||0).toLocaleString();
 
+                // UPDATED: Added Quotes around IDs in editEntry/deleteEntry calls to handle non-numeric IDs safely
                 let pRows = ''; let pTotalCyl=0, pTotalAmt=0;
                 purchases.forEach(p=>{ 
                     const unit = (p.cylinders>0) ? Math.round((p.totalPrice||0)/p.cylinders) : 0; 
                     pTotalCyl += Number(p.cylinders||0); pTotalAmt += Number(p.totalPrice||0); 
-                    pRows += `<tr><td data-label="Date">${ymd(p.date)}</td><td data-label="Supplier">${p.supplier || '-'}</td><td data-label="Cylinders" class="text-center">${p.cylinders}</td><td data-label="Unit Price" class="text-right font-mono">${fmt(unit)}</td><td data-label="Total Price" class="text-right font-mono">${fmt(p.totalPrice)}</td><td data-label="Actions" class="text-right"><button class="action-btn" onclick="window.editEntry(${p.id})">${ICON_EDIT}</button><button class="action-btn del" onclick="window.deleteEntry(${p.id})">${ICON_TRASH}</button></td></tr>`; 
+                    pRows += `<tr><td data-label="Date">${ymd(p.date)}</td><td data-label="Supplier">${p.supplier || '-'}</td><td data-label="Cylinders" class="text-center">${p.cylinders}</td><td data-label="Unit Price" class="text-right font-mono">${fmt(unit)}</td><td data-label="Total Price" class="text-right font-mono">${fmt(p.totalPrice)}</td><td data-label="Actions" class="text-right"><button class="action-btn" onclick="window.editEntry('${p.id}')">${ICON_EDIT}</button><button class="action-btn del" onclick="window.deleteEntry('${p.id}')">${ICON_TRASH}</button></td></tr>`; 
                 });
                 document.getElementById('purchaseTable').innerHTML = table(['Date','Supplier','Cylinders','Unit Price','Total Price','Actions'], pRows, `<tfoot><tr><td colspan="2">TOTAL</td><td class="text-center">${pTotalCyl}</td><td class="text-right"></td><td class="text-right">${fmt(pTotalAmt)}</td><td></td></tr></tfoot>`);
 
@@ -676,12 +689,12 @@
                   const computed = fifo.salesCOGS.get(s.id); const cogs = Number((computed !== undefined) ? computed : (s.cogs ?? 0));
                   const profit = Number(s.totalPrice||0) - cogs;
                   sTotalCyl += Number(s.cylinders||0); sTotalSale += Number(s.totalPrice||0); sTotalCOGS += Number(cogs||0); sTotalProfit += Number(profit||0);
-                  sRows += `<tr><td data-label="Date">${ymd(s.date)}</td><td data-label="Customer">${s.customer || '-'}</td><td data-label="Cylinders" class="text-center">${s.cylinders}</td><td data-label="Sale" class="text-right font-mono">${fmt(s.totalPrice)}</td><td data-label="COGS" class="text-right font-mono" style="color:var(--muted)">${fmt(cogs)}</td><td data-label="Profit" class="text-right font-mono" style="font-weight:600;color:${profit>=0? 'var(--success)':'var(--danger)'}">${fmt(profit)}</td><td data-label="Stock" class="text-center" style="color:var(--brand);">${fifo.stockLevelAfter.get(s.id)||0}</td><td data-label="Note">${s.note||''}</td><td data-label="Actions" class="text-right"><button class="action-btn" onclick="window.editEntry(${s.id})">${ICON_EDIT}</button><button class="action-btn del" onclick="window.deleteEntry(${s.id})">${ICON_TRASH}</button></td></tr>`;
+                  sRows += `<tr><td data-label="Date">${ymd(s.date)}</td><td data-label="Customer">${s.customer || '-'}</td><td data-label="Cylinders" class="text-center">${s.cylinders}</td><td data-label="Sale" class="text-right font-mono">${fmt(s.totalPrice)}</td><td data-label="COGS" class="text-right font-mono" style="color:var(--muted)">${fmt(cogs)}</td><td data-label="Profit" class="text-right font-mono" style="font-weight:600;color:${profit>=0? 'var(--success)':'var(--danger)'}">${fmt(profit)}</td><td data-label="Stock" class="text-center" style="color:var(--brand);">${fifo.stockLevelAfter.get(s.id)||0}</td><td data-label="Note">${s.note||''}</td><td data-label="Actions" class="text-right"><button class="action-btn" onclick="window.editEntry('${s.id}')">${ICON_EDIT}</button><button class="action-btn del" onclick="window.deleteEntry('${s.id}')">${ICON_TRASH}</button></td></tr>`;
                 });
                 document.getElementById('salesTable').innerHTML = table(['Date','Customer','Cyl','Sale','COGS','Profit','Stock','Note','Actions'], sRows, `<tfoot><tr><td colspan="2">TOTAL</td><td class="text-center">${sTotalCyl}</td><td class="text-right">${fmt(sTotalSale)}</td><td class="text-right">${fmt(sTotalCOGS)}</td><td class="text-right">${fmt(sTotalProfit)}</td><td colspan="3"></td></tr></tfoot>`);
 
                 let eRows=''; let eTotal=0;
-                expenses.forEach(e=>{ eTotal += Number(e.totalPrice||0); eRows += `<tr><td data-label="Date">${ymd(e.date)}</td><td data-label="Description">${e.note||''}</td><td data-label="Amount" class="text-right font-mono">${fmt(e.totalPrice)}</td><td data-label="Actions" class="text-right"><button class="action-btn" onclick="window.editEntry(${e.id})">${ICON_EDIT}</button><button class="action-btn del" onclick="window.deleteEntry(${e.id})">${ICON_TRASH}</button></td></tr>`; });
+                expenses.forEach(e=>{ eTotal += Number(e.totalPrice||0); eRows += `<tr><td data-label="Date">${ymd(e.date)}</td><td data-label="Description">${e.note||''}</td><td data-label="Amount" class="text-right font-mono">${fmt(e.totalPrice)}</td><td data-label="Actions" class="text-right"><button class="action-btn" onclick="window.editEntry('${e.id}')">${ICON_EDIT}</button><button class="action-btn del" onclick="window.deleteEntry('${e.id})">${ICON_TRASH}</button></td></tr>`; });
                 document.getElementById('expensesTable').innerHTML = table(['Date','Description','Amount','Actions'], eRows, `<tfoot><tr><td colspan="2">TOTAL</td><td class="text-right">${fmt(eTotal)}</td><td></td></tr></tfoot>`);
 
                 const mS = summarizeForKey(key, filtered);
@@ -694,12 +707,19 @@
             }
 
             function clearForms(){ ['pDate','pCyl','pUnit','pTotal','pSupplier','sDate','sCyl','sUnit','sTotal','sNote','sCustomer','eDate','eNote','eAmount','tDate','tCyl','tUnit','tTotal'].forEach(id=> { const el = document.getElementById(id); if(el) el.value=''; }); editingId = null; if(document.getElementById('tSupplier')) document.getElementById('tSupplier').value = "From Umar"; }
+            
+            // UPDATED: Added Try-Catch to prevent crash if scrollIntoView options are not supported in webview
             function toggle(el, show){ 
                 if(el) {
                     el.classList.toggle('hidden', !show); 
                     if(show) {
                         setTimeout(() => {
-                            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            try {
+                                el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            } catch(e) {
+                                // Fallback for older browsers
+                                el.scrollIntoView(true);
+                            }
                         }, 100);
                     }
                 }
@@ -712,7 +732,7 @@
               qtyEl.addEventListener('input', onChange); unitEl.addEventListener('input', onChange); totalEl.addEventListener('input', onTotal);
             }
 
-            // TABS LOGIC - RE-ADDED
+            // TABS LOGIC
             document.querySelectorAll('nav.tabs button').forEach(btn=>{ 
                 btn.addEventListener('click', ()=>{ 
                     document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.remove('active')); 
@@ -723,6 +743,29 @@
                     if(target) target.classList.remove('hidden');
                 }); 
             });
+
+            let editingId = null;
+            // Ensure global functions are defined robustly
+            window.editEntry = function(id){
+              clearForms(); 
+              const { transaction } = findTransactionById(id); 
+              if(!transaction) return alert('Not found'); 
+              editingId = id;
+              if(transaction.type==='buy'){
+                  document.getElementById('pDate').value = transaction.date; document.getElementById('pCyl').value = transaction.cylinders; document.getElementById('pTotal').value = transaction.totalPrice; document.getElementById('pSupplier').value = transaction.supplier || ''; document.getElementById('pUnit').dispatchEvent(new Event('input')); toggle(document.getElementById('purchaseForm'), true);
+              } else if(transaction.type==='sell'){
+                  document.getElementById('sDate').value = transaction.date; document.getElementById('sCyl').value = transaction.cylinders; document.getElementById('sTotal').value = transaction.totalPrice; document.getElementById('sNote').value = transaction.note||''; document.getElementById('sCustomer').value = transaction.customer || ''; document.getElementById('sTotal').dispatchEvent(new Event('input')); toggle(document.getElementById('saleForm'), true);
+              } else if(transaction.type==='expense'){
+                  document.getElementById('eDate').value = transaction.date; document.getElementById('eNote').value = transaction.note||''; document.getElementById('eAmount').value = transaction.totalPrice; toggle(document.getElementById('expenseForm'), true);
+              }
+            };
+
+            window.deleteEntry = async function(id) { 
+                if(!confirm("Delete?")) return; 
+                const { transaction, key } = findTransactionById(id); 
+                if(transaction) { store[key].transactions.splice(store[key].transactions.indexOf(transaction), 1); await saveStore(); render(); } 
+            };
+
 
             document.getElementById('addPurchase').onclick = ()=>{ clearForms(); toggle(document.getElementById('purchaseForm'), true); };
             document.getElementById('pCancel').onclick = ()=>{ toggle(document.getElementById('purchaseForm'), false); clearForms(); };
