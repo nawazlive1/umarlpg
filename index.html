@@ -3,8 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Umar LPG Manager (Mobile)</title>
+  <title>Umar LPG Manager Pro V4</title>
   
+  <!-- Google Fonts for Urdu -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
   <style>
     :root { 
         /* --- GLOBAL THEME --- */
@@ -19,15 +22,20 @@
         --rashid-bg: linear-gradient(135deg, #10B981 0%, #059669 100%);
         --danger: #EF4444;   
         --success: #10B981;
+        --warning: #F59E0B;
         
         --radius: 10px;       
         --shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
+
+    /* Urdu Font Override */
+    [lang="ur"] { font-family: 'Noto Nastaliq Urdu', serif; }
+    [lang="ur"] body { direction: rtl; }
     
     * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
     
     body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        font-family: 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
         margin: 0;
         background-color: var(--bg-color);
         background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
@@ -53,11 +61,14 @@
 
     .top-bar {
         display: flex;
-        justify-content: flex-end;
+        justify-content: space-between;
+        align-items: center;
         margin-bottom: 8px;
     }
     
-    #btnSwitchApp {
+    .app-controls { display: flex; gap: 8px; }
+
+    #btnSwitchApp, #btnLang {
         background: rgba(255, 255, 255, 0.2);
         color: white;
         border: 1px solid rgba(255, 255, 255, 0.4);
@@ -69,8 +80,9 @@
         display: inline-flex;
         align-items: center;
         transition: background 0.2s;
+        text-decoration: none;
     }
-    #btnSwitchApp:active { background: rgba(255,255,255,0.4); }
+    #btnSwitchApp:active, #btnLang:active { background: rgba(255,255,255,0.4); }
 
     .header-content { max-width: 1000px; margin: 0 auto; }
     
@@ -140,6 +152,7 @@
         cursor: pointer;
         transition: all 0.2s;
         margin-bottom: 4px;
+        white-space: nowrap;
     }
     nav.tabs button.active { 
         background: var(--brand); 
@@ -191,6 +204,8 @@
     .text-center { text-align: center; }
     
     .action-btn { background: #F1F5F9; border: none; padding: 6px; border-radius: 4px; margin-left: 4px; color: var(--muted); width: auto; }
+    .whatsapp-btn { background: #DCFCE7; color: #166534; border: 1px solid #86EFAC; }
+    .bill-btn { background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; }
     
     #status-banner {
         padding: 8px; text-align: center; font-size: 13px; font-weight: 600;
@@ -221,6 +236,18 @@
         display: flex; align-items: center; justify-content: center;
     }
 
+    /* --- UNIVERSAL MODAL STYLES --- */
+    .modal-overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.5); z-index: 2000;
+        display: none; align-items: center; justify-content: center;
+    }
+    .modal-box {
+        background: white; width: 95%; max-width: 500px; padding: 20px;
+        border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        max-height: 90vh; overflow-y: auto;
+    }
+
     /* --- MOBILE RESPONSIVE --- */
     @media (max-width: 768px) {
         .add-btn-desktop {
@@ -244,7 +271,7 @@
         }
         td:before { content: attr(data-label); font-weight: 600; color: var(--muted); font-size: 13px; text-align: left; }
         
-        td[data-label="Date"] { 
+        td[data-label="Date"], td[data-label="Account"] { 
             font-weight: 700; color: var(--brand); font-size: 15px;
             border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 8px;
         }
@@ -256,15 +283,12 @@
     }
     
     @media print {
-        #main-header, .tabs, .add-btn-desktop, #filter-bar, .action-btn { display: none !important; }
-        .table-container { box-shadow: none; border: 1px solid #ccc; background: white; }
-        table, thead, tbody, tr, td, th { display: table-cell !important; width: 100%; } 
-        table { display: table !important; }
-        thead { display: table-header-group !important; }
-        tbody { display: table-row-group !important; }
-        tr { display: table-row !important; }
-        td, th { display: table-cell !important; }
-        body { background: white; }
+        #main-header, .tabs, .add-btn-desktop, #filter-bar, .action-btn, #invoice-close-btn, #invoice-print-btn, #login-overlay, .top-bar { display: none !important; }
+        /* Hide everything except the invoice modal content if open */
+        body > * { visibility: hidden; }
+        #invoice-modal { display: flex !important; background: white; position: absolute; top:0; left:0; width:100%; height:auto; }
+        #invoice-modal .modal-box { visibility: visible; box-shadow: none; border: none; max-width: 100%; padding: 0; margin: 0; width: 100%; }
+        .modal-box * { visibility: visible; }
     }
   </style>
 </head>
@@ -274,7 +298,7 @@
   <div id="login-overlay">
       <div class="login-box" style="width:90%; max-width:320px; text-align:center;">
           <div style="background:white; padding:24px; border-radius:16px; box-shadow:0 10px 25px rgba(0,0,0,0.1); border:1px solid #f1f5f9;">
-            <h2 style="margin-top:0;">Login</h2>
+            <h2 style="margin-top:0;" id="lblLoginHeader">Login</h2>
             <div id="login-error" style="color:var(--danger); display:none; margin-bottom:10px; font-size:12px;">Error connecting.</div>
             <div style="display:grid; gap:12px;">
                 <input type="email" id="txtEmail" placeholder="Email" />
@@ -284,13 +308,89 @@
           </div>
       </div>
   </div>
+  
+  <!-- INVOICE MODAL -->
+  <div id="invoice-modal" class="modal-overlay">
+      <div class="modal-box">
+          <div style="text-align:center; margin-bottom:20px; border-bottom:1px solid #eee; padding-bottom:10px;">
+              <h2 id="inv-app-title" style="margin:0; color:var(--brand);">Umar LPG</h2>
+              <p style="margin:4px 0; color:var(--muted); font-size:12px;">Official Receipt / Invoice</p>
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:12px; font-size:13px;">
+              <div>
+                  <span style="color:var(--muted); display:block; font-size:11px;">Customer</span>
+                  <strong id="inv-customer"></strong>
+              </div>
+              <div style="text-align:right;">
+                  <span style="color:var(--muted); display:block; font-size:11px;">Date</span>
+                  <strong id="inv-date"></strong>
+              </div>
+          </div>
+          <table style="width:100%; border-collapse:collapse; margin-bottom:12px;">
+              <thead>
+                  <tr style="background:#f8fafc; border-bottom:1px solid #e2e8f0;">
+                      <th style="padding:8px; text-align:left; font-size:12px;">Item</th>
+                      <th style="padding:8px; text-align:center; font-size:12px;">Qty</th>
+                      <th style="padding:8px; text-align:right; font-size:12px;">Price</th>
+                      <th style="padding:8px; text-align:right; font-size:12px;">Total</th>
+                  </tr>
+              </thead>
+              <tbody>
+                  <tr>
+                      <td style="padding:8px; font-size:13px;">LPG Cylinders</td>
+                      <td style="padding:8px; text-align:center; font-size:13px;" id="inv-qty"></td>
+                      <td style="padding:8px; text-align:right; font-size:13px;" id="inv-rate"></td>
+                      <td style="padding:8px; text-align:right; font-weight:bold; font-size:13px;" id="inv-total"></td>
+                  </tr>
+              </tbody>
+              <tfoot style="border-top:1px solid #e2e8f0;">
+                   <tr>
+                       <td colspan="3" style="padding:8px; text-align:right; font-size:12px;">Total Bill:</td>
+                       <td style="padding:8px; text-align:right; font-weight:bold; font-size:13px;" id="inv-grand-total"></td>
+                   </tr>
+                   <tr>
+                       <td colspan="3" style="padding:8px; text-align:right; font-size:12px;">Paid:</td>
+                       <td style="padding:8px; text-align:right; font-size:13px;" id="inv-paid"></td>
+                   </tr>
+                   <tr>
+                       <td colspan="3" style="padding:8px; text-align:right; font-size:12px;">Balance (Due):</td>
+                       <td style="padding:8px; text-align:right; font-weight:bold; color:var(--danger); font-size:13px;" id="inv-due"></td>
+                   </tr>
+              </tfoot>
+          </table>
+          <div style="text-align:center; margin-top:20px; font-size:11px; color:var(--muted);">
+              Thank you for your business!
+          </div>
+          <div style="margin-top:20px; display:flex; gap:10px;">
+              <button id="invoice-print-btn" class="btn-primary" onclick="window.print()">Print</button>
+              <button id="invoice-close-btn" class="btn-ghost" onclick="document.getElementById('invoice-modal').style.display='none'">Close</button>
+          </div>
+      </div>
+  </div>
+
+  <!-- DAY DETAIL MODAL (NEW) -->
+  <div id="day-detail-modal" class="modal-overlay">
+      <div class="modal-box" style="max-width:600px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid #eee; padding-bottom:8px;">
+              <h3 id="dd-title" style="margin:0;">Details</h3>
+              <button onclick="document.getElementById('day-detail-modal').style.display='none'" style="background:none; border:none; font-size:24px; cursor:pointer;">&times;</button>
+          </div>
+          
+          <div id="dd-content"></div>
+
+          <button onclick="document.getElementById('day-detail-modal').style.display='none'" class="btn-primary" style="margin-top:16px;">Close</button>
+      </div>
+  </div>
 
   <div id="status-banner">Connecting...</div>
   
   <div id="main-header">
     <div class="header-content">
       <div class="top-bar">
-        <button id="btnSwitchApp">Go to Rashid LPG</button>
+        <div class="app-controls">
+            <button id="btnSwitchApp">Rashid LPG</button>
+            <button id="btnLang">اردو</button>
+        </div>
       </div>
       <h1 id="appTitle">Umar LPG</h1>
       <div class="toolbar">
@@ -307,13 +407,13 @@
   </div>
 
   <nav class="tabs">
-    <button data-tab="purchases" class="active">Purchases</button>
-    <button data-tab="sales">Sales</button>
-    <button data-tab="expenses">Expenses</button>
-    <!-- New Tab for Sending to Rashid -->
+    <button data-tab="purchases" class="active" id="tabPurchase">Purchases</button>
+    <button data-tab="sales" id="tabSale">Sales</button>
+    <button data-tab="parties" id="tabParties">Accounts</button>
+    <button data-tab="expenses" id="tabExpense">Expenses</button>
     <button data-tab="transfer" id="tabToRashid" style="color:var(--brand-dark); border:1px solid var(--brand);">To Rashid</button>
-    <button data-tab="summary">Summary</button>
-    <button data-tab="daily">Daily</button>
+    <button data-tab="summary" id="tabSummary">Summary</button>
+    <button data-tab="daily" id="tabDaily">Daily</button>
   </nav>
 
   <main>
@@ -334,17 +434,18 @@
     <!-- PURCHASES -->
     <section id="tab-purchases">
       <div class="row-header">
-        <h2>Purchases</h2>
+        <h2 id="lblPurchases">Purchases</h2>
         <button id="addPurchase" class="add-btn-desktop">+</button>
       </div>
       <div id="purchaseForm" class="form-panel hidden">
-        <h3 style="margin:0 0 16px 0;">New Purchase</h3>
+        <h3 style="margin:0 0 16px 0;" id="lblNewPurchase">New Purchase</h3>
         <div class="grid cols-5">
             <input type="datetime-local" id="pDate" />
-            <input type="text" id="pSupplier" placeholder="Supplier" />
+            <input type="text" id="pSupplier" placeholder="Supplier Name" />
             <input type="number" id="pCyl" placeholder="Cyl" />
             <input type="number" id="pUnit" placeholder="Rate" />
-            <input type="number" id="pTotal" placeholder="Total" />
+            <input type="number" id="pTotal" placeholder="Total Bill" />
+            <input type="number" id="pPaid" placeholder="Amount Paid (optional)" style="border-color:var(--warning)" />
         </div>
         <div style="margin-top:16px; display:flex; gap:10px;">
             <button id="pSave" class="btn-primary">Save</button>
@@ -354,43 +455,22 @@
       <div id="purchaseTable" class="table-container"></div>
     </section>
 
-    <!-- NEW SECTION: TO RASHID (Transfer) -->
-    <section id="tab-transfer" class="hidden">
-        <div class="row-header">
-          <h2>Send to Rashid's Purchase</h2>
-        </div>
-        <div class="form-panel" style="border: 2px solid var(--success);">
-            <p style="font-size:13px; color:var(--muted); margin-top:0;">
-                Note: Anything you add here will <b>immediately appear in Rashid LPG's</b> Purchase list. It will not be added to your stock.
-            </p>
-            <div class="grid cols-5">
-                <input type="datetime-local" id="tDate" />
-                <input type="text" id="tSupplier" placeholder="Supplier (e.g. From Umar)" value="From Umar" />
-                <input type="number" id="tCyl" placeholder="Cylinders" />
-                <input type="number" id="tUnit" placeholder="Rate" />
-                <input type="number" id="tTotal" placeholder="Total" />
-            </div>
-            <div style="margin-top:16px; display:flex; gap:10px;">
-                <button id="tSave" class="btn-primary" style="background:var(--success);">Send to Rashid</button>
-            </div>
-        </div>
-    </section>
-
     <!-- SALES -->
     <section id="tab-sales" class="hidden">
       <div class="row-header">
-        <h2>Sales</h2>
+        <h2 id="lblSales">Sales</h2>
         <button id="addSale" class="add-btn-desktop">+</button>
       </div>
       <div id="saleForm" class="form-panel hidden">
-        <h3 style="margin:0 0 16px 0;">New Sale</h3>
+        <h3 style="margin:0 0 16px 0;" id="lblNewSale">New Sale</h3>
         <div class="grid cols-3">
             <input type="datetime-local" id="sDate" />
-            <input type="text" id="sCustomer" placeholder="Customer" />
+            <input type="text" id="sCustomer" placeholder="Customer Name" />
             <input type="number" id="sCyl" placeholder="Cyl" />
             <input type="number" id="sUnit" placeholder="Rate" />
-            <input type="number" id="sTotal" placeholder="Total" />
-            <input type="text" id="sNote" placeholder="Note" />
+            <input type="number" id="sTotal" placeholder="Total Bill" />
+            <input type="number" id="sPaid" placeholder="Received Amount (optional)" style="border-color:var(--success)" />
+            <input type="text" id="sNote" placeholder="Note / Details" />
         </div>
         <div style="margin-top:16px; display:flex; gap:10px;">
             <button id="sSave" class="btn-primary">Save</button>
@@ -400,10 +480,25 @@
       <div id="salesTable" class="table-container"></div>
     </section>
 
+    <!-- ACCOUNTS / PARTIES -->
+    <section id="tab-parties" class="hidden">
+      <div class="row-header">
+        <h2 id="lblAccounts">Customer & Supplier Accounts</h2>
+      </div>
+      <div class="form-panel" style="background:#F0F9FF; border-color:#BAE6FD;">
+        <p style="margin:0; font-size:13px; color:#0369A1;" id="lblAcctHelp">
+           This list shows total balances calculated from all history.
+           <br><b>Positive (+):</b> They owe you (Receivable).
+           <br><b>Negative (-):</b> You owe them (Payable).
+        </p>
+      </div>
+      <div id="partiesTable" class="table-container"></div>
+    </section>
+
     <!-- EXPENSES -->
     <section id="tab-expenses" class="hidden">
       <div class="row-header">
-        <h2>Expenses</h2>
+        <h2 id="lblExpenses">Expenses</h2>
         <button id="addExpense" class="add-btn-desktop">+</button>
       </div>
       <div id="expenseForm" class="form-panel hidden">
@@ -420,10 +515,51 @@
       <div id="expensesTable" class="table-container"></div>
     </section>
 
+    <!-- TRANSFER TO RASHID -->
+    <section id="tab-transfer" class="hidden">
+        <div class="row-header">
+          <h2 id="lblTransfer">Send to Rashid's Purchase</h2>
+        </div>
+        <div class="form-panel" style="border: 2px solid var(--success);">
+            <p style="font-size:13px; color:var(--muted); margin-top:0;">
+                Note: Anything you add here will <b>immediately appear in Rashid LPG's</b> Purchase list.
+            </p>
+            <div class="grid cols-5">
+                <input type="datetime-local" id="tDate" />
+                <input type="text" id="tSupplier" placeholder="Supplier (e.g. From Umar)" value="From Umar" />
+                <input type="number" id="tCyl" placeholder="Cylinders" />
+                <input type="number" id="tUnit" placeholder="Rate" />
+                <input type="number" id="tTotal" placeholder="Total" />
+            </div>
+            <div style="margin-top:16px; display:flex; gap:10px;">
+                <button id="tSave" class="btn-primary" style="background:var(--success);">Send to Rashid</button>
+            </div>
+        </div>
+    </section>
+
     <!-- SUMMARY & DAILY -->
     <section id="tab-summary" class="hidden">
+      <!-- Standard Monthly Summary -->
       <div id="summaryBox"></div>
+      
+      <!-- Custom Report Section -->
+      <div style="margin-top:24px; padding-top:24px; border-top:1px dashed var(--border);">
+          <h3 id="lblCustomReport">Detailed Profit Report (Custom Range)</h3>
+          <div class="form-panel" style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;">
+              <div style="flex:1; min-width:140px;">
+                  <label style="font-size:12px; font-weight:600;">Start Date</label>
+                  <input type="date" id="reportStart" />
+              </div>
+              <div style="flex:1; min-width:140px;">
+                  <label style="font-size:12px; font-weight:600;">End Date</label>
+                  <input type="date" id="reportEnd" />
+              </div>
+              <button id="btnGenReport" class="btn-primary" style="flex:0 0 auto; width:auto; height:46px;">Generate Report</button>
+          </div>
+          <div id="reportResults" style="margin-top:16px;"></div>
+      </div>
     </section>
+    
     <section id="tab-daily" class="hidden">
       <div id="dailyTable" class="table-container"></div>
     </section>
@@ -438,6 +574,85 @@
 
     const ICON_EDIT = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
     const ICON_TRASH = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
+    const ICON_WHATSAPP = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>`;
+    const ICON_BILL = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>`;
+
+    // --- TRANSLATION DICTIONARY ---
+    const i18n = {
+        en: {
+            title: "Umar LPG",
+            rashidTitle: "Rashid LPG",
+            login: "Login",
+            purchases: "Purchases",
+            sales: "Sales",
+            accounts: "Accounts",
+            expenses: "Expenses",
+            toRashid: "To Rashid",
+            summary: "Summary",
+            daily: "Daily",
+            newPurchase: "New Purchase",
+            newSale: "New Sale",
+            supplier: "Supplier Name",
+            customer: "Customer Name",
+            cyl: "Cyl",
+            rate: "Rate",
+            total: "Total",
+            paid: "Paid Amount",
+            note: "Note",
+            save: "Save",
+            cancel: "Cancel",
+            date: "Date",
+            actions: "Actions",
+            balance: "Balance",
+            reminder: "Reminder",
+            profit: "Profit",
+            stock: "Stock",
+            gross: "Gross",
+            net: "Net Profit",
+            cogs: "COGS",
+            acctHelp: "This list shows total balances calculated from all history.<br><b>Positive (+):</b> They owe you.<br><b>Negative (-):</b> You owe them.",
+            customReport: "Detailed Profit Report (Custom Range)",
+            genReport: "Generate Report",
+            bill: "Bill"
+        },
+        ur: {
+            title: "عمر ایل پی جی",
+            rashidTitle: "راشد ایل پی جی",
+            login: "لاگ ان کریں",
+            purchases: "خریداری",
+            sales: "فروخت",
+            accounts: "کھاتے",
+            expenses: "اخراجات",
+            toRashid: "راشد کو بھیجیں",
+            summary: "خلاصہ",
+            daily: "روزنامہ",
+            newPurchase: "نئی خریداری",
+            newSale: "نئی فروخت",
+            supplier: "سپلائر کا نام",
+            customer: "گاہک کا نام",
+            cyl: "سلنڈر",
+            rate: "ریٹ",
+            total: "کل رقم",
+            paid: "ادا شدہ رقم",
+            note: "نوٹ / تفصیل",
+            save: "محفوظ کریں",
+            cancel: "منسوخ",
+            date: "تاریخ",
+            actions: "عمل",
+            balance: "بقیہ رقم",
+            reminder: "یاد دہانی",
+            profit: "منافع",
+            stock: "اسٹاک",
+            gross: "مجموعی منافع",
+            net: "خالص منافع",
+            cogs: "لاگت",
+            acctHelp: "یہ فہرست تمام سابقہ ریکارڈ سے حساب کتاب دکھاتی ہے۔<br><b>مثبت (+):</b> آپ نے لینے ہیں۔<br><b>منفی (-):</b> آپ نے دینے ہیں۔",
+            customReport: "تفصیلی منافع رپورٹ (اپنی مرضی کے مطابق)",
+            genReport: "رپورٹ نکالیں",
+            bill: "بل"
+        }
+    };
+    let currentLang = 'en';
 
     const firebaseConfig = {
       apiKey: "AIzaSyCMkXvwJ_T6-Y6d3PiyhAW80oO9k0tspBw",
@@ -472,6 +687,51 @@
                     banner.className = isError ? 'error' : '';
                 }
             }
+
+            // --- LANGUAGE HANDLER ---
+            function setLanguage(lang) {
+                currentLang = lang;
+                const t = i18n[lang];
+                document.documentElement.lang = lang;
+                document.getElementById('btnLang').innerText = lang === 'en' ? 'اردو' : 'English';
+                document.getElementById('appTitle').innerText = currentAppMode === 'umar' ? t.title : t.rashidTitle;
+                
+                // Update Labels
+                document.getElementById('lblLoginHeader').innerText = t.login;
+                document.getElementById('tabPurchase').innerText = t.purchases;
+                document.getElementById('tabSale').innerText = t.sales;
+                document.getElementById('tabParties').innerText = t.accounts;
+                document.getElementById('tabExpense').innerText = t.expenses;
+                document.getElementById('tabToRashid').innerText = t.toRashid;
+                document.getElementById('tabSummary').innerText = t.summary;
+                document.getElementById('tabDaily').innerText = t.daily;
+
+                document.getElementById('lblPurchases').innerText = t.purchases;
+                document.getElementById('lblNewPurchase').innerText = t.newPurchase;
+                document.getElementById('pSupplier').placeholder = t.supplier;
+                document.getElementById('pPaid').placeholder = t.paid;
+                
+                document.getElementById('lblSales').innerText = t.sales;
+                document.getElementById('lblNewSale').innerText = t.newSale;
+                document.getElementById('sCustomer').placeholder = t.customer;
+                document.getElementById('sPaid').placeholder = t.paid;
+
+                document.getElementById('lblAccounts').innerText = t.accounts;
+                document.getElementById('lblAcctHelp').innerHTML = t.acctHelp;
+
+                document.getElementById('pSave').innerText = t.save;
+                document.getElementById('pCancel').innerText = t.cancel;
+                document.getElementById('sSave').innerText = t.save;
+                document.getElementById('sCancel').innerText = t.cancel;
+
+                // New Labels
+                document.getElementById('lblCustomReport').innerText = t.customReport;
+                document.getElementById('btnGenReport').innerText = t.genReport;
+                
+                render(); // Re-render tables with new headers
+            }
+
+            document.getElementById('btnLang').onclick = () => setLanguage(currentLang === 'en' ? 'ur' : 'en');
 
             auth.onAuthStateChanged((user) => {
                 if (user) {
@@ -511,14 +771,14 @@
 
                 if(currentAppMode === 'umar'){
                     currentAppMode = 'rashid';
-                    document.getElementById('appTitle').innerText = 'Rashid LPG';
+                    document.getElementById('appTitle').innerText = i18n[currentLang].rashidTitle;
                     document.documentElement.style.setProperty('--brand', '#10B981'); 
                     header.style.background = 'var(--rashid-bg)';
                     document.getElementById('btnSwitchApp').innerText = 'Go to Umar LPG';
                     if(transferTab) transferTab.style.display = 'none'; 
                 } else {
                     currentAppMode = 'umar';
-                    document.getElementById('appTitle').innerText = 'Umar LPG';
+                    document.getElementById('appTitle').innerText = i18n[currentLang].title;
                     document.documentElement.style.setProperty('--brand', '#2563EB'); 
                     header.style.background = 'var(--header-bg)';
                     document.getElementById('btnSwitchApp').innerText = 'Go to Rashid LPG';
@@ -570,12 +830,10 @@
             function ensureMonth(key){ if(!store[key]) store[key] = { transactions: [] }; }
             function nextId(){ return Date.now() + Math.floor(Math.random() * 1000); }
             
-            // --- UPDATED FIND FUNCTION (Robust for string/number ID mismatch) ---
             function findTransactionById(id){ 
                 for(const key of Object.keys(store)){ 
                     const bucket = store[key]; 
                     if(bucket && bucket.transactions){ 
-                        // Use string comparison to match IDs even if type differs
                         const tx = bucket.transactions.find(t => String(t.id) === String(id)); 
                         if(tx) return { transaction: tx, key }; 
                     } 
@@ -605,6 +863,29 @@
                 stockLevelAfter.set(t.id, layers.reduce((s,L)=> s+L.qty, 0));
               }
               return { salesCOGS, remaining: layers.reduce((s,L)=> s+L.qty,0), remainingValue: Math.round(layers.reduce((s,L)=> s+L.qty*L.unitCost,0)), stockLevelAfter };
+            }
+
+            function computeGlobalBalances() {
+                const accounts = {};
+                Object.values(store).forEach(bucket => {
+                    (bucket.transactions || []).forEach(t => {
+                        if (t.type === 'buy' && t.supplier) {
+                            const name = t.supplier.trim();
+                            if (!accounts[name]) accounts[name] = 0;
+                            const total = Number(t.totalPrice || 0);
+                            const paid = Number(t.paidAmount !== undefined ? t.paidAmount : t.totalPrice);
+                            accounts[name] -= (total - paid);
+                        }
+                        if (t.type === 'sell' && t.customer) {
+                            const name = t.customer.trim();
+                            if (!accounts[name]) accounts[name] = 0;
+                            const total = Number(t.totalPrice || 0);
+                            const paid = Number(t.paidAmount !== undefined ? t.paidAmount : t.totalPrice);
+                            accounts[name] += (total - paid);
+                        }
+                    });
+                });
+                return accounts;
             }
 
             function summarizeForKey(key, filteredTx){
@@ -643,6 +924,91 @@
                     return { date, ...d, grossProfit: d.saleRevenue - d.cogs, netProfit: (d.saleRevenue - d.cogs) - d.expenses };
                 });
             }
+            
+            // --- INVOICE GENERATION ---
+            window.showInvoice = function(id) {
+                const { transaction } = findTransactionById(id);
+                if(!transaction) return alert("Data not found");
+                
+                document.getElementById('inv-app-title').innerText = currentAppMode === 'umar' ? 'Umar LPG' : 'Rashid LPG';
+                document.getElementById('inv-customer').innerText = transaction.customer || 'Customer';
+                document.getElementById('inv-date').innerText = ymd(transaction.date);
+                
+                document.getElementById('inv-qty').innerText = transaction.cylinders || 0;
+                // Calculate Rate
+                const rate = transaction.cylinders > 0 ? Math.round(transaction.totalPrice / transaction.cylinders) : 0;
+                document.getElementById('inv-rate').innerText = rate.toLocaleString();
+                document.getElementById('inv-total').innerText = Number(transaction.totalPrice).toLocaleString();
+                
+                const total = Number(transaction.totalPrice || 0);
+                const paid = Number(transaction.paidAmount !== undefined ? transaction.paidAmount : total);
+                const due = total - paid;
+                
+                document.getElementById('inv-grand-total').innerText = total.toLocaleString();
+                document.getElementById('inv-paid').innerText = paid.toLocaleString();
+                document.getElementById('inv-due').innerText = due.toLocaleString();
+                
+                document.getElementById('invoice-modal').style.display = 'flex';
+            };
+
+            // --- NEW: DAY DETAIL POPUP ---
+            window.showDayDetails = function(day) {
+                const key = activeKey();
+                const bucket = store[key] || { transactions: [] };
+                // Filter all transactions for this day
+                const dayTx = bucket.transactions.filter(t => ymd(t.date) === day);
+                
+                if(dayTx.length === 0) return alert("No details found.");
+
+                // Group by type
+                const sales = dayTx.filter(t => t.type === 'sell');
+                const purchases = dayTx.filter(t => t.type === 'buy');
+                const expenses = dayTx.filter(t => t.type === 'expense');
+                const fmt = (n) => Number(n).toLocaleString();
+
+                let html = '';
+
+                // Sales Section
+                if(sales.length > 0) {
+                    html += `<h4 style="margin:12px 0 4px 0; color:var(--brand); border-bottom:1px solid #eee;">Sales</h4>`;
+                    sales.forEach(s => {
+                        const paid = s.paidAmount !== undefined ? s.paidAmount : s.totalPrice;
+                        const due = s.totalPrice - paid;
+                        const dueTag = due > 0 ? `<span style="color:var(--danger); font-size:10px;">(Due: ${fmt(due)})</span>` : '';
+                        html += `<div style="display:flex; justify-content:space-between; padding:4px 0; font-size:13px;">
+                                    <span>${s.customer || '-'} ${dueTag}</span>
+                                    <span><b>${fmt(s.totalPrice)}</b> (${s.cylinders} cyl)</span>
+                                 </div>`;
+                    });
+                }
+
+                // Expenses Section
+                if(expenses.length > 0) {
+                    html += `<h4 style="margin:12px 0 4px 0; color:var(--danger); border-bottom:1px solid #eee;">Expenses</h4>`;
+                    expenses.forEach(e => {
+                        html += `<div style="display:flex; justify-content:space-between; padding:4px 0; font-size:13px;">
+                                    <span>${e.note || 'Expense'}</span>
+                                    <span><b>${fmt(e.totalPrice)}</b></span>
+                                 </div>`;
+                    });
+                }
+
+                // Purchases Section
+                if(purchases.length > 0) {
+                    html += `<h4 style="margin:12px 0 4px 0; color:var(--success); border-bottom:1px solid #eee;">Purchases</h4>`;
+                    purchases.forEach(p => {
+                        html += `<div style="display:flex; justify-content:space-between; padding:4px 0; font-size:13px;">
+                                    <span>${p.supplier || '-'}</span>
+                                    <span><b>${fmt(p.totalPrice)}</b> (${p.cylinders} cyl)</span>
+                                 </div>`;
+                    });
+                }
+
+                document.getElementById('dd-title').innerText = `Details: ${day}`;
+                document.getElementById('dd-content').innerHTML = html;
+                document.getElementById('day-detail-modal').style.display = 'flex';
+            };
+
 
             const monthSelect = document.getElementById('monthSelect'); const yearSelect = document.getElementById('yearSelect');
             function initMonthYearOptions(){
@@ -659,6 +1025,7 @@
             
             function render(){
               try {
+                const t = i18n[currentLang];
                 const key = activeKey(); ensureMonth(key); const allTxForMonth = [...store[key].transactions];
                 const [y,m] = key.split('-').map(Number); const fifo = computeFIFO(new Date(y,m,0,23,59,59,999));
                 
@@ -675,51 +1042,165 @@
                 const expenses = filtered.filter(t=>t.type==='expense').sort((a,b)=> asDate(a.date)-asDate(b.date));
                 const fmt = (n) => Number(n||0).toLocaleString();
 
-                // UPDATED: Added Quotes around IDs in editEntry/deleteEntry calls to handle non-numeric IDs safely
+                // --- RENDER PURCHASES ---
                 let pRows = ''; let pTotalCyl=0, pTotalAmt=0;
                 purchases.forEach(p=>{ 
                     const unit = (p.cylinders>0) ? Math.round((p.totalPrice||0)/p.cylinders) : 0; 
                     pTotalCyl += Number(p.cylinders||0); pTotalAmt += Number(p.totalPrice||0); 
-                    pRows += `<tr><td data-label="Date">${ymd(p.date)}</td><td data-label="Supplier">${p.supplier || '-'}</td><td data-label="Cylinders" class="text-center">${p.cylinders}</td><td data-label="Unit Price" class="text-right font-mono">${fmt(unit)}</td><td data-label="Total Price" class="text-right font-mono">${fmt(p.totalPrice)}</td><td data-label="Actions" class="text-right"><button class="action-btn" onclick="window.editEntry('${p.id}')">${ICON_EDIT}</button><button class="action-btn del" onclick="window.deleteEntry('${p.id}')">${ICON_TRASH}</button></td></tr>`; 
+                    const isCredit = (p.paidAmount !== undefined && p.paidAmount < p.totalPrice);
+                    const statusDot = isCredit ? `<span style="color:var(--danger);font-size:10px;">● Due</span>` : '';
+                    
+                    pRows += `<tr><td data-label="${t.date}">${ymd(p.date)}</td><td data-label="${t.supplier}">${p.supplier || '-'} ${statusDot}</td><td data-label="${t.cyl}" class="text-center">${p.cylinders}</td><td data-label="${t.rate}" class="text-right font-mono">${fmt(unit)}</td><td data-label="${t.total}" class="text-right font-mono">${fmt(p.totalPrice)}</td><td data-label="${t.actions}" class="text-right"><button class="action-btn" onclick="window.editEntry('${p.id}')">${ICON_EDIT}</button><button class="action-btn del" onclick="window.deleteEntry('${p.id}')">${ICON_TRASH}</button></td></tr>`; 
                 });
-                document.getElementById('purchaseTable').innerHTML = table(['Date','Supplier','Cylinders','Unit Price','Total Price','Actions'], pRows, `<tfoot><tr><td colspan="2">TOTAL</td><td class="text-center">${pTotalCyl}</td><td class="text-right"></td><td class="text-right">${fmt(pTotalAmt)}</td><td></td></tr></tfoot>`);
+                document.getElementById('purchaseTable').innerHTML = table([t.date, t.supplier, t.cyl, t.rate, t.total, t.actions], pRows, `<tfoot><tr><td colspan="2">TOTAL</td><td class="text-center">${pTotalCyl}</td><td class="text-right"></td><td class="text-right">${fmt(pTotalAmt)}</td><td></td></tr></tfoot>`);
 
+                // --- RENDER SALES ---
                 let sRows=''; let sTotalCyl=0, sTotalSale=0, sTotalCOGS=0, sTotalProfit=0;
                 sales.forEach(s=>{
                   const computed = fifo.salesCOGS.get(s.id); const cogs = Number((computed !== undefined) ? computed : (s.cogs ?? 0));
                   const profit = Number(s.totalPrice||0) - cogs;
                   sTotalCyl += Number(s.cylinders||0); sTotalSale += Number(s.totalPrice||0); sTotalCOGS += Number(cogs||0); sTotalProfit += Number(profit||0);
-                  sRows += `<tr><td data-label="Date">${ymd(s.date)}</td><td data-label="Customer">${s.customer || '-'}</td><td data-label="Cylinders" class="text-center">${s.cylinders}</td><td data-label="Sale" class="text-right font-mono">${fmt(s.totalPrice)}</td><td data-label="COGS" class="text-right font-mono" style="color:var(--muted)">${fmt(cogs)}</td><td data-label="Profit" class="text-right font-mono" style="font-weight:600;color:${profit>=0? 'var(--success)':'var(--danger)'}">${fmt(profit)}</td><td data-label="Stock" class="text-center" style="color:var(--brand);">${fifo.stockLevelAfter.get(s.id)||0}</td><td data-label="Note">${s.note||''}</td><td data-label="Actions" class="text-right"><button class="action-btn" onclick="window.editEntry('${s.id}')">${ICON_EDIT}</button><button class="action-btn del" onclick="window.deleteEntry('${s.id}')">${ICON_TRASH}</button></td></tr>`;
+                  const isCredit = (s.paidAmount !== undefined && s.paidAmount < s.totalPrice);
+                  const due = isCredit ? (s.totalPrice - s.paidAmount) : 0;
+                  const creditBadge = isCredit ? `<div style="font-size:11px;color:var(--danger);font-weight:600;">Due: ${fmt(due)}</div>` : '';
+                  
+                  // NEW: Bill Button
+                  const billBtn = `<button class="action-btn bill-btn" title="Print Bill" onclick="window.showInvoice('${s.id}')">${ICON_BILL}</button>`;
+
+                  sRows += `<tr><td data-label="${t.date}">${ymd(s.date)}</td><td data-label="${t.customer}">${s.customer || '-'} ${creditBadge}</td><td data-label="${t.cyl}" class="text-center">${s.cylinders}</td><td data-label="${t.total}" class="text-right font-mono">${fmt(s.totalPrice)}</td><td data-label="${t.cogs}" class="text-right font-mono" style="color:var(--muted)">${fmt(cogs)}</td><td data-label="${t.profit}" class="text-right font-mono" style="font-weight:600;color:${profit>=0? 'var(--success)':'var(--danger)'}">${fmt(profit)}</td><td data-label="${t.stock}" class="text-center" style="color:var(--brand);">${fifo.stockLevelAfter.get(s.id)||0}</td><td data-label="${t.note}">${s.note||''}</td><td data-label="${t.actions}" class="text-right">${billBtn}<button class="action-btn" onclick="window.editEntry('${s.id}')">${ICON_EDIT}</button><button class="action-btn del" onclick="window.deleteEntry('${s.id}')">${ICON_TRASH}</button></td></tr>`;
                 });
-                document.getElementById('salesTable').innerHTML = table(['Date','Customer','Cyl','Sale','COGS','Profit','Stock','Note','Actions'], sRows, `<tfoot><tr><td colspan="2">TOTAL</td><td class="text-center">${sTotalCyl}</td><td class="text-right">${fmt(sTotalSale)}</td><td class="text-right">${fmt(sTotalCOGS)}</td><td class="text-right">${fmt(sTotalProfit)}</td><td colspan="3"></td></tr></tfoot>`);
+                document.getElementById('salesTable').innerHTML = table([t.date, t.customer, t.cyl, t.total, t.cogs, t.profit, t.stock, t.note, t.actions], sRows, `<tfoot><tr><td colspan="2">TOTAL</td><td class="text-center">${sTotalCyl}</td><td class="text-right">${fmt(sTotalSale)}</td><td class="text-right">${fmt(sTotalCOGS)}</td><td class="text-right">${fmt(sTotalProfit)}</td><td colspan="3"></td></tr></tfoot>`);
 
+                // --- RENDER EXPENSES ---
                 let eRows=''; let eTotal=0;
-                expenses.forEach(e=>{ eTotal += Number(e.totalPrice||0); eRows += `<tr><td data-label="Date">${ymd(e.date)}</td><td data-label="Description">${e.note||''}</td><td data-label="Amount" class="text-right font-mono">${fmt(e.totalPrice)}</td><td data-label="Actions" class="text-right"><button class="action-btn" onclick="window.editEntry('${e.id}')">${ICON_EDIT}</button><button class="action-btn del" onclick="window.deleteEntry('${e.id})">${ICON_TRASH}</button></td></tr>`; });
-                document.getElementById('expensesTable').innerHTML = table(['Date','Description','Amount','Actions'], eRows, `<tfoot><tr><td colspan="2">TOTAL</td><td class="text-right">${fmt(eTotal)}</td><td></td></tr></tfoot>`);
+                expenses.forEach(e=>{ eTotal += Number(e.totalPrice||0); eRows += `<tr><td data-label="${t.date}">${ymd(e.date)}</td><td data-label="Description">${e.note||''}</td><td data-label="${t.total}" class="text-right font-mono">${fmt(e.totalPrice)}</td><td data-label="${t.actions}" class="text-right"><button class="action-btn" onclick="window.editEntry('${e.id}')">${ICON_EDIT}</button><button class="action-btn del" onclick="window.deleteEntry('${e.id})">${ICON_TRASH}</button></td></tr>`; });
+                document.getElementById('expensesTable').innerHTML = table([t.date, 'Description', t.total, t.actions], eRows, `<tfoot><tr><td colspan="2">TOTAL</td><td class="text-right">${fmt(eTotal)}</td><td></td></tr></tfoot>`);
 
+                // --- RENDER ACCOUNTS (PARTIES) ---
+                const accts = computeGlobalBalances();
+                let acctRows = '';
+                Object.entries(accts).sort((a,b) => b[1] - a[1]).forEach(([name, bal]) => {
+                    if(bal === 0) return; 
+                    const isPositive = bal > 0; 
+                    const color = isPositive ? 'var(--success)' : 'var(--danger)';
+                    const action = isPositive 
+                        ? `<button class="action-btn whatsapp-btn" onclick="window.open('https://wa.me/?text=Hello ${name}, your pending balance is ${fmt(bal)}. Please pay soon.', '_blank')">${ICON_WHATSAPP} ${t.reminder}</button>` 
+                        : `<span style="color:var(--muted);font-size:11px">No Action</span>`;
+
+                    acctRows += `<tr><td data-label="Account" style="font-weight:700;">${name}</td><td data-label="${t.balance}" class="text-right font-mono" style="color:${color}; font-weight:700; font-size:16px;">${fmt(Math.abs(bal))} ${isPositive ? 'Cr (Rec)' : 'Dr (Pay)'}</td><td data-label="${t.actions}" class="text-right">${action}</td></tr>`;
+                });
+                document.getElementById('partiesTable').innerHTML = table(['Account Name', t.balance, t.actions], acctRows || '<tr><td colspan="3" class="text-center">No outstanding balances.</td></tr>');
+
+                // --- RENDER SUMMARY ---
                 const mS = summarizeForKey(key, filtered);
-                document.getElementById('summaryBox').innerHTML = `<div class="summary-grid"><div class="stat-card"><div class="stat-label">Sales Revenue</div><div class="stat-val">${fmt(mS.totalSaleRevenue)}</div></div><div class="stat-card"><div class="stat-label">COGS</div><div class="stat-val">${fmt(mS.totalCOGS)}</div></div><div class="stat-card"><div class="stat-label">Expenses</div><div class="stat-val" style="color:var(--danger)">${fmt(mS.totalExpenses)}</div></div><div class="stat-card" style="border-color:var(--success); background:#F0FDF4;"><div class="stat-label">Net Profit</div><div class="stat-val green">${fmt(mS.grossProfit)}</div></div><div class="stat-card"><div class="stat-label">Stock Remaining</div><div class="stat-val" style="color:var(--brand)">${mS.remainingCylinders} cyl</div></div></div>`;
+                document.getElementById('summaryBox').innerHTML = `<div class="summary-grid"><div class="stat-card"><div class="stat-label">${t.total} Revenue</div><div class="stat-val">${fmt(mS.totalSaleRevenue)}</div></div><div class="stat-card"><div class="stat-label">${t.cogs}</div><div class="stat-val">${fmt(mS.totalCOGS)}</div></div><div class="stat-card"><div class="stat-label">${t.expenses}</div><div class="stat-val" style="color:var(--danger)">${fmt(mS.totalExpenses)}</div></div><div class="stat-card" style="border-color:var(--success); background:#F0FDF4;"><div class="stat-label">${t.net}</div><div class="stat-val green">${fmt(mS.grossProfit)}</div></div><div class="stat-card"><div class="stat-label">${t.stock} Remaining</div><div class="stat-val" style="color:var(--brand)">${mS.remainingCylinders} cyl</div></div></div>`;
                 
-                const dRows = generateDailyBreakdown(allTxForMonth, fifo.salesCOGS).map(d=>{ const gc = d.grossProfit>=0? 'text-success':'text-danger'; const nc = d.netProfit>=0? 'text-success':'text-danger'; return `<tr data-day="${d.date}" style="cursor:pointer;" title="Tap"><td data-label="Date">${d.date}</td><td data-label="Sold" class="text-center">${d.soldCyl}</td><td data-label="Sale" class="text-right">${fmt(d.saleRevenue)}</td><td data-label="COGS" class="text-right">${fmt(d.cogs)}</td><td data-label="Gross" class="text-right ${gc}">${fmt(d.grossProfit)}</td><td data-label="Exp" class="text-right">${fmt(d.expenses)}</td><td data-label="Net" class="text-right ${nc}" style="font-weight:700;">${fmt(d.netProfit)}</td></tr>`; }).join('');
-                document.getElementById('dailyTable').innerHTML = table(['Date','Sold','Sale','COGS','Gross','Exp','Net Profit'], dRows);
+                // --- RENDER DAILY ---
+                const dRows = generateDailyBreakdown(allTxForMonth, fifo.salesCOGS).map(d=>{ const gc = d.grossProfit>=0? 'text-success':'text-danger'; const nc = d.netProfit>=0? 'text-success':'text-danger'; return `<tr data-day="${d.date}" style="cursor:pointer;" title="Tap to view details"><td data-label="${t.date}">${d.date}</td><td data-label="Sold" class="text-center">${d.soldCyl}</td><td data-label="Sale" class="text-right">${fmt(d.saleRevenue)}</td><td data-label="COGS" class="text-right">${fmt(d.cogs)}</td><td data-label="${t.gross}" class="text-right ${gc}">${fmt(d.grossProfit)}</td><td data-label="Exp" class="text-right">${fmt(d.expenses)}</td><td data-label="${t.net}" class="text-right ${nc}" style="font-weight:700;">${fmt(d.netProfit)}</td></tr>`; }).join('');
+                document.getElementById('dailyTable').innerHTML = table([t.date,'Sold','Sale',t.cogs,t.gross,'Exp',t.net], dRows);
+
+                // --- FIXED: OPEN DAY DETAIL MODAL INSTEAD OF TAB SWITCH ---
+                document.querySelectorAll('#dailyTable tr[data-day]').forEach(tr => {
+                    tr.addEventListener('click', () => {
+                        const day = tr.dataset.day;
+                        window.showDayDetails(day);
+                    });
+                });
 
               } catch (err) { console.error(err); }
             }
-
-            function clearForms(){ ['pDate','pCyl','pUnit','pTotal','pSupplier','sDate','sCyl','sUnit','sTotal','sNote','sCustomer','eDate','eNote','eAmount','tDate','tCyl','tUnit','tTotal'].forEach(id=> { const el = document.getElementById(id); if(el) el.value=''; }); editingId = null; if(document.getElementById('tSupplier')) document.getElementById('tSupplier').value = "From Umar"; }
             
-            // UPDATED: Added Try-Catch to prevent crash if scrollIntoView options are not supported in webview
+            // --- NEW: GENERATE CUSTOM REPORT ---
+            document.getElementById('btnGenReport').onclick = () => {
+                const start = document.getElementById('reportStart').value;
+                const end = document.getElementById('reportEnd').value;
+                if(!start || !end) return alert("Please select start and end dates");
+                if(start > end) return alert("Start date cannot be after end date");
+                
+                // Aggregate across ALL time
+                let totalSale=0, totalCOGS=0, totalExp=0;
+                
+                let allTx = [];
+                Object.keys(store).forEach(k => {
+                   if(store[k].transactions) allTx = allTx.concat(store[k].transactions);
+                });
+                
+                // Filter by date range
+                const rangeTx = allTx.filter(t => {
+                   const d = ymd(t.date);
+                   return d >= start && d <= end;
+                });
+                
+                if(rangeTx.length === 0) {
+                    document.getElementById('reportResults').innerHTML = `<p style="color:var(--muted); text-align:center;">No data found for this range.</p>`;
+                    return;
+                }
+                
+                // Group by bucket to leverage existing logic
+                const bucketsInvolved = new Set(rangeTx.map(t => {
+                     const d = new Date(t.date);
+                     return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+                }));
+                
+                bucketsInvolved.forEach(key => {
+                     if(!store[key]) return;
+                     const [y,m] = key.split('-').map(Number);
+                     const fifo = computeFIFO(new Date(y,m,0,23,59,59)); // End of that month
+                     
+                     // Filter only tx in this bucket that match date range
+                     const bucketTx = store[key].transactions.filter(t => {
+                         const d = ymd(t.date);
+                         return d >= start && d <= end;
+                     });
+                     
+                     bucketTx.forEach(t => {
+                         if(t.type === 'sell'){
+                             totalSale += Number(t.totalPrice || 0);
+                             const c = fifo.salesCOGS.get(t.id);
+                             totalCOGS += Number(c !== undefined ? c : 0);
+                         } else if (t.type === 'expense'){
+                             totalExp += Number(t.totalPrice || 0);
+                         }
+                     });
+                });
+                
+                const net = totalSale - totalCOGS - totalExp;
+                const color = net >= 0 ? 'var(--success)' : 'var(--danger)';
+                const fmt = (n) => Number(n).toLocaleString();
+                
+                document.getElementById('reportResults').innerHTML = `
+                    <div style="background:#fff; border:1px solid var(--border); border-radius:8px; padding:16px;">
+                        <h4 style="margin:0 0 12px 0; border-bottom:1px solid #eee; padding-bottom:8px;">Report: ${start} to ${end}</h4>
+                        <div class="grid cols-3" style="text-align:center;">
+                             <div>
+                                <div style="font-size:11px; color:var(--muted);">Total Sales</div>
+                                <div style="font-weight:700; font-size:16px;">${fmt(totalSale)}</div>
+                             </div>
+                             <div>
+                                <div style="font-size:11px; color:var(--muted);">Total Expenses</div>
+                                <div style="font-weight:700; font-size:16px; color:var(--danger);">${fmt(totalExp)}</div>
+                             </div>
+                             <div>
+                                <div style="font-size:11px; color:var(--muted);">Net Profit</div>
+                                <div style="font-weight:700; font-size:16px; color:${color};">${fmt(net)}</div>
+                             </div>
+                        </div>
+                    </div>
+                `;
+            };
+
+            function clearForms(){ 
+                ['pDate','pCyl','pUnit','pTotal','pPaid','pSupplier','sDate','sCyl','sUnit','sTotal','sPaid','sNote','sCustomer','eDate','eNote','eAmount','tDate','tCyl','tUnit','tTotal'].forEach(id=> { const el = document.getElementById(id); if(el) el.value=''; }); 
+                editingId = null; 
+                if(document.getElementById('tSupplier')) document.getElementById('tSupplier').value = "From Umar"; 
+            }
+            
             function toggle(el, show){ 
                 if(el) {
                     el.classList.toggle('hidden', !show); 
                     if(show) {
                         setTimeout(() => {
-                            try {
-                                el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                            } catch(e) {
-                                // Fallback for older browsers
-                                el.scrollIntoView(true);
-                            }
+                            try { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch(e) { el.scrollIntoView(true); }
                         }, 100);
                     }
                 }
@@ -741,20 +1222,24 @@
                     document.querySelectorAll('main > section').forEach(s=> s.classList.add('hidden')); 
                     const target = document.getElementById(`tab-${t}`);
                     if(target) target.classList.remove('hidden');
+                    if(t === 'parties') render(); // Refresh accounts when tab clicked
                 }); 
             });
 
             let editingId = null;
-            // Ensure global functions are defined robustly
             window.editEntry = function(id){
               clearForms(); 
               const { transaction } = findTransactionById(id); 
               if(!transaction) return alert('Not found'); 
               editingId = id;
               if(transaction.type==='buy'){
-                  document.getElementById('pDate').value = transaction.date; document.getElementById('pCyl').value = transaction.cylinders; document.getElementById('pTotal').value = transaction.totalPrice; document.getElementById('pSupplier').value = transaction.supplier || ''; document.getElementById('pUnit').dispatchEvent(new Event('input')); toggle(document.getElementById('purchaseForm'), true);
+                  document.getElementById('pDate').value = transaction.date; document.getElementById('pCyl').value = transaction.cylinders; document.getElementById('pTotal').value = transaction.totalPrice; document.getElementById('pSupplier').value = transaction.supplier || ''; 
+                  document.getElementById('pPaid').value = (transaction.paidAmount !== undefined) ? transaction.paidAmount : transaction.totalPrice;
+                  document.getElementById('pUnit').dispatchEvent(new Event('input')); toggle(document.getElementById('purchaseForm'), true);
               } else if(transaction.type==='sell'){
-                  document.getElementById('sDate').value = transaction.date; document.getElementById('sCyl').value = transaction.cylinders; document.getElementById('sTotal').value = transaction.totalPrice; document.getElementById('sNote').value = transaction.note||''; document.getElementById('sCustomer').value = transaction.customer || ''; document.getElementById('sTotal').dispatchEvent(new Event('input')); toggle(document.getElementById('saleForm'), true);
+                  document.getElementById('sDate').value = transaction.date; document.getElementById('sCyl').value = transaction.cylinders; document.getElementById('sTotal').value = transaction.totalPrice; document.getElementById('sNote').value = transaction.note||''; document.getElementById('sCustomer').value = transaction.customer || ''; 
+                  document.getElementById('sPaid').value = (transaction.paidAmount !== undefined) ? transaction.paidAmount : transaction.totalPrice;
+                  document.getElementById('sTotal').dispatchEvent(new Event('input')); toggle(document.getElementById('saleForm'), true);
               } else if(transaction.type==='expense'){
                   document.getElementById('eDate').value = transaction.date; document.getElementById('eNote').value = transaction.note||''; document.getElementById('eAmount').value = transaction.totalPrice; toggle(document.getElementById('expenseForm'), true);
               }
@@ -766,16 +1251,15 @@
                 if(transaction) { store[key].transactions.splice(store[key].transactions.indexOf(transaction), 1); await saveStore(); render(); } 
             };
 
-
             document.getElementById('addPurchase').onclick = ()=>{ clearForms(); toggle(document.getElementById('purchaseForm'), true); };
             document.getElementById('pCancel').onclick = ()=>{ toggle(document.getElementById('purchaseForm'), false); clearForms(); };
             document.getElementById('addSale').onclick = ()=>{ clearForms(); toggle(document.getElementById('saleForm'), true); };
             document.getElementById('sCancel').onclick = ()=>{ toggle(document.getElementById('saleForm'), false); clearForms(); };
             document.getElementById('addExpense').onclick = ()=>{ clearForms(); toggle(document.getElementById('expenseForm'), true); };
             document.getElementById('eCancel').onclick = ()=>{ toggle(document.getElementById('expenseForm'), false); clearForms(); };
+            
             bindCalc({ qtyEl: document.getElementById('pCyl'), unitEl: document.getElementById('pUnit'), totalEl: document.getElementById('pTotal') });
             bindCalc({ qtyEl: document.getElementById('sCyl'), unitEl: document.getElementById('sUnit'), totalEl: document.getElementById('sTotal') });
-            // Calc for Transfer Tab
             bindCalc({ qtyEl: document.getElementById('tCyl'), unitEl: document.getElementById('tUnit'), totalEl: document.getElementById('tTotal') });
 
             document.getElementById('btnToggleFilter').onclick = () => { 
@@ -788,22 +1272,41 @@
             document.getElementById('btnApplyFilter').onclick = render;
             document.getElementById('btnResetFilter').onclick = () => { document.getElementById('filterDateFrom').value = ''; document.getElementById('filterDateTo').value = ''; document.getElementById('filterText').value = ''; render(); };
             
+            // --- SAVE LOGIC UPDATED FOR CREDIT/PAID ---
             document.getElementById('pSave').onclick = async ()=>{
               const d = document.getElementById('pDate').value || new Date().toISOString(); const cyl = Number(document.getElementById('pCyl').value || 0); const total = Number(document.getElementById('pTotal').value || 0); const supplier = document.getElementById('pSupplier').value || '';
+              const paidInput = document.getElementById('pPaid').value;
+              const paid = paidInput === '' ? total : Number(paidInput); 
+              
               if(!cyl || !total) return alert('Enter data');
               const key = `${new Date(d).getFullYear()}-${String(new Date(d).getMonth()+1).padStart(2,'0')}`; ensureMonth(key);
-              if(editingId){ const { transaction } = findTransactionById(editingId); transaction.date = d; transaction.type='buy'; transaction.cylinders = cyl; transaction.totalPrice = total; transaction.supplier = supplier; } 
-              else { store[key].transactions.push({ id: nextId(), date: d, type: 'buy', cylinders: cyl, totalPrice: total, supplier }); }
+              
+              if(editingId){ 
+                  const { transaction } = findTransactionById(editingId); 
+                  transaction.date = d; transaction.type='buy'; transaction.cylinders = cyl; transaction.totalPrice = total; transaction.supplier = supplier; transaction.paidAmount = paid;
+              } 
+              else { store[key].transactions.push({ id: nextId(), date: d, type: 'buy', cylinders: cyl, totalPrice: total, supplier, paidAmount: paid }); }
+              
               await saveStore(); toggle(document.getElementById('purchaseForm'), false); clearForms(); render();
             };
+            
             document.getElementById('sSave').onclick = async ()=>{
               const d = document.getElementById('sDate').value || new Date().toISOString(); const cyl = Number(document.getElementById('sCyl').value || 0); const total = Number(document.getElementById('sTotal').value || 0); const note = document.getElementById('sNote').value || ''; const customer = document.getElementById('sCustomer').value || '';
+              const paidInput = document.getElementById('sPaid').value;
+              const paid = paidInput === '' ? total : Number(paidInput);
+
               if(!cyl || !total) return alert('Enter data');
               const key = `${new Date(d).getFullYear()}-${String(new Date(d).getMonth()+1).padStart(2,'0')}`; ensureMonth(key);
-              if(editingId){ const { transaction } = findTransactionById(editingId); transaction.date = d; transaction.type='sell'; transaction.cylinders = cyl; transaction.totalPrice = total; transaction.note = note; transaction.customer = customer; } 
-              else { store[key].transactions.push({ id: nextId(), date: d, type: 'sell', cylinders: cyl, totalPrice: total, note, customer }); }
+              
+              if(editingId){ 
+                  const { transaction } = findTransactionById(editingId); 
+                  transaction.date = d; transaction.type='sell'; transaction.cylinders = cyl; transaction.totalPrice = total; transaction.note = note; transaction.customer = customer; transaction.paidAmount = paid;
+              } 
+              else { store[key].transactions.push({ id: nextId(), date: d, type: 'sell', cylinders: cyl, totalPrice: total, note, customer, paidAmount: paid }); }
+              
               await saveStore(); toggle(document.getElementById('saleForm'), false); clearForms(); render();
             };
+
             document.getElementById('eSave').onclick = async ()=>{
               const d = document.getElementById('eDate').value || new Date().toISOString(); const amt = Number(document.getElementById('eAmount').value || 0); const note = document.getElementById('eNote').value || '';
               if(!amt) return alert('Enter amount');
@@ -823,34 +1326,22 @@
                 if (!cyl || !total) return alert('Please enter quantity and total.');
                 if(!confirm(`Send ${cyl} cylinders to Rashid LPG?\nThis will be added to Rashid's purchases.`)) return;
 
-                // We need to write to the OTHER store (store_rashid)
-                // Since currentMode is Umar, the other one is store_rashid
                 const otherDocId = 'store_rashid'; 
-                
                 try {
                     const otherRef = db.collection('ledger').doc(otherDocId);
                     const docSnap = await otherRef.get();
                     let otherData = docSnap.exists ? (docSnap.data().data || {}) : {};
-                    
                     const key = `${new Date(d).getFullYear()}-${String(new Date(d).getMonth()+1).padStart(2,'0')}`;
                     if(!otherData[key]) otherData[key] = { transactions: [] };
                     
                     otherData[key].transactions.push({
-                        id: nextId(),
-                        date: d,
-                        type: 'buy', // It becomes a PURCHASE for Rashid
-                        cylinders: cyl,
-                        totalPrice: total,
-                        supplier: supplier
+                        id: nextId(), date: d, type: 'buy', cylinders: cyl, totalPrice: total, supplier: supplier
                     });
                     
                     await otherRef.set({ data: otherData, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
                     alert('Success! Sent to Rashid LPG.');
                     clearForms();
-                    // No need to render() because we didn't change CURRENT store
-                } catch(e) {
-                    alert('Error sending: ' + e.message);
-                }
+                } catch(e) { alert('Error sending: ' + e.message); }
             };
             
             document.getElementById('btnPrint').onclick = () => window.print();
@@ -865,10 +1356,11 @@
 
             function getFixedInitialData() { return { "2025-11": { "transactions": [ {"id": 11, "date": "2025-10-29", "type": "buy", "cylinders": 6, "totalPrice": 55836}, {"id": 14, "date": "2025-11-01", "type": "sell", "cylinders": 3, "totalPrice": 32400}, {"id": 16, "date": "2025-11-02", "type": "buy", "cylinders": 11, "totalPrice": 101508} ] } }; }
             setTimeout(()=> { if(Object.keys(store).length === 0) { initMonthYearOptions(); render(); } }, 600);
+            
+            // Set Default Language
+            setLanguage('en');
 
-        } catch (error) {
-            console.error("Critical Init Error", error);
-        }
+        } catch (error) { console.error("Critical Init Error", error); }
     });
   </script>
 </body>
