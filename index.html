@@ -4,27 +4,27 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Umar LPG Manager Pro V4</title>
-  
+   
   <!-- Google Fonts for Urdu -->
   <link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 
   <style>
     :root { 
         /* --- GLOBAL THEME --- */
-        --bg-color: #F8FAFC;       
-        --card-bg: #FFFFFF;     
-        --border: #E2E8F0;   
-        --ink: #0F172A;      
-        --muted: #64748B;    
+        --bg-color: #F8FAFC;        
+        --card-bg: #FFFFFF;      
+        --border: #E2E8F0;    
+        --ink: #0F172A;       
+        --muted: #64748B;     
         --brand: #2563EB;    /* Professional Blue */
         --brand-dark: #1E40AF;
         --header-bg: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
         --rashid-bg: linear-gradient(135deg, #10B981 0%, #059669 100%);
-        --danger: #EF4444;   
+        --danger: #EF4444;    
         --success: #10B981;
         --warning: #F59E0B;
         
-        --radius: 10px;       
+        --radius: 10px;        
         --shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
 
@@ -375,7 +375,7 @@
               <h3 id="dd-title" style="margin:0;">Details</h3>
               <button onclick="document.getElementById('day-detail-modal').style.display='none'" style="background:none; border:none; font-size:24px; cursor:pointer;">&times;</button>
           </div>
-          
+           
           <div id="dd-content"></div>
 
           <button onclick="document.getElementById('day-detail-modal').style.display='none'" class="btn-primary" style="margin-top:16px;">Close</button>
@@ -976,8 +976,8 @@
                         const due = s.totalPrice - paid;
                         const dueTag = due > 0 ? `<span style="color:var(--danger); font-size:10px;">(Due: ${fmt(due)})</span>` : '';
                         html += `<div style="display:flex; justify-content:space-between; padding:4px 0; font-size:13px;">
-                                    <span>${s.customer || '-'} ${dueTag}</span>
-                                    <span><b>${fmt(s.totalPrice)}</b> (${s.cylinders} cyl)</span>
+                                     <span>${s.customer || '-'} ${dueTag}</span>
+                                     <span><b>${fmt(s.totalPrice)}</b> (${s.cylinders} cyl)</span>
                                  </div>`;
                     });
                 }
@@ -987,8 +987,8 @@
                     html += `<h4 style="margin:12px 0 4px 0; color:var(--danger); border-bottom:1px solid #eee;">Expenses</h4>`;
                     expenses.forEach(e => {
                         html += `<div style="display:flex; justify-content:space-between; padding:4px 0; font-size:13px;">
-                                    <span>${e.note || 'Expense'}</span>
-                                    <span><b>${fmt(e.totalPrice)}</b></span>
+                                     <span>${e.note || 'Expense'}</span>
+                                     <span><b>${fmt(e.totalPrice)}</b></span>
                                  </div>`;
                     });
                 }
@@ -998,8 +998,8 @@
                     html += `<h4 style="margin:12px 0 4px 0; color:var(--success); border-bottom:1px solid #eee;">Purchases</h4>`;
                     purchases.forEach(p => {
                         html += `<div style="display:flex; justify-content:space-between; padding:4px 0; font-size:13px;">
-                                    <span>${p.supplier || '-'}</span>
-                                    <span><b>${fmt(p.totalPrice)}</b> (${p.cylinders} cyl)</span>
+                                     <span>${p.supplier || '-'}</span>
+                                     <span><b>${fmt(p.totalPrice)}</b> (${p.cylinders} cyl)</span>
                                  </div>`;
                     });
                 }
@@ -1017,9 +1017,35 @@
                 Object.keys(store).forEach(k=>{ years.add(Number(k.split('-')[0])); });
                 yearSelect.innerHTML = Array.from(years).sort((a,b)=>a-b).map(y=>`<option value="${y}">${y}</option>`).join('');
                 monthSelect.innerHTML = MONTHS.map((m,i)=>`<option value="${i+1}">${m}</option>`).join('');
-                yearSelect.value = currentYear; monthSelect.value = String(now.getMonth()+1);
+                
+                // FIXED: Check LocalStorage for sticky date, otherwise use current date
+                const savedYear = localStorage.getItem('lpg_pref_year');
+                const savedMonth = localStorage.getItem('lpg_pref_month');
+
+                if(savedYear && savedMonth) {
+                    yearSelect.value = savedYear;
+                    monthSelect.value = savedMonth;
+                } else {
+                    yearSelect.value = currentYear; 
+                    monthSelect.value = String(now.getMonth()+1);
+                }
+                
                 if(Object.keys(store).length===1){ const [y,m]=Object.keys(store)[0].split('-'); yearSelect.value = y; monthSelect.value = String(Number(m)); }
             }
+
+            // FIXED: Add event listeners to update view AND save preference when changed
+            monthSelect.addEventListener('change', () => {
+                localStorage.setItem('lpg_pref_month', monthSelect.value);
+                localStorage.setItem('lpg_pref_year', yearSelect.value); // ensure year is also saved
+                render();
+            });
+
+            yearSelect.addEventListener('change', () => {
+                localStorage.setItem('lpg_pref_year', yearSelect.value);
+                localStorage.setItem('lpg_pref_month', monthSelect.value);
+                render();
+            });
+
             function activeKey(){ return `${yearSelect.value}-${String(monthSelect.value).padStart(2,'0')}`; }
             function table(headers, rowsHtml, tfootHtml=''){ return `<table><thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${rowsHtml||''}</tbody>${tfootHtml}</table>`; }
             
@@ -1122,7 +1148,7 @@
                 
                 let allTx = [];
                 Object.keys(store).forEach(k => {
-                   if(store[k].transactions) allTx = allTx.concat(store[k].transactions);
+                    if(store[k].transactions) allTx = allTx.concat(store[k].transactions);
                 });
                 
                 // Filter by date range
