@@ -844,7 +844,24 @@
             function computeFIFO(cutoffDate){
               const all = [];
               Object.entries(store).forEach(([key,bucket])=>{ (bucket.transactions||[]).forEach(t=>{ if(!t.date) return; if(asDate(t.date) <= cutoffDate) all.push(t); }); });
-              all.sort((a,b)=> new Date(a.date)-new Date(b.date) || (a.id??0)-(b.id??0));
+              
+              // UPDATED SORT: Date -> Buy (0) vs Sell (1) -> ID
+              all.sort((a,b)=> {
+                const da = new Date(a.date), db = new Date(b.date);
+                if(da < db) return -1; 
+                if(da > db) return 1;
+                
+                // Same Date: Prioritize BUY (0) over SELL (1) over EXPENSE (2)
+                const typeOrder = { 'buy': 0, 'sell': 1, 'expense': 2 };
+                const ta = typeOrder[a.type] ?? 9; 
+                const tb = typeOrder[b.type] ?? 9;
+                
+                if(ta !== tb) return ta - tb;
+                
+                // Fallback to ID
+                return (a.id||0) - (b.id||0);
+              });
+              
               const layers=[]; const salesCOGS=new Map(); const stockLevelAfter=new Map();
               for(const t of all){
                 if(t.type==='buy'){
@@ -1390,4 +1407,4 @@
     });
   </script>
 </body>
-</html>
+          </html>
