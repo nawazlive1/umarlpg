@@ -3,10 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>میری اسمارٹ ڈائری</title>
+    <title>میری اسمارٹ ڈائری پرو</title>
     
     <!-- Tailwind CSS (ڈیزائن کے لیے) -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class', // ڈارک موڈ کو کلاس کے ذریعے کنٹرول کریں گے
+            theme: {
+                extend: {
+                    colors: {
+                        darkbg: '#111827',
+                        darkcard: '#1f2937',
+                        darkinput: '#374151',
+                    }
+                }
+            }
+        }
+    </script>
     
     <!-- Urdu Fonts (اردو فونٹ) -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;700&family=Noto+Sans+Arabic:wght@400;700&display=swap" rel="stylesheet">
@@ -14,10 +28,9 @@
     <style>
         body {
             font-family: 'Noto Sans Arabic', sans-serif;
-            background-color: #f0fdf4; /* ہلکا ہرا بیک گراؤنڈ */
             -webkit-tap-highlight-color: transparent;
         }
-        h1, h2, h3, .urdu-text, button, input {
+        h1, h2, h3, .urdu-text, button, input, select, option {
             font-family: 'Noto Nastaliq Urdu', serif;
             line-height: 2.2;
         }
@@ -26,8 +39,6 @@
             max-width: 480px; 
             margin: 0 auto;
             min-height: 100vh;
-            background: white;
-            box-shadow: 0 0 20px rgba(0,0,0,0.05);
             display: flex;
             flex-direction: column;
             position: relative;
@@ -50,85 +61,85 @@
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="text-gray-800 bg-gray-100">
+<body class="text-gray-800 bg-gray-100 dark:bg-black transition-colors duration-300">
 
-    <div class="mobile-container">
+    <div class="mobile-container bg-white dark:bg-darkbg transition-colors duration-300 shadow-2xl">
         
         <!-- ==================== 1. لاگ ان اور سائن اپ اسکرین ==================== -->
-        <div id="authSection" class="flex-1 flex flex-col justify-center p-6 bg-green-50">
+        <div id="authSection" class="flex-1 flex flex-col justify-center p-6 bg-green-50 dark:bg-gray-900">
             <div class="text-center mb-10">
-                <div class="bg-white w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 shadow-md text-4xl">
+                <div class="bg-white dark:bg-gray-800 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 shadow-md text-4xl">
                     📖
                 </div>
-                <h1 class="text-3xl font-bold text-green-800">میری ڈائری</h1>
-                <p class="text-sm text-green-600 font-sans mt-1">آپ کا پرسنل ڈیجیٹل اسسٹنٹ</p>
+                <h1 class="text-3xl font-bold text-green-800 dark:text-green-400">میری ڈائری پرو</h1>
+                <p class="text-sm text-green-600 dark:text-green-300 font-sans mt-1">آپ کا پرسنل ڈیجیٹل اسسٹنٹ</p>
             </div>
 
             <!-- لاگ ان فارم -->
-            <div id="loginForm" class="bg-white p-6 rounded-2xl shadow-lg border border-green-100 animate-fade-in">
-                <h2 class="text-xl font-bold text-center mb-6 text-gray-700">خوش آمدید، لاگ ان کریں</h2>
+            <div id="loginForm" class="bg-white dark:bg-darkcard p-6 rounded-2xl shadow-lg border border-green-100 dark:border-gray-700 animate-fade-in">
+                <h2 class="text-xl font-bold text-center mb-6 text-gray-700 dark:text-gray-200">خوش آمدید، لاگ ان کریں</h2>
                 
                 <div class="space-y-4">
                     <div>
-                        <label class="text-xs text-gray-500 mr-1 font-sans">ای میل (Email)</label>
-                        <input type="email" id="loginEmail" class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none text-left" dir="ltr">
+                        <label class="text-xs text-gray-500 dark:text-gray-400 mr-1 font-sans">ای میل (Email)</label>
+                        <input type="email" id="loginEmail" class="w-full p-3 bg-gray-50 dark:bg-darkinput dark:text-white border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-green-500 outline-none text-left" dir="ltr">
                     </div>
                     <div>
-                        <label class="text-xs text-gray-500 mr-1 font-sans">پاسورڈ (Password)</label>
-                        <input type="password" id="loginPass" class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none text-left" dir="ltr">
+                        <label class="text-xs text-gray-500 dark:text-gray-400 mr-1 font-sans">پاسورڈ (Password)</label>
+                        <input type="password" id="loginPass" class="w-full p-3 bg-gray-50 dark:bg-darkinput dark:text-white border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-green-500 outline-none text-left" dir="ltr">
                     </div>
                 </div>
                 
-                <button onclick="loginUser()" class="w-full mt-6 bg-green-600 text-white font-bold py-3 rounded-xl btn-press shadow-lg shadow-green-200 text-lg">
+                <button onclick="loginUser()" class="w-full mt-6 bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl btn-press shadow-lg shadow-green-200 dark:shadow-none text-lg">
                     داخل ہوں
                 </button>
                 
                 <div class="mt-4 text-center">
-                    <button onclick="showScreen('forgotPassForm')" class="text-sm text-green-600 font-sans hover:underline">پاسورڈ بھول گئے؟</button>
+                    <button onclick="showScreen('forgotPassForm')" class="text-sm text-green-600 dark:text-green-400 font-sans hover:underline">پاسورڈ بھول گئے؟</button>
                 </div>
 
-                <div class="mt-8 pt-6 border-t border-gray-100 text-center">
+                <div class="mt-8 pt-6 border-t border-gray-100 dark:border-gray-700 text-center">
                     <p class="text-gray-400 text-xs font-sans mb-3">کیا آپ نئے ہیں؟</p>
-                    <button onclick="showScreen('signupForm')" class="w-full border-2 border-green-600 text-green-700 font-bold py-2 rounded-xl btn-press hover:bg-green-50">
+                    <button onclick="showScreen('signupForm')" class="w-full border-2 border-green-600 text-green-700 dark:text-green-400 dark:border-green-500 font-bold py-2 rounded-xl btn-press hover:bg-green-50 dark:hover:bg-gray-800">
                         نیا اکاؤنٹ بنائیں
                     </button>
                 </div>
             </div>
 
             <!-- سائن اپ فارم (چھپا ہوا) -->
-            <div id="signupForm" class="hidden bg-white p-6 rounded-2xl shadow-lg border border-green-100">
-                <h2 class="text-xl font-bold text-center mb-6 text-gray-700">نیا اکاؤنٹ رجسٹر کریں</h2>
+            <div id="signupForm" class="hidden bg-white dark:bg-darkcard p-6 rounded-2xl shadow-lg border border-green-100 dark:border-gray-700">
+                <h2 class="text-xl font-bold text-center mb-6 text-gray-700 dark:text-gray-200">نیا اکاؤنٹ رجسٹر کریں</h2>
                 
                 <div class="space-y-4">
-                    <input type="email" id="signupEmail" placeholder="ای میل لکھیں" class="w-full p-3 bg-gray-50 border rounded-xl" dir="ltr">
-                    <input type="password" id="signupPass" placeholder="پاسورڈ (کم از کم 6 ہندسے)" class="w-full p-3 bg-gray-50 border rounded-xl" dir="ltr">
+                    <input type="email" id="signupEmail" placeholder="ای میل لکھیں" class="w-full p-3 bg-gray-50 dark:bg-darkinput dark:text-white border rounded-xl" dir="ltr">
+                    <input type="password" id="signupPass" placeholder="پاسورڈ (کم از کم 6 ہندسے)" class="w-full p-3 bg-gray-50 dark:bg-darkinput dark:text-white border rounded-xl" dir="ltr">
                 </div>
                 
                 <button onclick="signupUser()" class="w-full mt-6 bg-green-600 text-white font-bold py-3 rounded-xl btn-press shadow-lg">
                     اکاؤنٹ بنائیں
                 </button>
-                <button onclick="showScreen('loginForm')" class="w-full mt-3 text-gray-500 py-2 font-sans text-sm">واپس لاگ ان پر جائیں</button>
+                <button onclick="showScreen('loginForm')" class="w-full mt-3 text-gray-500 dark:text-gray-400 py-2 font-sans text-sm">واپس لاگ ان پر جائیں</button>
             </div>
 
             <!-- پاسورڈ ریکوری فارم (چھپا ہوا) -->
-            <div id="forgotPassForm" class="hidden bg-white p-6 rounded-2xl shadow-lg border border-green-100">
-                <h2 class="text-xl font-bold text-center mb-2 text-gray-700">پاسورڈ ری سیٹ</h2>
-                <p class="text-xs text-center text-gray-500 mb-6 font-sans">اپنا ای میل لکھیں، ہم آپ کو لنک بھیجیں گے۔</p>
+            <div id="forgotPassForm" class="hidden bg-white dark:bg-darkcard p-6 rounded-2xl shadow-lg border border-green-100 dark:border-gray-700">
+                <h2 class="text-xl font-bold text-center mb-2 text-gray-700 dark:text-gray-200">پاسورڈ ری سیٹ</h2>
+                <p class="text-xs text-center text-gray-500 dark:text-gray-400 mb-6 font-sans">اپنا ای میل لکھیں، ہم آپ کو لنک بھیجیں گے۔</p>
                 
-                <input type="email" id="resetEmail" placeholder="ای میل" class="w-full p-3 mb-4 bg-gray-50 border rounded-xl" dir="ltr">
+                <input type="email" id="resetEmail" placeholder="ای میل" class="w-full p-3 mb-4 bg-gray-50 dark:bg-darkinput dark:text-white border rounded-xl" dir="ltr">
                 
-                <button onclick="resetPassword()" class="w-full bg-yellow-500 text-white font-bold py-3 rounded-xl btn-press shadow-md">
+                <button onclick="resetPassword()" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 rounded-xl btn-press shadow-md">
                     ای میل بھیجیں
                 </button>
-                <button onclick="showScreen('loginForm')" class="w-full mt-3 text-gray-500 py-2 font-sans text-sm">واپس جائیں</button>
+                <button onclick="showScreen('loginForm')" class="w-full mt-3 text-gray-500 dark:text-gray-400 py-2 font-sans text-sm">واپس جائیں</button>
             </div>
         </div>
 
         <!-- ==================== 2. مین ایپ (لاگ ان کے بعد) ==================== -->
-        <div id="appSection" class="hidden flex flex-col h-screen bg-white">
+        <div id="appSection" class="hidden flex flex-col h-screen bg-gray-50 dark:bg-darkbg">
             
             <!-- ہیڈر -->
-            <header class="bg-green-600 px-4 py-3 text-white flex justify-between items-center shadow-md z-20">
+            <header class="bg-green-600 dark:bg-green-800 px-4 py-3 text-white flex justify-between items-center shadow-md z-30 sticky top-0">
                 <div class="flex items-center gap-2">
                     <span class="text-2xl">📖</span>
                     <div>
@@ -136,33 +147,77 @@
                         <p id="userEmailDisplay" class="text-[10px] text-green-100 opacity-90 font-sans tracking-wide" dir="ltr">...</p>
                     </div>
                 </div>
-                <button onclick="logoutUser()" class="bg-green-700 hover:bg-green-800 p-2 rounded-lg text-xs font-sans transition">لاگ آؤٹ</button>
+                <div class="flex gap-2">
+                    <!-- Dark Mode Toggle -->
+                    <button onclick="toggleDarkMode()" class="bg-green-700 dark:bg-green-900 p-2 rounded-lg text-lg transition">
+                        <span id="darkModeIcon">🌙</span>
+                    </button>
+                    <!-- Logout -->
+                    <button onclick="logoutUser()" class="bg-green-700 dark:bg-green-900 hover:bg-green-800 p-2 rounded-lg text-xs font-sans transition">لاگ آؤٹ</button>
+                </div>
             </header>
 
+            <!-- سرچ بار -->
+            <div class="px-4 py-2 bg-white dark:bg-darkcard border-b dark:border-gray-700 z-20">
+                <div class="relative">
+                    <input type="text" id="searchInput" placeholder="تلاش کریں..." 
+                        class="w-full p-2 pr-8 bg-gray-100 dark:bg-darkinput dark:text-white rounded-lg text-sm border-none focus:ring-1 focus:ring-green-500 outline-none text-right urdu-text"
+                        oninput="filterTasks()">
+                    <span class="absolute right-2 top-2 text-gray-400">🔍</span>
+                </div>
+            </div>
+
             <!-- ٹاسک لسٹ (اسکرول ایریا) -->
-            <div class="flex-1 overflow-y-auto p-4 bg-gray-50 no-scrollbar" id="mainScrollArea">
-                <ul id="taskList" class="space-y-3 pb-24">
+            <div class="flex-1 overflow-y-auto p-4 bg-gray-50 dark:bg-darkbg no-scrollbar" id="mainScrollArea">
+                <ul id="taskList" class="space-y-3 pb-40">
                     <!-- یہاں ڈیٹا آئے گا -->
                     <div class="flex flex-col items-center justify-center mt-20 opacity-50">
                         <div class="loader mb-2"></div>
-                        <p class="text-sm font-sans">لوڈ ہو رہا ہے...</p>
+                        <p class="text-sm font-sans dark:text-gray-400">لوڈ ہو رہا ہے...</p>
                     </div>
                 </ul>
             </div>
 
             <!-- ان پٹ بار (نیچے فکسڈ) -->
-            <div class="bg-white border-t border-gray-200 p-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-20">
+            <div class="bg-white dark:bg-darkcard border-t border-gray-200 dark:border-gray-700 p-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-30 rounded-t-2xl">
                 <div class="flex flex-col gap-2">
-                    <input type="text" id="taskInput" placeholder="آج کیا کرنا ہے؟ یہاں لکھیں..." 
-                        class="w-full p-3 bg-gray-100 rounded-xl focus:bg-white focus:ring-2 focus:ring-green-500 outline-none transition-all text-right text-gray-700 shadow-inner">
+                    
+                    <!-- ایڈوانس آپشنز (موڈ اور کیٹیگری) -->
+                    <div class="flex gap-2">
+                        <select id="taskCategory" class="bg-gray-100 dark:bg-darkinput dark:text-white text-xs rounded-lg p-2 outline-none flex-1 border-none cursor-pointer">
+                            <option value="عام">📌 عام</option>
+                            <option value="ذاتی">👤 ذاتی</option>
+                            <option value="کام">💼 کام</option>
+                            <option value="خریداری">🛒 خریداری</option>
+                            <option value="آئیڈیا">💡 آئیڈیا</option>
+                            <option value="ضروری">🔥 ضروری</option>
+                        </select>
+                        
+                        <select id="taskMood" class="bg-gray-100 dark:bg-darkinput dark:text-white text-xs rounded-lg p-2 outline-none flex-1 border-none cursor-pointer">
+                            <option value="🙂">🙂 نارمل</option>
+                            <option value="😃">😃 خوش</option>
+                            <option value="😔">😔 اداس</option>
+                            <option value="😡">😡 غصہ</option>
+                            <option value="😴">😴 تھکا ہوا</option>
+                            <option value="🤩">🤩 پرجوش</option>
+                        </select>
+                    </div>
+
+                    <!-- مین ان پٹ -->
+                    <input type="text" id="taskInput" placeholder="آج کیا لکھنا ہے؟" 
+                        class="w-full p-3 bg-gray-100 dark:bg-darkinput dark:text-white rounded-xl focus:bg-white dark:focus:bg-gray-700 focus:ring-2 focus:ring-green-500 outline-none transition-all text-right text-gray-700 shadow-inner">
                     
                     <div class="flex gap-2 items-center">
                         <div class="relative flex-1">
-                            <input type="datetime-local" id="taskDate" class="w-full p-2.5 bg-gray-100 rounded-lg text-xs text-gray-600 border-none outline-none font-sans">
+                            <input type="datetime-local" id="taskDate" class="w-full p-2.5 bg-gray-100 dark:bg-darkinput dark:text-white rounded-lg text-xs text-gray-600 dark:text-gray-300 border-none outline-none font-sans">
                         </div>
-                        <button onclick="addTask()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2.5 rounded-lg font-bold shadow-lg btn-press flex items-center gap-2 transition-colors">
+                        <button onclick="addTask()" id="saveBtn" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2.5 rounded-lg font-bold shadow-lg btn-press flex items-center gap-2 transition-colors">
                             <span>محفوظ</span>
-                            <span>✅</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                        </button>
+                        <!-- کینسل ایڈٹ بٹن (صرف ایڈٹ کے وقت نظر آئے گا) -->
+                        <button onclick="cancelEdit()" id="cancelEditBtn" class="hidden bg-gray-500 text-white px-3 py-2.5 rounded-lg font-bold shadow-lg btn-press">
+                            ❌
                         </button>
                     </div>
                 </div>
@@ -170,20 +225,19 @@
         </div>
 
         <!-- نوٹیفکیشن ٹوسٹ -->
-        <div id="toast" class="fixed top-6 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-sm px-6 py-3 rounded-full shadow-2xl opacity-0 transition-all duration-300 pointer-events-none z-50 font-sans">
+        <div id="toast" class="fixed top-6 left-1/2 transform -translate-x-1/2 bg-gray-800 dark:bg-white dark:text-black text-white text-sm px-6 py-3 rounded-full shadow-2xl opacity-0 transition-all duration-300 pointer-events-none z-50 font-sans">
             پیغام
         </div>
     </div>
 
     <!-- Firebase Logic -->
     <script type="module">
-        // Firebase لائبریریاں
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, where, onSnapshot, deleteDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, where, onSnapshot, deleteDoc, doc, serverTimestamp, updateDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
         // ==========================================
-        // آپ کی ذاتی سیٹنگز (یہاں لگی ہوئی ہیں)
+        // آپ کی ذاتی سیٹنگز
         // ==========================================
         const firebaseConfig = {
             apiKey: "AIzaSyCwrfDXG8pRpkqDYht0EpRZ8h_ElRu0N_w",
@@ -195,7 +249,7 @@
             measurementId: "G-MT3L3B3P95"
         };
 
-        // Firebase کنکشن شروع کریں
+        // Firebase کنکشن
         let app, auth, db;
         try {
             app = initializeApp(firebaseConfig);
@@ -208,6 +262,8 @@
         }
 
         let currentUser = null;
+        let allTasksData = []; // تلاش کے لیے ڈیٹا یہاں محفوظ ہوگا
+        let editingTaskId = null; // اگر کوئی ٹاسک ایڈٹ ہو رہا ہو
 
         // --- 1. لاگ ان چیک سسٹم ---
         onAuthStateChanged(auth, (user) => {
@@ -215,36 +271,26 @@
             const appSection = document.getElementById('appSection');
             
             if (user) {
-                // اگر یوزر لاگ ان ہے
                 currentUser = user;
                 document.getElementById('userEmailDisplay').innerText = user.email;
-                
                 authSection.classList.add('hidden');
                 appSection.classList.remove('hidden');
-                
-                loadTasks(); // فورا ڈیٹا لوڈ کریں
+                loadTasks();
+                loadDarkModePreference(); // ڈارک موڈ چیک کریں
             } else {
-                // اگر لاگ آؤٹ ہے
                 currentUser = null;
                 authSection.classList.remove('hidden');
                 appSection.classList.add('hidden');
-                document.getElementById('taskList').innerHTML = ''; // پرانا ڈیٹا صاف کر دیں
+                document.getElementById('taskList').innerHTML = '';
             }
         });
 
         // --- 2. ڈیٹا لوڈ کرنا (Firestore) ---
         function loadTasks() {
             if (!currentUser) return;
-
-            // صرف موجودہ یوزر کا ڈیٹا منگوائیں
-            const q = query(
-                collection(db, "tasks"), 
-                where("uid", "==", currentUser.uid)
-            );
-
+            const q = query(collection(db, "tasks"), where("uid", "==", currentUser.uid));
             const list = document.getElementById('taskList');
             
-            // یہ "لائیو" لسنر ہے، جیسے ہی ڈیٹا بیس میں کچھ بدلے گا، یہاں خود اپڈیٹ ہو جائے گا
             onSnapshot(q, (snapshot) => {
                 if (snapshot.empty) {
                     list.innerHTML = `
@@ -252,66 +298,77 @@
                             <span class="text-4xl block mb-2">📝</span>
                             <p class="text-gray-400 font-sans text-sm">ابھی کوئی کام موجود نہیں۔<br>نیچے سے کچھ لکھ کر شامل کریں۔</p>
                         </div>`;
+                    allTasksData = [];
                     return;
                 }
 
-                // ڈیٹا کو ترتیب دینے کے لیے ارے میں ڈالیں
-                let tasksArray = [];
+                allTasksData = [];
                 snapshot.forEach((doc) => {
-                    tasksArray.push({ id: doc.id, ...doc.data() });
+                    allTasksData.push({ id: doc.id, ...doc.data() });
                 });
 
                 // ترتیب: نیا کام سب سے اوپر
-                tasksArray.sort((a, b) => {
+                allTasksData.sort((a, b) => {
                     const timeA = a.createdAt ? a.createdAt.seconds : 0;
                     const timeB = b.createdAt ? b.createdAt.seconds : 0;
                     return timeB - timeA;
                 });
 
-                // اسکرین پر دکھائیں
-                list.innerHTML = "";
-                tasksArray.forEach(task => {
-                    renderTaskHTML(task);
-                });
-                
-                // لسٹ کو نیچے اسکرول کریں (Optional)
-                // document.getElementById('mainScrollArea').scrollTop = 0;
+                renderTasks(allTasksData); // لسٹ دکھائیں
 
             }, (error) => {
                 console.log("Data Error:", error);
-                if(error.code === 'permission-denied') {
-                    showToast("ڈیٹا بیس کی اجازت (Rules) میں مسئلہ ہے");
-                }
+                if(error.code === 'permission-denied') showToast("ڈیٹا بیس کی اجازت (Rules) میں مسئلہ ہے");
             });
         }
 
-        // --- 3. نیا کام شامل کرنا ---
+        // --- 3. نیا کام شامل کرنا / اپڈیٹ کرنا ---
         window.addTask = async () => {
             const input = document.getElementById('taskInput');
             const dateInput = document.getElementById('taskDate');
-            const text = input.value.trim();
+            const moodInput = document.getElementById('taskMood');
+            const catInput = document.getElementById('taskCategory');
             
+            const text = input.value.trim();
             if (!text) return showToast("براہ کرم کچھ لکھیں!");
 
-            // بٹن کو عارضی طور پر ڈسیبل کریں
-            const btn = document.querySelector('button[onclick="addTask()"]');
+            const btn = document.getElementById('saveBtn');
             const originalBtnContent = btn.innerHTML;
             btn.innerHTML = '<div class="loader" style="width:15px; height:15px; border-width:2px;"></div>';
             btn.disabled = true;
 
             try {
-                await addDoc(collection(db, "tasks"), {
-                    text: text,
-                    dateDue: dateInput.value,
-                    createdAt: serverTimestamp(),
-                    uid: currentUser.uid // یوزر کی پہچان
-                });
-                
-                // ان پٹ خالی کریں
-                input.value = '';
-                dateInput.value = '';
-                input.focus();
-                showToast("محفوظ ہو گیا ✅");
+                if (editingTaskId) {
+                    // --- اپڈیٹ موڈ ---
+                    const taskRef = doc(db, "tasks", editingTaskId);
+                    await updateDoc(taskRef, {
+                        text: text,
+                        dateDue: dateInput.value,
+                        mood: moodInput.value,
+                        category: catInput.value,
+                        updatedAt: serverTimestamp()
+                    });
+                    showToast("اپڈیٹ ہو گیا ✏️");
+                    cancelEdit(); // فارم ری سیٹ
+                } else {
+                    // --- نیا ٹاسک موڈ ---
+                    await addDoc(collection(db, "tasks"), {
+                        text: text,
+                        dateDue: dateInput.value,
+                        mood: moodInput.value,
+                        category: catInput.value,
+                        createdAt: serverTimestamp(),
+                        uid: currentUser.uid
+                    });
+                    showToast("محفوظ ہو گیا ✅");
+                    
+                    // ان پٹ خالی کریں
+                    input.value = '';
+                    dateInput.value = '';
+                    moodInput.value = '🙂';
+                    catInput.value = 'عام';
+                    input.focus();
+                }
             } catch (error) {
                 console.error(error);
                 showToast("غلطی: محفوظ نہیں ہو سکا");
@@ -321,7 +378,44 @@
             }
         };
 
-        // --- 4. مٹانا (Delete) ---
+        // --- 4. ایڈیٹنگ شروع کریں ---
+        window.editTask = (id) => {
+            const task = allTasksData.find(t => t.id === id);
+            if (!task) return;
+
+            // ویلیوز ان پٹ میں ڈالیں
+            document.getElementById('taskInput').value = task.text;
+            document.getElementById('taskDate').value = task.dateDue || '';
+            document.getElementById('taskMood').value = task.mood || '🙂';
+            document.getElementById('taskCategory').value = task.category || 'عام';
+
+            // بٹن تبدیل کریں
+            editingTaskId = id;
+            document.getElementById('saveBtn').innerHTML = '<span>اپڈیٹ</span><span>✏️</span>';
+            document.getElementById('saveBtn').classList.remove('bg-green-600');
+            document.getElementById('saveBtn').classList.add('bg-blue-600');
+            document.getElementById('cancelEditBtn').classList.remove('hidden');
+
+            // ان پٹ پر فوکس
+            document.getElementById('taskInput').focus();
+            showToast("ایڈیٹنگ موڈ آن ہے");
+        };
+
+        window.cancelEdit = () => {
+            editingTaskId = null;
+            document.getElementById('taskInput').value = '';
+            document.getElementById('taskDate').value = '';
+            document.getElementById('taskMood').value = '🙂';
+            document.getElementById('taskCategory').value = 'عام';
+
+            // بٹن واپس سیٹ کریں
+            document.getElementById('saveBtn').innerHTML = '<span>محفوظ</span><span>✅</span>';
+            document.getElementById('saveBtn').classList.add('bg-green-600');
+            document.getElementById('saveBtn').classList.remove('bg-blue-600');
+            document.getElementById('cancelEditBtn').classList.add('hidden');
+        };
+
+        // --- 5. مٹانا (Delete) ---
         window.deleteTask = async (id) => {
             if(confirm("کیا آپ واقعی اسے مٹانا چاہتے ہیں؟")) {
                 try {
@@ -333,94 +427,141 @@
             }
         };
 
-        // --- 5. HTML رینڈرنگ (ڈیزائن) ---
-        function renderTaskHTML(task) {
-            const list = document.getElementById('taskList');
-            const li = document.createElement('li');
-            
-            // تاریخ کی فارمیٹنگ
-            let timeDisplay = "";
-            let timeColor = "text-gray-400";
-            
-            if (task.dateDue) {
-                const d = new Date(task.dateDue);
-                const now = new Date();
-                const isPast = now > d;
-                
-                timeColor = isPast ? "text-red-500 font-bold" : "text-green-600";
-                const icon = isPast ? "⚠️" : "📅";
-                
-                timeDisplay = `
-                    <div class="flex items-center gap-1 mt-1 text-xs ${timeColor} bg-gray-50 inline-block px-2 py-1 rounded font-sans" dir="ltr">
-                        <span>${icon}</span>
-                        <span>${d.getDate()}/${d.getMonth()+1} • ${formatAMPM(d)}</span>
-                    </div>`;
-            }
+        // --- 6. سرچ / فلٹر فنکشن ---
+        window.filterTasks = () => {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = allTasksData.filter(task => 
+                task.text.toLowerCase().includes(query) || 
+                (task.category && task.category.includes(query))
+            );
+            renderTasks(filtered);
+        };
 
-            li.className = "bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex justify-between items-start animate-fade-in group hover:shadow-md transition-all";
-            li.innerHTML = `
-                <div class="flex-1 ml-3">
-                    <p class="text-gray-800 text-lg leading-relaxed break-words urdu-text">${task.text}</p>
-                    ${timeDisplay}
-                </div>
-                <button onclick="deleteTask('${task.id}')" class="text-gray-300 hover:text-red-500 p-2 rounded-lg hover:bg-red-50 transition -mt-1 -mr-2">
-                    <span class="text-xl">🗑️</span>
-                </button>
-            `;
-            list.appendChild(li);
+        // --- 7. رینڈرنگ (لسٹ دکھانا) ---
+        function renderTasks(tasks) {
+            const list = document.getElementById('taskList');
+            list.innerHTML = "";
+            tasks.forEach(task => {
+                const li = document.createElement('li');
+                
+                // تاریخ کی فارمیٹنگ
+                let timeDisplay = "";
+                let timeColor = "text-gray-400 dark:text-gray-500";
+                
+                if (task.dateDue) {
+                    const d = new Date(task.dateDue);
+                    const now = new Date();
+                    const isPast = now > d;
+                    timeColor = isPast ? "text-red-500 font-bold" : "text-green-600 dark:text-green-400";
+                    const icon = isPast ? "⚠️" : "📅";
+                    timeDisplay = `
+                        <div class="flex items-center gap-1 text-[10px] ${timeColor} bg-gray-50 dark:bg-gray-800 inline-block px-1.5 py-0.5 rounded font-sans mt-1" dir="ltr">
+                            <span>${icon}</span>
+                            <span>${d.getDate()}/${d.getMonth()+1} • ${formatAMPM(d)}</span>
+                        </div>`;
+                }
+
+                // کیٹیگری بیج
+                const cat = task.category || 'عام';
+                const mood = task.mood || '🙂';
+                
+                // رنگین بیج کیٹیگری کے لیے
+                const catColors = {
+                    'عام': 'bg-gray-100 text-gray-600',
+                    'ذاتی': 'bg-purple-100 text-purple-600',
+                    'کام': 'bg-blue-100 text-blue-600',
+                    'خریداری': 'bg-yellow-100 text-yellow-600',
+                    'آئیڈیا': 'bg-pink-100 text-pink-600',
+                    'ضروری': 'bg-red-100 text-red-600'
+                };
+                const badgeClass = catColors[cat] || catColors['عام'];
+
+                li.className = "bg-white dark:bg-darkcard p-3 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex justify-between items-start animate-fade-in group hover:shadow-md transition-all";
+                li.innerHTML = `
+                    <div class="flex items-start gap-3 flex-1 ml-2">
+                        <div class="text-2xl pt-1">${mood}</div>
+                        <div class="flex-1">
+                            <div class="flex gap-2 mb-1">
+                                <span class="text-[10px] px-1.5 py-0.5 rounded ${badgeClass} font-bold">${cat}</span>
+                            </div>
+                            <p class="text-gray-800 dark:text-gray-200 text-lg leading-relaxed break-words urdu-text">${task.text}</p>
+                            ${timeDisplay}
+                        </div>
+                    </div>
+                    <div class="flex flex-col gap-1 -mr-2">
+                        <button onclick="editTask('${task.id}')" class="text-gray-300 hover:text-blue-500 p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 transition">
+                            ✏️
+                        </button>
+                        <button onclick="deleteTask('${task.id}')" class="text-gray-300 hover:text-red-500 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 transition">
+                            🗑️
+                        </button>
+                    </div>
+                `;
+                list.appendChild(li);
+            });
         }
 
-        // --- 6. Auth فنکشنز ---
+        // --- 8. ڈارک موڈ لاجک ---
+        window.toggleDarkMode = () => {
+            const html = document.documentElement;
+            const icon = document.getElementById('darkModeIcon');
+            
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                icon.innerText = '🌙';
+                localStorage.setItem('theme', 'light');
+            } else {
+                html.classList.add('dark');
+                icon.innerText = '☀️';
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+
+        function loadDarkModePreference() {
+            const savedTheme = localStorage.getItem('theme');
+            const icon = document.getElementById('darkModeIcon');
+            if (savedTheme === 'dark') {
+                document.documentElement.classList.add('dark');
+                if(icon) icon.innerText = '☀️';
+            }
+        }
+
+        // --- Auth & Helper Functions ---
         window.signupUser = async () => {
             const email = document.getElementById('signupEmail').value;
             const pass = document.getElementById('signupPass').value;
-            
             if(!email || !pass) return showToast("ای میل اور پاسورڈ لکھیں");
-            if(pass.length < 6) return showToast("پاسورڈ چھوٹا ہے (کم از کم 6 ہندسے)");
-
+            if(pass.length < 6) return showToast("پاسورڈ چھوٹا ہے");
             try {
                 await createUserWithEmailAndPassword(auth, email, pass);
                 showToast("اکاؤنٹ بن گیا! خوش آمدید 🎉");
-            } catch (error) {
-                showToast("مسئلہ: " + getErrorMsg(error.code));
-            }
+            } catch (error) { showToast("مسئلہ: " + getErrorMsg(error.code)); }
         };
 
         window.loginUser = async () => {
             const email = document.getElementById('loginEmail').value;
             const pass = document.getElementById('loginPass').value;
-
             if(!email || !pass) return showToast("تفصیلات مکمل کریں");
-
             try {
                 await signInWithEmailAndPassword(auth, email, pass);
                 showToast("لاگ ان کامیاب ✅");
-            } catch (error) {
-                showToast("لاگ ان ناکام: " + getErrorMsg(error.code));
-            }
+            } catch (error) { showToast("لاگ ان ناکام: " + getErrorMsg(error.code)); }
         };
 
         window.logoutUser = () => {
-            if(confirm("کیا آپ لاگ آؤٹ کرنا چاہتے ہیں؟")) {
-                signOut(auth);
-                showToast("اللہ حافظ! 👋");
-            }
+            if(confirm("کیا آپ لاگ آؤٹ کرنا چاہتے ہیں؟")) { signOut(auth); showToast("اللہ حافظ! 👋"); }
         };
 
         window.resetPassword = async () => {
             const email = document.getElementById('resetEmail').value;
             if(!email) return showToast("پہلے ای میل لکھیں");
-            
             try {
                 await sendPasswordResetEmail(auth, email);
-                showToast("📧 ای میل چیک کریں، لنک بھیج دیا ہے");
+                showToast("📧 لنک بھیج دیا ہے");
                 showScreen('loginForm');
-            } catch (error) {
-                showToast(getErrorMsg(error.code));
-            }
+            } catch (error) { showToast(getErrorMsg(error.code)); }
         }
 
-        // --- ہیلپر فنکشنز ---
         function formatAMPM(date) {
             let hours = date.getHours();
             let minutes = date.getMinutes();
@@ -452,19 +593,8 @@
             t.innerText = msg;
             t.style.opacity = '1';
             t.style.top = "20px";
-            setTimeout(() => {
-                t.style.opacity = '0';
-                t.style.top = "-50px";
-            }, 3000);
+            setTimeout(() => { t.style.opacity = '0'; t.style.top = "-50px"; }, 3000);
         }
     </script>
-<!-- Chosen Palette: Green & White (Fresh/Natural) with Dark Gray Text -->
-<!-- Application Structure Plan: A mobile-first Single Page Application (SPA) designed as a personal diary. It features a secure authentication flow (Login/Signup/Reset) leading to a main dashboard. The dashboard consists of a sticky header for user info, a scrollable task list for content consumption, and a fixed bottom input bar for quick data entry. This structure ensures ease of use on mobile devices, mimicking native app behavior. -->
-<!-- Visualization & Content Choices: 
-- **Task List:** Rendered as a vertical list of cards. Goal: To clearly display diary entries. Method: HTML/Tailwind list items. Interaction: Delete button with confirmation.
-- **Date/Time Display:** Conditional formatting (red for past due, green for future). Goal: To give immediate temporal context.
-- **Input Area:** Fixed at the bottom. Goal: To allow quick entry without scrolling.
-- **Icons:** Unicode emojis used instead of SVG to ensure lightweight and strict compliance with 'NO SVG' constraints while maintaining visual appeal. -->
-<!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
 </body>
 </html>
