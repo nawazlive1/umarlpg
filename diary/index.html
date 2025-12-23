@@ -5,11 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>میری اسمارٹ ڈائری پرو</title>
     
-    <!-- Tailwind CSS (ڈیزائن کے لیے) -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
-            darkMode: 'class', // ڈارک موڈ کو کلاس کے ذریعے کنٹرول کریں گے
+            darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
@@ -22,63 +22,44 @@
         }
     </script>
     
-    <!-- Urdu Fonts (اردو فونٹ) -->
+    <!-- Urdu Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;700&family=Noto+Sans+Arabic:wght@400;700&display=swap" rel="stylesheet">
     
     <style>
-        body {
-            font-family: 'Noto Sans Arabic', sans-serif;
-            -webkit-tap-highlight-color: transparent;
-        }
-        h1, h2, h3, .urdu-text, button, input, select, option {
-            font-family: 'Noto Nastaliq Urdu', serif;
-            line-height: 2.2;
-        }
-        /* موبائل آپٹیمائزیشن */
-        .mobile-container {
-            max-width: 480px; 
-            margin: 0 auto;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-        }
+        body { font-family: 'Noto Sans Arabic', sans-serif; -webkit-tap-highlight-color: transparent; }
+        h1, h2, h3, .urdu-text, button, input, select, option { font-family: 'Noto Nastaliq Urdu', serif; line-height: 2.2; }
+        .mobile-container { max-width: 480px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; position: relative; }
         .btn-press:active { transform: scale(0.97); }
-        
-        /* لوڈنگ اسپنر */
-        .loader {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #16a34a;
-            border-radius: 50%;
-            width: 25px;
-            height: 25px;
-            animation: spin 1s linear infinite;
-        }
+        .loader { border: 3px solid #f3f3f3; border-top: 3px solid #16a34a; border-radius: 50%; width: 25px; height: 25px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        /* اسکرول بار چھپانا */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        @media print {
+            body, .mobile-container { background: white !important; color: black !important; height: auto !important; min-height: auto !important; }
+            #authSection, header, .input-bar, #toast, .no-print, #calendarView { display: none !important; }
+            #appSection { display: block !important; height: auto !important; overflow: visible !important; }
+            #mainScrollArea { overflow: visible !important; height: auto !important; }
+            ul#taskList li { border: 1px solid #ccc; break-inside: avoid; box-shadow: none; margin-bottom: 10px; }
+            .mobile-container { box-shadow: none; max-width: 100%; margin: 0; }
+        }
     </style>
 </head>
 <body class="text-gray-800 bg-gray-100 dark:bg-black transition-colors duration-300">
 
     <div class="mobile-container bg-white dark:bg-darkbg transition-colors duration-300 shadow-2xl">
         
-        <!-- ==================== 1. لاگ ان اور سائن اپ اسکرین ==================== -->
+        <!-- Auth Section -->
         <div id="authSection" class="flex-1 flex flex-col justify-center p-6 bg-green-50 dark:bg-gray-900">
             <div class="text-center mb-10">
-                <div class="bg-white dark:bg-gray-800 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 shadow-md text-4xl">
-                    📖
-                </div>
+                <div class="bg-white dark:bg-gray-800 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 shadow-md text-4xl">📖</div>
                 <h1 class="text-3xl font-bold text-green-800 dark:text-green-400">میری ڈائری پرو</h1>
                 <p class="text-sm text-green-600 dark:text-green-300 font-sans mt-1">آپ کا پرسنل ڈیجیٹل اسسٹنٹ</p>
             </div>
 
-            <!-- لاگ ان فارم -->
+            <!-- Login Form -->
             <div id="loginForm" class="bg-white dark:bg-darkcard p-6 rounded-2xl shadow-lg border border-green-100 dark:border-gray-700 animate-fade-in">
                 <h2 class="text-xl font-bold text-center mb-6 text-gray-700 dark:text-gray-200">خوش آمدید، لاگ ان کریں</h2>
-                
                 <div class="space-y-4">
                     <div>
                         <label class="text-xs text-gray-500 dark:text-gray-400 mr-1 font-sans">ای میل (Email)</label>
@@ -89,56 +70,39 @@
                         <input type="password" id="loginPass" class="w-full p-3 bg-gray-50 dark:bg-darkinput dark:text-white border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-green-500 outline-none text-left" dir="ltr">
                     </div>
                 </div>
-                
-                <button onclick="loginUser()" class="w-full mt-6 bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl btn-press shadow-lg shadow-green-200 dark:shadow-none text-lg">
-                    داخل ہوں
-                </button>
-                
+                <button onclick="loginUser()" class="w-full mt-6 bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl btn-press shadow-lg text-lg">داخل ہوں</button>
                 <div class="mt-4 text-center">
                     <button onclick="showScreen('forgotPassForm')" class="text-sm text-green-600 dark:text-green-400 font-sans hover:underline">پاسورڈ بھول گئے؟</button>
                 </div>
-
                 <div class="mt-8 pt-6 border-t border-gray-100 dark:border-gray-700 text-center">
                     <p class="text-gray-400 text-xs font-sans mb-3">کیا آپ نئے ہیں؟</p>
-                    <button onclick="showScreen('signupForm')" class="w-full border-2 border-green-600 text-green-700 dark:text-green-400 dark:border-green-500 font-bold py-2 rounded-xl btn-press hover:bg-green-50 dark:hover:bg-gray-800">
-                        نیا اکاؤنٹ بنائیں
-                    </button>
+                    <button onclick="showScreen('signupForm')" class="w-full border-2 border-green-600 text-green-700 dark:text-green-400 dark:border-green-500 font-bold py-2 rounded-xl btn-press hover:bg-green-50 dark:hover:bg-gray-800">نیا اکاؤنٹ بنائیں</button>
                 </div>
             </div>
 
-            <!-- سائن اپ فارم (چھپا ہوا) -->
+            <!-- Signup Form -->
             <div id="signupForm" class="hidden bg-white dark:bg-darkcard p-6 rounded-2xl shadow-lg border border-green-100 dark:border-gray-700">
                 <h2 class="text-xl font-bold text-center mb-6 text-gray-700 dark:text-gray-200">نیا اکاؤنٹ رجسٹر کریں</h2>
-                
                 <div class="space-y-4">
                     <input type="email" id="signupEmail" placeholder="ای میل لکھیں" class="w-full p-3 bg-gray-50 dark:bg-darkinput dark:text-white border rounded-xl" dir="ltr">
                     <input type="password" id="signupPass" placeholder="پاسورڈ (کم از کم 6 ہندسے)" class="w-full p-3 bg-gray-50 dark:bg-darkinput dark:text-white border rounded-xl" dir="ltr">
                 </div>
-                
-                <button onclick="signupUser()" class="w-full mt-6 bg-green-600 text-white font-bold py-3 rounded-xl btn-press shadow-lg">
-                    اکاؤنٹ بنائیں
-                </button>
+                <button onclick="signupUser()" class="w-full mt-6 bg-green-600 text-white font-bold py-3 rounded-xl btn-press shadow-lg">اکاؤنٹ بنائیں</button>
                 <button onclick="showScreen('loginForm')" class="w-full mt-3 text-gray-500 dark:text-gray-400 py-2 font-sans text-sm">واپس لاگ ان پر جائیں</button>
             </div>
 
-            <!-- پاسورڈ ریکوری فارم (چھپا ہوا) -->
+            <!-- Forgot Password -->
             <div id="forgotPassForm" class="hidden bg-white dark:bg-darkcard p-6 rounded-2xl shadow-lg border border-green-100 dark:border-gray-700">
                 <h2 class="text-xl font-bold text-center mb-2 text-gray-700 dark:text-gray-200">پاسورڈ ری سیٹ</h2>
                 <p class="text-xs text-center text-gray-500 dark:text-gray-400 mb-6 font-sans">اپنا ای میل لکھیں، ہم آپ کو لنک بھیجیں گے۔</p>
-                
                 <input type="email" id="resetEmail" placeholder="ای میل" class="w-full p-3 mb-4 bg-gray-50 dark:bg-darkinput dark:text-white border rounded-xl" dir="ltr">
-                
-                <button onclick="resetPassword()" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 rounded-xl btn-press shadow-md">
-                    ای میل بھیجیں
-                </button>
+                <button onclick="resetPassword()" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 rounded-xl btn-press shadow-md">ای میل بھیجیں</button>
                 <button onclick="showScreen('loginForm')" class="w-full mt-3 text-gray-500 dark:text-gray-400 py-2 font-sans text-sm">واپس جائیں</button>
             </div>
         </div>
 
-        <!-- ==================== 2. مین ایپ (لاگ ان کے بعد) ==================== -->
-        <div id="appSection" class="hidden flex flex-col h-screen bg-gray-50 dark:bg-darkbg">
-            
-            <!-- ہیڈر -->
+        <!-- App Section -->
+        <div id="appSection" class="hidden flex flex-col h-screen bg-gray-50 dark:bg-darkbg relative">
             <header class="bg-green-600 dark:bg-green-800 px-4 py-3 text-white flex justify-between items-center shadow-md z-30 sticky top-0">
                 <div class="flex items-center gap-2">
                     <span class="text-2xl">📖</span>
@@ -148,86 +112,63 @@
                     </div>
                 </div>
                 <div class="flex gap-2">
-                    <!-- Dark Mode Toggle -->
-                    <button onclick="toggleDarkMode()" class="bg-green-700 dark:bg-green-900 p-2 rounded-lg text-lg transition">
-                        <span id="darkModeIcon">🌙</span>
-                    </button>
-                    <!-- Logout -->
+                    <button onclick="exportToPDF()" class="bg-green-700 dark:bg-green-900 p-2 rounded-lg text-lg transition" title="Save as PDF">🖨️</button>
+                    <button onclick="toggleCalendar()" class="bg-green-700 dark:bg-green-900 p-2 rounded-lg text-lg transition">📅</button>
+                    <button onclick="toggleDarkMode()" class="bg-green-700 dark:bg-green-900 p-2 rounded-lg text-lg transition"><span id="darkModeIcon">🌙</span></button>
                     <button onclick="logoutUser()" class="bg-green-700 dark:bg-green-900 hover:bg-green-800 p-2 rounded-lg text-xs font-sans transition">لاگ آؤٹ</button>
                 </div>
             </header>
 
-            <!-- سرچ بار -->
-            <div class="px-4 py-2 bg-white dark:bg-darkcard border-b dark:border-gray-700 z-20">
+            <div id="calendarView" class="hidden absolute top-14 left-0 right-0 bg-white dark:bg-darkcard shadow-xl z-20 p-4 rounded-b-2xl border-b border-gray-200 dark:border-gray-700">
+                <div class="flex justify-between items-center mb-4">
+                    <button onclick="changeMonth(-1)" class="p-2 bg-gray-100 dark:bg-gray-700 rounded-full">◀</button>
+                    <h3 id="currentMonthYear" class="text-lg font-bold dark:text-white"></h3>
+                    <button onclick="changeMonth(1)" class="p-2 bg-gray-100 dark:bg-gray-700 rounded-full">▶</button>
+                </div>
+                <div class="grid grid-cols-7 gap-1 text-center font-sans text-xs text-gray-500 dark:text-gray-400 mb-2"><div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div></div>
+                <div id="calendarGrid" class="grid grid-cols-7 gap-1 text-center font-sans"></div>
+                <button onclick="toggleCalendar()" class="w-full mt-4 text-xs text-red-500 py-2 border-t dark:border-gray-600">بند کریں ❌</button>
+            </div>
+
+            <div class="px-4 py-2 bg-white dark:bg-darkcard border-b dark:border-gray-700 z-10 no-print">
                 <div class="relative">
-                    <input type="text" id="searchInput" placeholder="تلاش کریں..." 
-                        class="w-full p-2 pr-8 bg-gray-100 dark:bg-darkinput dark:text-white rounded-lg text-sm border-none focus:ring-1 focus:ring-green-500 outline-none text-right urdu-text"
-                        oninput="filterTasks()">
+                    <input type="text" id="searchInput" placeholder="تلاش کریں..." class="w-full p-2 pr-8 bg-gray-100 dark:bg-darkinput dark:text-white rounded-lg text-sm border-none focus:ring-1 focus:ring-green-500 outline-none text-right urdu-text" oninput="filterTasks()">
                     <span class="absolute right-2 top-2 text-gray-400">🔍</span>
                 </div>
             </div>
 
-            <!-- ٹاسک لسٹ (اسکرول ایریا) -->
             <div class="flex-1 overflow-y-auto p-4 bg-gray-50 dark:bg-darkbg no-scrollbar" id="mainScrollArea">
+                <h3 id="listHeading" class="hidden text-center text-sm text-gray-500 mb-2"></h3>
                 <ul id="taskList" class="space-y-3 pb-40">
-                    <!-- یہاں ڈیٹا آئے گا -->
-                    <div class="flex flex-col items-center justify-center mt-20 opacity-50">
-                        <div class="loader mb-2"></div>
-                        <p class="text-sm font-sans dark:text-gray-400">لوڈ ہو رہا ہے...</p>
-                    </div>
+                    <div class="flex flex-col items-center justify-center mt-20 opacity-50"><div class="loader mb-2"></div><p class="text-sm font-sans dark:text-gray-400">لوڈ ہو رہا ہے...</p></div>
                 </ul>
             </div>
 
-            <!-- ان پٹ بار (نیچے فکسڈ) -->
-            <div class="bg-white dark:bg-darkcard border-t border-gray-200 dark:border-gray-700 p-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-30 rounded-t-2xl">
+            <div class="input-bar bg-white dark:bg-darkcard border-t border-gray-200 dark:border-gray-700 p-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-30 rounded-t-2xl">
                 <div class="flex flex-col gap-2">
-                    
-                    <!-- ایڈوانس آپشنز (موڈ اور کیٹیگری) -->
                     <div class="flex gap-2">
                         <select id="taskCategory" class="bg-gray-100 dark:bg-darkinput dark:text-white text-xs rounded-lg p-2 outline-none flex-1 border-none cursor-pointer">
-                            <option value="عام">📌 عام</option>
-                            <option value="ذاتی">👤 ذاتی</option>
-                            <option value="کام">💼 کام</option>
-                            <option value="خریداری">🛒 خریداری</option>
-                            <option value="آئیڈیا">💡 آئیڈیا</option>
-                            <option value="ضروری">🔥 ضروری</option>
+                            <option value="عام">📌 عام</option><option value="ذاتی">👤 ذاتی</option><option value="کام">💼 کام</option><option value="خریداری">🛒 خریداری</option><option value="آئیڈیا">💡 آئیڈیا</option><option value="ضروری">🔥 ضروری</option>
                         </select>
-                        
                         <select id="taskMood" class="bg-gray-100 dark:bg-darkinput dark:text-white text-xs rounded-lg p-2 outline-none flex-1 border-none cursor-pointer">
-                            <option value="🙂">🙂 نارمل</option>
-                            <option value="😃">😃 خوش</option>
-                            <option value="😔">😔 اداس</option>
-                            <option value="😡">😡 غصہ</option>
-                            <option value="😴">😴 تھکا ہوا</option>
-                            <option value="🤩">🤩 پرجوش</option>
+                            <option value="🙂">🙂 نارمل</option><option value="😃">😃 خوش</option><option value="😔">😔 اداس</option><option value="😡">😡 غصہ</option><option value="😴">😴 تھکا ہوا</option><option value="🤩">🤩 پرجوش</option>
                         </select>
                     </div>
-
-                    <!-- مین ان پٹ -->
-                    <input type="text" id="taskInput" placeholder="آج کیا لکھنا ہے؟" 
-                        class="w-full p-3 bg-gray-100 dark:bg-darkinput dark:text-white rounded-xl focus:bg-white dark:focus:bg-gray-700 focus:ring-2 focus:ring-green-500 outline-none transition-all text-right text-gray-700 shadow-inner">
-                    
+                    <div class="relative">
+                        <input type="text" id="taskInput" placeholder="آج کیا لکھنا ہے؟" class="w-full p-3 pl-10 bg-gray-100 dark:bg-darkinput dark:text-white rounded-xl focus:bg-white dark:focus:bg-gray-700 focus:ring-2 focus:ring-green-500 outline-none transition-all text-right text-gray-700 shadow-inner">
+                        <button onclick="getDailyPrompt()" class="absolute left-2 top-2 text-xl hover:scale-110 transition" title="آج کا خیال">💡</button>
+                    </div>
                     <div class="flex gap-2 items-center">
                         <div class="relative flex-1">
                             <input type="datetime-local" id="taskDate" class="w-full p-2.5 bg-gray-100 dark:bg-darkinput dark:text-white rounded-lg text-xs text-gray-600 dark:text-gray-300 border-none outline-none font-sans">
                         </div>
-                        <button onclick="addTask()" id="saveBtn" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2.5 rounded-lg font-bold shadow-lg btn-press flex items-center gap-2 transition-colors">
-                            <span>محفوظ</span>
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
-                        </button>
-                        <!-- کینسل ایڈٹ بٹن (صرف ایڈٹ کے وقت نظر آئے گا) -->
-                        <button onclick="cancelEdit()" id="cancelEditBtn" class="hidden bg-gray-500 text-white px-3 py-2.5 rounded-lg font-bold shadow-lg btn-press">
-                            ❌
-                        </button>
+                        <button onclick="addTask()" id="saveBtn" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2.5 rounded-lg font-bold shadow-lg btn-press flex items-center gap-2 transition-colors"><span>محفوظ</span><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg></button>
+                        <button onclick="cancelEdit()" id="cancelEditBtn" class="hidden bg-gray-500 text-white px-3 py-2.5 rounded-lg font-bold shadow-lg btn-press">❌</button>
                     </div>
                 </div>
             </div>
         </div>
-
-        <!-- نوٹیفکیشن ٹوسٹ -->
-        <div id="toast" class="fixed top-6 left-1/2 transform -translate-x-1/2 bg-gray-800 dark:bg-white dark:text-black text-white text-sm px-6 py-3 rounded-full shadow-2xl opacity-0 transition-all duration-300 pointer-events-none z-50 font-sans">
-            پیغام
-        </div>
+        <div id="toast" class="fixed top-6 left-1/2 transform -translate-x-1/2 bg-gray-800 dark:bg-white dark:text-black text-white text-sm px-6 py-3 rounded-full shadow-2xl opacity-0 transition-all duration-300 pointer-events-none z-50 font-sans text-center w-max max-w-[80%]">پیغام</div>
     </div>
 
     <!-- Firebase Logic -->
@@ -236,9 +177,6 @@
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
         import { getFirestore, collection, addDoc, query, where, onSnapshot, deleteDoc, doc, serverTimestamp, updateDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-        // ==========================================
-        // آپ کی ذاتی سیٹنگز
-        // ==========================================
         const firebaseConfig = {
             apiKey: "AIzaSyCwrfDXG8pRpkqDYht0EpRZ8h_ElRu0N_w",
             authDomain: "mysmartdiarypk.firebaseapp.com",
@@ -249,7 +187,6 @@
             measurementId: "G-MT3L3B3P95"
         };
 
-        // Firebase کنکشن
         let app, auth, db;
         try {
             app = initializeApp(firebaseConfig);
@@ -262,21 +199,20 @@
         }
 
         let currentUser = null;
-        let allTasksData = []; // تلاش کے لیے ڈیٹا یہاں محفوظ ہوگا
-        let editingTaskId = null; // اگر کوئی ٹاسک ایڈٹ ہو رہا ہو
+        let allTasksData = [];
+        let editingTaskId = null;
+        let currentCalendarDate = new Date();
 
-        // --- 1. لاگ ان چیک سسٹم ---
         onAuthStateChanged(auth, (user) => {
             const authSection = document.getElementById('authSection');
             const appSection = document.getElementById('appSection');
-            
             if (user) {
                 currentUser = user;
                 document.getElementById('userEmailDisplay').innerText = user.email;
                 authSection.classList.add('hidden');
                 appSection.classList.remove('hidden');
                 loadTasks();
-                loadDarkModePreference(); // ڈارک موڈ چیک کریں
+                loadDarkModePreference();
             } else {
                 currentUser = null;
                 authSection.classList.remove('hidden');
@@ -285,50 +221,33 @@
             }
         });
 
-        // --- 2. ڈیٹا لوڈ کرنا (Firestore) ---
         function loadTasks() {
             if (!currentUser) return;
             const q = query(collection(db, "tasks"), where("uid", "==", currentUser.uid));
-            const list = document.getElementById('taskList');
-            
             onSnapshot(q, (snapshot) => {
+                const list = document.getElementById('taskList');
                 if (snapshot.empty) {
-                    list.innerHTML = `
-                        <div class="text-center mt-10">
-                            <span class="text-4xl block mb-2">📝</span>
-                            <p class="text-gray-400 font-sans text-sm">ابھی کوئی کام موجود نہیں۔<br>نیچے سے کچھ لکھ کر شامل کریں۔</p>
-                        </div>`;
+                    list.innerHTML = `<div class="text-center mt-10"><span class="text-4xl block mb-2">📝</span><p class="text-gray-400 font-sans text-sm">ابھی کوئی کام موجود نہیں</p></div>`;
                     allTasksData = [];
                     return;
                 }
-
                 allTasksData = [];
-                snapshot.forEach((doc) => {
-                    allTasksData.push({ id: doc.id, ...doc.data() });
-                });
-
-                // ترتیب: نیا کام سب سے اوپر
+                snapshot.forEach((doc) => allTasksData.push({ id: doc.id, ...doc.data() }));
                 allTasksData.sort((a, b) => {
                     const timeA = a.createdAt ? a.createdAt.seconds : 0;
                     const timeB = b.createdAt ? b.createdAt.seconds : 0;
                     return timeB - timeA;
                 });
-
-                renderTasks(allTasksData); // لسٹ دکھائیں
-
-            }, (error) => {
-                console.log("Data Error:", error);
-                if(error.code === 'permission-denied') showToast("ڈیٹا بیس کی اجازت (Rules) میں مسئلہ ہے");
+                renderTasks(allTasksData);
+                renderCalendar();
             });
         }
 
-        // --- 3. نیا کام شامل کرنا / اپڈیٹ کرنا ---
         window.addTask = async () => {
             const input = document.getElementById('taskInput');
             const dateInput = document.getElementById('taskDate');
             const moodInput = document.getElementById('taskMood');
             const catInput = document.getElementById('taskCategory');
-            
             const text = input.value.trim();
             if (!text) return showToast("براہ کرم کچھ لکھیں!");
 
@@ -339,64 +258,34 @@
 
             try {
                 if (editingTaskId) {
-                    // --- اپڈیٹ موڈ ---
-                    const taskRef = doc(db, "tasks", editingTaskId);
-                    await updateDoc(taskRef, {
-                        text: text,
-                        dateDue: dateInput.value,
-                        mood: moodInput.value,
-                        category: catInput.value,
-                        updatedAt: serverTimestamp()
+                    await updateDoc(doc(db, "tasks", editingTaskId), {
+                        text: text, dateDue: dateInput.value, mood: moodInput.value, category: catInput.value, updatedAt: serverTimestamp()
                     });
                     showToast("اپڈیٹ ہو گیا ✏️");
-                    cancelEdit(); // فارم ری سیٹ
+                    cancelEdit();
                 } else {
-                    // --- نیا ٹاسک موڈ ---
                     await addDoc(collection(db, "tasks"), {
-                        text: text,
-                        dateDue: dateInput.value,
-                        mood: moodInput.value,
-                        category: catInput.value,
-                        createdAt: serverTimestamp(),
-                        uid: currentUser.uid
+                        text: text, dateDue: dateInput.value, mood: moodInput.value, category: catInput.value, createdAt: serverTimestamp(), uid: currentUser.uid
                     });
                     showToast("محفوظ ہو گیا ✅");
-                    
-                    // ان پٹ خالی کریں
-                    input.value = '';
-                    dateInput.value = '';
-                    moodInput.value = '🙂';
-                    catInput.value = 'عام';
-                    input.focus();
+                    input.value = ''; dateInput.value = ''; moodInput.value = '🙂'; catInput.value = 'عام'; input.focus();
                 }
-            } catch (error) {
-                console.error(error);
-                showToast("غلطی: محفوظ نہیں ہو سکا");
-            } finally {
-                btn.innerHTML = originalBtnContent;
-                btn.disabled = false;
-            }
+            } catch (error) { showToast("غلطی: محفوظ نہیں ہو سکا"); } 
+            finally { btn.innerHTML = originalBtnContent; btn.disabled = false; }
         };
 
-        // --- 4. ایڈیٹنگ شروع کریں ---
         window.editTask = (id) => {
             const task = allTasksData.find(t => t.id === id);
             if (!task) return;
-
-            // ویلیوز ان پٹ میں ڈالیں
             document.getElementById('taskInput').value = task.text;
             document.getElementById('taskDate').value = task.dateDue || '';
             document.getElementById('taskMood').value = task.mood || '🙂';
             document.getElementById('taskCategory').value = task.category || 'عام';
-
-            // بٹن تبدیل کریں
             editingTaskId = id;
-            document.getElementById('saveBtn').innerHTML = '<span>اپڈیٹ</span><span>✏️</span>';
-            document.getElementById('saveBtn').classList.remove('bg-green-600');
-            document.getElementById('saveBtn').classList.add('bg-blue-600');
+            const btn = document.getElementById('saveBtn');
+            btn.innerHTML = '<span>اپڈیٹ</span><span>✏️</span>';
+            btn.classList.remove('bg-green-600'); btn.classList.add('bg-blue-600');
             document.getElementById('cancelEditBtn').classList.remove('hidden');
-
-            // ان پٹ پر فوکس
             document.getElementById('taskInput').focus();
             showToast("ایڈیٹنگ موڈ آن ہے");
         };
@@ -407,73 +296,38 @@
             document.getElementById('taskDate').value = '';
             document.getElementById('taskMood').value = '🙂';
             document.getElementById('taskCategory').value = 'عام';
-
-            // بٹن واپس سیٹ کریں
-            document.getElementById('saveBtn').innerHTML = '<span>محفوظ</span><span>✅</span>';
-            document.getElementById('saveBtn').classList.add('bg-green-600');
-            document.getElementById('saveBtn').classList.remove('bg-blue-600');
+            const btn = document.getElementById('saveBtn');
+            btn.innerHTML = '<span>محفوظ</span><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>';
+            btn.classList.add('bg-green-600'); btn.classList.remove('bg-blue-600');
             document.getElementById('cancelEditBtn').classList.add('hidden');
         };
 
-        // --- 5. مٹانا (Delete) ---
         window.deleteTask = async (id) => {
             if(confirm("کیا آپ واقعی اسے مٹانا چاہتے ہیں؟")) {
-                try {
-                    await deleteDoc(doc(db, "tasks", id));
-                    showToast("مٹا دیا گیا 🗑️");
-                } catch (e) {
-                    showToast("غلطی پیش آ گئی");
-                }
+                try { await deleteDoc(doc(db, "tasks", id)); showToast("مٹا دیا گیا 🗑️"); } catch (e) { showToast("غلطی پیش آ گئی"); }
             }
         };
 
-        // --- 6. سرچ / فلٹر فنکشن ---
         window.filterTasks = () => {
             const query = document.getElementById('searchInput').value.toLowerCase();
-            const filtered = allTasksData.filter(task => 
-                task.text.toLowerCase().includes(query) || 
-                (task.category && task.category.includes(query))
-            );
+            const filtered = allTasksData.filter(task => task.text.toLowerCase().includes(query) || (task.category && task.category.includes(query)));
             renderTasks(filtered);
         };
 
-        // --- 7. رینڈرنگ (لسٹ دکھانا) ---
         function renderTasks(tasks) {
             const list = document.getElementById('taskList');
             list.innerHTML = "";
             tasks.forEach(task => {
                 const li = document.createElement('li');
-                
-                // تاریخ کی فارمیٹنگ
-                let timeDisplay = "";
-                let timeColor = "text-gray-400 dark:text-gray-500";
-                
+                let timeDisplay = "", timeColor = "text-gray-400 dark:text-gray-500";
                 if (task.dateDue) {
                     const d = new Date(task.dateDue);
-                    const now = new Date();
-                    const isPast = now > d;
+                    const isPast = new Date() > d;
                     timeColor = isPast ? "text-red-500 font-bold" : "text-green-600 dark:text-green-400";
-                    const icon = isPast ? "⚠️" : "📅";
-                    timeDisplay = `
-                        <div class="flex items-center gap-1 text-[10px] ${timeColor} bg-gray-50 dark:bg-gray-800 inline-block px-1.5 py-0.5 rounded font-sans mt-1" dir="ltr">
-                            <span>${icon}</span>
-                            <span>${d.getDate()}/${d.getMonth()+1} • ${formatAMPM(d)}</span>
-                        </div>`;
+                    timeDisplay = `<div class="flex items-center gap-1 text-[10px] ${timeColor} bg-gray-50 dark:bg-gray-800 inline-block px-1.5 py-0.5 rounded font-sans mt-1" dir="ltr"><span>${isPast?"⚠️":"📅"}</span><span>${d.getDate()}/${d.getMonth()+1} • ${formatAMPM(d)}</span></div>`;
                 }
-
-                // کیٹیگری بیج
-                const cat = task.category || 'عام';
-                const mood = task.mood || '🙂';
-                
-                // رنگین بیج کیٹیگری کے لیے
-                const catColors = {
-                    'عام': 'bg-gray-100 text-gray-600',
-                    'ذاتی': 'bg-purple-100 text-purple-600',
-                    'کام': 'bg-blue-100 text-blue-600',
-                    'خریداری': 'bg-yellow-100 text-yellow-600',
-                    'آئیڈیا': 'bg-pink-100 text-pink-600',
-                    'ضروری': 'bg-red-100 text-red-600'
-                };
+                const cat = task.category || 'عام', mood = task.mood || '🙂';
+                const catColors = { 'عام': 'bg-gray-100 text-gray-600', 'ذاتی': 'bg-purple-100 text-purple-600', 'کام': 'bg-blue-100 text-blue-600', 'خریداری': 'bg-yellow-100 text-yellow-600', 'آئیڈیا': 'bg-pink-100 text-pink-600', 'ضروری': 'bg-red-100 text-red-600' };
                 const badgeClass = catColors[cat] || catColors['عام'];
 
                 li.className = "bg-white dark:bg-darkcard p-3 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex justify-between items-start animate-fade-in group hover:shadow-md transition-all";
@@ -481,93 +335,108 @@
                     <div class="flex items-start gap-3 flex-1 ml-2">
                         <div class="text-2xl pt-1">${mood}</div>
                         <div class="flex-1">
-                            <div class="flex gap-2 mb-1">
-                                <span class="text-[10px] px-1.5 py-0.5 rounded ${badgeClass} font-bold">${cat}</span>
-                            </div>
+                            <div class="flex gap-2 mb-1"><span class="text-[10px] px-1.5 py-0.5 rounded ${badgeClass} font-bold">${cat}</span></div>
                             <p class="text-gray-800 dark:text-gray-200 text-lg leading-relaxed break-words urdu-text">${task.text}</p>
                             ${timeDisplay}
                         </div>
                     </div>
-                    <div class="flex flex-col gap-1 -mr-2">
-                        <button onclick="editTask('${task.id}')" class="text-gray-300 hover:text-blue-500 p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 transition">
-                            ✏️
-                        </button>
-                        <button onclick="deleteTask('${task.id}')" class="text-gray-300 hover:text-red-500 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 transition">
-                            🗑️
-                        </button>
+                    <div class="flex flex-col gap-1 -mr-2 no-print">
+                        <button onclick="editTask('${task.id}')" class="text-gray-300 hover:text-blue-500 p-2">✏️</button>
+                        <button onclick="deleteTask('${task.id}')" class="text-gray-300 hover:text-red-500 p-2">🗑️</button>
                     </div>
                 `;
                 list.appendChild(li);
             });
         }
 
-        // --- 8. ڈارک موڈ لاجک ---
-        window.toggleDarkMode = () => {
-            const html = document.documentElement;
-            const icon = document.getElementById('darkModeIcon');
-            
-            if (html.classList.contains('dark')) {
-                html.classList.remove('dark');
-                icon.innerText = '🌙';
-                localStorage.setItem('theme', 'light');
-            } else {
-                html.classList.add('dark');
-                icon.innerText = '☀️';
-                localStorage.setItem('theme', 'dark');
+        window.exportToPDF = () => { if(allTasksData.length === 0) return showToast("پرنٹ کرنے کے لیے کچھ نہیں ہے!"); window.print(); };
+
+        const prompts = ["آج کا دن کیسا گزرا؟", "آج آپ نے کیا نیا سیکھا؟", "کوئی ایسی بات جس نے آج آپ کو خوش کیا؟", "آج کا سب سے مشکل لمحہ کون سا تھا؟", "کل کے لیے آپ کا کیا ارادہ ہے؟", "کیا آپ نے آج کسی کی مدد کی؟", "آج آپ کو کس بات پر غصہ آیا؟", "اپنی زندگی کی کسی اچھی یاد کے بارے میں لکھیں۔", "آج موسم کیسا تھا؟", "آج آپ نے کھانے میں کیا کھایا؟"];
+        window.getDailyPrompt = () => {
+            const random = prompts[Math.floor(Math.random() * prompts.length)];
+            const input = document.getElementById('taskInput');
+            if(input.value.trim() === "") { input.value = random; input.focus(); showToast("💡 خیال شامل کر دیا گیا!"); } else { showToast(`💡 خیال: ${random}`); }
+        };
+
+        window.toggleCalendar = () => {
+            const cal = document.getElementById('calendarView');
+            if(cal.classList.contains('hidden')) { cal.classList.remove('hidden'); renderCalendar(); } else { cal.classList.add('hidden'); }
+        };
+        window.changeMonth = (step) => { currentCalendarDate.setMonth(currentCalendarDate.getMonth() + step); renderCalendar(); };
+        window.renderCalendar = () => {
+            const grid = document.getElementById('calendarGrid');
+            const monthYear = document.getElementById('currentMonthYear');
+            grid.innerHTML = "";
+            const y = currentCalendarDate.getFullYear(); const m = currentCalendarDate.getMonth();
+            monthYear.innerText = new Date(y, m).toLocaleString('default', { month: 'long', year: 'numeric' });
+            const firstDay = new Date(y, m, 1).getDay(); const daysInMonth = new Date(y, m + 1, 0).getDate();
+            for(let i=0; i<firstDay; i++) { grid.innerHTML += `<div></div>`; }
+            for(let d=1; d<=daysInMonth; d++) {
+                const dateStr = `${y}-${String(m+1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                const hasTask = allTasksData.some(t => t.dateDue && t.dateDue.startsWith(dateStr));
+                const dayEl = document.createElement('div');
+                dayEl.className = `p-2 rounded-lg cursor-pointer hover:bg-green-100 dark:hover:bg-green-900 transition flex flex-col items-center justify-center dark:text-white relative`;
+                dayEl.innerHTML = `<span class="z-10">${d}</span>`;
+                if(hasTask) { dayEl.innerHTML += `<span class="w-1.5 h-1.5 bg-green-500 rounded-full mt-1"></span>`; }
+                const today = new Date();
+                if(d === today.getDate() && m === today.getMonth() && y === today.getFullYear()) { dayEl.classList.add('bg-blue-100', 'dark:bg-blue-900', 'font-bold'); }
+                dayEl.onclick = () => filterByDate(dateStr);
+                grid.appendChild(dayEl);
             }
-        }
+        };
+
+        window.filterByDate = (dateStr) => {
+            const filtered = allTasksData.filter(t => t.dateDue && t.dateDue.startsWith(dateStr));
+            renderTasks(filtered);
+            showToast(`📅 ${dateStr} کے نوٹس`);
+            document.getElementById('calendarView').classList.add('hidden');
+            const heading = document.getElementById('listHeading');
+            heading.classList.remove('hidden');
+            heading.innerText = `${dateStr} کے نوٹس (${filtered.length}) - سب دکھانے کے لیے سرچ صاف کریں`;
+            document.getElementById('searchInput').value = ""; 
+        };
+
+        window.toggleDarkMode = () => {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            document.getElementById('darkModeIcon').innerText = isDark ? '☀️' : '🌙';
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        };
 
         function loadDarkModePreference() {
-            const savedTheme = localStorage.getItem('theme');
-            const icon = document.getElementById('darkModeIcon');
-            if (savedTheme === 'dark') {
+            if (localStorage.getItem('theme') === 'dark') {
                 document.documentElement.classList.add('dark');
-                if(icon) icon.innerText = '☀️';
+                document.getElementById('darkModeIcon').innerText = '☀️';
             }
         }
 
-        // --- Auth & Helper Functions ---
         window.signupUser = async () => {
             const email = document.getElementById('signupEmail').value;
             const pass = document.getElementById('signupPass').value;
             if(!email || !pass) return showToast("ای میل اور پاسورڈ لکھیں");
             if(pass.length < 6) return showToast("پاسورڈ چھوٹا ہے");
-            try {
-                await createUserWithEmailAndPassword(auth, email, pass);
-                showToast("اکاؤنٹ بن گیا! خوش آمدید 🎉");
-            } catch (error) { showToast("مسئلہ: " + getErrorMsg(error.code)); }
+            try { await createUserWithEmailAndPassword(auth, email, pass); showToast("اکاؤنٹ بن گیا! خوش آمدید 🎉"); } catch (error) { showToast("مسئلہ: " + getErrorMsg(error.code)); }
         };
 
         window.loginUser = async () => {
             const email = document.getElementById('loginEmail').value;
             const pass = document.getElementById('loginPass').value;
             if(!email || !pass) return showToast("تفصیلات مکمل کریں");
-            try {
-                await signInWithEmailAndPassword(auth, email, pass);
-                showToast("لاگ ان کامیاب ✅");
-            } catch (error) { showToast("لاگ ان ناکام: " + getErrorMsg(error.code)); }
+            try { await signInWithEmailAndPassword(auth, email, pass); showToast("لاگ ان کامیاب ✅"); } catch (error) { showToast("لاگ ان ناکام: " + getErrorMsg(error.code)); }
         };
 
-        window.logoutUser = () => {
-            if(confirm("کیا آپ لاگ آؤٹ کرنا چاہتے ہیں؟")) { signOut(auth); showToast("اللہ حافظ! 👋"); }
-        };
+        window.logoutUser = () => { if(confirm("کیا آپ لاگ آؤٹ کرنا چاہتے ہیں؟")) { signOut(auth); showToast("اللہ حافظ! 👋"); } };
 
         window.resetPassword = async () => {
             const email = document.getElementById('resetEmail').value;
             if(!email) return showToast("پہلے ای میل لکھیں");
-            try {
-                await sendPasswordResetEmail(auth, email);
-                showToast("📧 لنک بھیج دیا ہے");
-                showScreen('loginForm');
-            } catch (error) { showToast(getErrorMsg(error.code)); }
+            try { await sendPasswordResetEmail(auth, email); showToast("📧 لنک بھیج دیا ہے"); showScreen('loginForm'); } catch (error) { showToast(getErrorMsg(error.code)); }
         }
 
         function formatAMPM(date) {
-            let hours = date.getHours();
-            let minutes = date.getMinutes();
+            let hours = date.getHours(); let minutes = date.getMinutes();
             const ampm = hours >= 12 ? 'PM' : 'AM';
-            hours = hours % 12;
-            hours = hours ? hours : 12; 
+            hours = hours % 12; hours = hours ? hours : 12; 
             minutes = minutes < 10 ? '0'+minutes : minutes;
             return hours + ':' + minutes + ' ' + ampm;
         }
@@ -581,20 +450,8 @@
             return 'کوئی مسئلہ پیش آ گیا';
         }
 
-        window.showScreen = (screenId) => {
-            ['loginForm', 'signupForm', 'forgotPassForm'].forEach(id => {
-                document.getElementById(id).classList.add('hidden');
-            });
-            document.getElementById(screenId).classList.remove('hidden');
-        };
-
-        function showToast(msg) {
-            const t = document.getElementById('toast');
-            t.innerText = msg;
-            t.style.opacity = '1';
-            t.style.top = "20px";
-            setTimeout(() => { t.style.opacity = '0'; t.style.top = "-50px"; }, 3000);
-        }
+        window.showScreen = (id) => { ['loginForm', 'signupForm', 'forgotPassForm'].forEach(i => document.getElementById(i).classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); };
+        function showToast(msg) { const t = document.getElementById('toast'); t.innerText = msg; t.style.opacity = '1'; t.style.top = "20px"; setTimeout(() => { t.style.opacity = '0'; t.style.top = "-50px"; }, 3000); }
     </script>
 </body>
 </html>
