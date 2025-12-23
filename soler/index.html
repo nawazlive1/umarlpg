@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="ur" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>شاہ نواز سمارٹ انرجی پلانر</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* مہر نستعلیق کے لیے ترجیح */
+        @font-face {
+            font-family: 'Mehr Nastaleeq';
+            src: local('Mehr Nastaleeq'), local('MehrNastaleeq-Regular');
+        }
+
+        body {
+            /* سب سے پہلے مہر نستعلیق، پھر جمیل نوری، پھر گوگل کا فونٹ */
+            font-family: 'Mehr Nastaleeq', 'Jameel Noori Nastaliq', 'Noto Nastaliq Urdu', serif;
+            background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+            min-height: 100vh;
+        }
+        .item-card {
+            transition: all 0.3s ease;
+        }
+        .item-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .result-box {
+            background: linear-gradient(to right, #11998e, #38ef7d);
+            color: white;
+        }
+        /* Style for heavy items */
+        .heavy-item {
+            border: 2px solid #feb2b2;
+            background-color: #fff5f5;
+        }
+        .heavy-item h3 {
+            color: #c53030;
+        }
+        
+        /* Input styling for watts */
+        .watt-input {
+            width: 60px;
+            text-align: center;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            padding: 2px;
+            font-size: 0.85rem;
+            background-color: #ffffff;
+        }
+        .watt-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-3xl mx-auto bg-white rounded-2xl shadow-2xl overflow-hidden">
+        
+        <!-- Header -->
+        <div class="bg-gray-800 p-6 text-center">
+            <h1 class="text-3xl font-bold text-yellow-400 mb-2">⚡ شاہ نواز سمارٹ انرجی پلانر</h1>
+            <p class="text-gray-300 text-sm">پاکستانی گھروں کے لیے (مکمل کسٹمائزڈ)</p>
+        </div>
+
+        <div class="p-6">
+            <!-- Instructions -->
+            <div class="bg-blue-50 border-r-4 border-blue-500 p-4 mb-6 rounded">
+                <p class="text-blue-800 text-sm leading-7">
+                    <strong>ہدایات:</strong><br>
+                    1. ہر چیز کے نیچے دیئے گئے خانے میں آپ اپنی مرضی کے <strong>واٹ (Watts)</strong> لکھ سکتے ہیں۔<br>
+                    2. نیچے رزلٹ میں آپ چھوٹی یا بڑی پلیٹ (مثلاً 150W یا 550W) منتخب کر سکتے ہیں۔
+                </p>
+            </div>
+
+            <!-- Items Grid -->
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+                
+                <!-- Fan -->
+                <div class="item-card bg-gray-50 p-4 rounded-xl border border-gray-200 flex flex-col items-center justify-between">
+                    <div class="text-center w-full">
+                        <i class="fas fa-fan text-3xl text-gray-600 mb-2"></i>
+                        <h3 class="font-bold text-gray-700">AC/DC پنکھا</h3>
+                        <div class="flex items-center justify-center gap-1 mt-2">
+                            <input type="number" id="fan-watts" value="65" class="watt-input" oninput="calculate()">
+                            <span class="text-xs text-gray-500">واٹ</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center mt-3 gap-3">
+                        <button onclick="updateCount('fan', -1)" class="w-8 h-8 rounded-full bg-red-100 text-red-600 hover:bg-red-200 font-bold">-</button>
+                        <span id="fan-count" class="font-bold text-xl w-6 text-center">0</span>
+                        <button onclick="updateCount('fan', 1)" class="w-8 h-8 rounded-full bg-green-100 text-green-600 hover:bg-green-200 font-bold">+</button>
+                    </div>
+                </div>
+
+                <!-- Bulb -->
+                <div class="item-card bg-gray-50 p-4 rounded-xl border border-gray-200 flex flex-col items-center justify-between">
+                    <div class="text-center w-full">
+                        <i class="fas fa-lightbulb text-3xl text-yellow-500 mb-2"></i>
+                        <h3 class="font-bold text-gray-700">ایل ای ڈی بلب</h3>
+                        <div class="flex items-center justify-center gap-1 mt-2">
+                            <input type="number" id="bulb-watts" value="12" class="watt-input" oninput="calculate()">
+                            <span class="text-xs text-gray-500">واٹ</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center mt-3 gap-3">
+                        <button onclick="updateCount('bulb', -1)" class="w-8 h-8 rounded-full bg-red-100 text-red-600 hover:bg-red-200 font-bold">-</button>
+                        <span id="bulb-count" class="font-bold text-xl w-6 text-center">0</span>
+                        <button onclick="updateCount('bulb', 1)" class="w-8 h-8 rounded-full bg-green-100 text-green-600 hover:bg-green-200 font-bold">+</button>
+                    </div>
+                </div>
+
+                <!-- TV -->
+                <div class="item-card bg-gray-50 p-4 rounded-xl border border-gray-200 flex flex-col items-center justify-between">
+                    <div class="text-center w-full">
+                        <i class="fas fa-tv text-3xl text-blue-600 mb-2"></i>
+                        <h3 class="font-bold text-gray-700">ایل ای ڈی ٹی وی</h3>
+                        <div class="flex items-center justify-center gap-1 mt-2">
+                            <input type="number" id="tv-watts" value="60" class="watt-input" oninput="calculate()">
+                            <span class="text-xs text-gray-500">واٹ</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center mt-3 gap-3">
+                        <button onclick="updateCount('tv', -1)" class="w-8 h-8 rounded-full bg-red-100 text-red-600 hover:bg-red-200 font-bold">-</button>
+                        <span id="tv-count" class="font-bold text-xl w-6 text-center">0</span>
+                        <button onclick="updateCount('tv', 1)" class="w-8 h-8 rounded-full bg-green-100 text-green-600 hover:bg-green-200 font-bold">+</button>
+                    </div>
+                </div>
+
+                 <!-- Fridge -->
+                 <div class="item-card bg-gray-50 p-4 rounded-xl border border-gray-200 flex flex-col items-center justify-between">
+                    <div class="text-center w-full">
+                        <i class="fas fa-snowflake text-3xl text-cyan-400 mb-2"></i>
+                        <h3 class="font-bold text-gray-700">فریج / انورٹر</h3>
+                        <div class="flex items-center justify-center gap-1 mt-2">
+                            <input type="number" id="fridge-watts" value="250" class="watt-input" oninput="calculate()">
+                            <span class="text-xs text-gray-500">واٹ</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center mt-3 gap-3">
+                        <button onclick="updateCount('fridge', -1)" class="w-8 h-8 rounded-full bg-red-100 text-red-600 hover:bg-red-200 font-bold">-</button>
+                        <span id="fridge-count" class="font-bold text-xl w-6 text-center">0</span>
+                        <button onclick="updateCount('fridge', 1)" class="w-8 h-8 rounded-full bg-green-100 text-green-600 hover:bg-green-200 font-bold">+</button>
+                    </div>
+                </div>
+
+                <!-- Wifi/Charger -->
+                <div class="item-card bg-gray-50 p-4 rounded-xl border border-gray-200 flex flex-col items-center justify-between">
+                    <div class="text-center w-full">
+                        <i class="fas fa-wifi text-3xl text-indigo-500 mb-2"></i>
+                        <h3 class="font-bold text-gray-700">وائی فائی/راؤٹر</h3>
+                        <div class="flex items-center justify-center gap-1 mt-2">
+                            <input type="number" id="wifi-watts" value="20" class="watt-input" oninput="calculate()">
+                            <span class="text-xs text-gray-500">واٹ</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center mt-3 gap-3">
+                        <button onclick="updateCount('wifi', -1)" class="w-8 h-8 rounded-full bg-red-100 text-red-600 hover:bg-red-200 font-bold">-</button>
+                        <span id="wifi-count" class="font-bold text-xl w-6 text-center">0</span>
+                        <button onclick="updateCount('wifi', 1)" class="w-8 h-8 rounded-full bg-green-100 text-green-600 hover:bg-green-200 font-bold">+</button>
+                    </div>
+                </div>
+
+                 <!-- Washing Machine -->
+                 <div class="item-card heavy-item p-4 rounded-xl flex flex-col items-center justify-between">
+                    <div class="text-center w-full">
+                        <i class="fas fa-tshirt text-3xl text-red-500 mb-2"></i>
+                        <h3 class="font-bold">واشنگ مشین</h3>
+                        <div class="flex items-center justify-center gap-1 mt-2">
+                            <input type="number" id="machine-watts" value="400" class="watt-input" oninput="calculate()">
+                            <span class="text-xs text-gray-500">واٹ</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center mt-3 gap-3">
+                        <button onclick="updateCount('machine', -1)" class="w-8 h-8 rounded-full bg-red-200 text-red-700 hover:bg-red-300 font-bold">-</button>
+                        <span id="machine-count" class="font-bold text-xl w-6 text-center">0</span>
+                        <button onclick="updateCount('machine', 1)" class="w-8 h-8 rounded-full bg-green-200 text-green-700 hover:bg-green-300 font-bold">+</button>
+                    </div>
+                </div>
+
+                <!-- Iron -->
+                <div class="item-card heavy-item p-4 rounded-xl flex flex-col items-center justify-between">
+                    <div class="text-center w-full">
+                        <i class="fas fa-check-double text-3xl text-red-500 mb-2"></i>
+                        <h3 class="font-bold">استری (Iron)</h3>
+                        <div class="flex items-center justify-center gap-1 mt-2">
+                            <input type="number" id="iron-watts" value="1000" class="watt-input" oninput="calculate()">
+                            <span class="text-xs text-gray-500">واٹ</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center mt-3 gap-3">
+                        <button onclick="updateCount('iron', -1)" class="w-8 h-8 rounded-full bg-red-200 text-red-700 hover:bg-red-300 font-bold">-</button>
+                        <span id="iron-count" class="font-bold text-xl w-6 text-center">0</span>
+                        <button onclick="updateCount('iron', 1)" class="w-8 h-8 rounded-full bg-green-200 text-green-700 hover:bg-green-300 font-bold">+</button>
+                    </div>
+                </div>
+
+                <!-- Water Heater Rod -->
+                <div class="item-card heavy-item p-4 rounded-xl flex flex-col items-center justify-between">
+                    <div class="text-center w-full">
+                        <i class="fas fa-temperature-high text-3xl text-red-500 mb-2"></i>
+                        <h3 class="font-bold">پانی والا راڈ</h3>
+                        <div class="flex items-center justify-center gap-1 mt-2">
+                            <input type="number" id="heater-watts" value="1000" class="watt-input" oninput="calculate()">
+                            <span class="text-xs text-gray-500">واٹ</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center mt-3 gap-3">
+                        <button onclick="updateCount('heater', -1)" class="w-8 h-8 rounded-full bg-red-200 text-red-700 hover:bg-red-300 font-bold">-</button>
+                        <span id="heater-count" class="font-bold text-xl w-6 text-center">0</span>
+                        <button onclick="updateCount('heater', 1)" class="w-8 h-8 rounded-full bg-green-200 text-green-700 hover:bg-green-300 font-bold">+</button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Backup Time Slider -->
+            <div class="mb-8 p-4 bg-gray-50 rounded-xl">
+                <label class="block text-gray-700 font-bold mb-2">
+                    <i class="fas fa-moon text-indigo-500 ml-2"></i>
+                    رات کا بیک اپ ٹائم (Night Backup)
+                </label>
+                <div class="flex items-center gap-4">
+                    <span class="text-gray-500 font-bold">1 گھنٹہ</span>
+                    <input type="range" id="backupHours" min="1" max="12" value="8" class="w-full h-2 bg-gray-300 rounded-lg appearance-none cursor-pointer accent-indigo-600" oninput="calculate()">
+                    <span class="text-gray-500 font-bold">12 گھنٹے</span>
+                </div>
+                <p class="text-center mt-2 text-indigo-800 font-bold text-lg" id="hours-display">8 گھنٹے</p>
+                <p class="text-center text-xs text-gray-500 mt-1">سولر ان گھنٹوں کے لیے دن میں ہی بیٹری چارج کرے گا۔</p>
+            </div>
+
+            <!-- Calculation Logic -->
+            <div id="result-section" class="result-box rounded-xl p-6 shadow-lg transform transition-all hidden">
+                <h2 class="text-2xl font-bold mb-4 border-b border-white/30 pb-2 flex items-center">
+                    <i class="fas fa-check-circle ml-2"></i> آپ کا سولر پلان
+                </h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <p class="text-white/80 text-sm">کل لوڈ (Instant Watts)</p>
+                        <p class="text-3xl font-bold" id="total-watts">0 Watts</p>
+                    </div>
+                    
+                    <div>
+                        <p class="text-white/80 text-sm">کم از کم انورٹر (Inverter)</p>
+                        <p class="text-2xl font-bold text-yellow-200" id="inverter-size">1 KVA</p>
+                    </div>
+
+                    <div class="bg-white/20 p-3 rounded-lg col-span-1 md:col-span-2">
+                        <p class="text-white/90 text-sm mb-1"><i class="fas fa-car-battery ml-1"></i> تجویز کردہ بیٹری بینک</p>
+                        <p class="text-2xl font-bold" id="battery-rec">Calculate...</p>
+                         <p class="text-xs text-white/70 mt-1">بھاری چیزیں (استری وغیرہ) بیٹری پر نہ چلائیں تو بہتر ہے۔</p>
+                    </div>
+
+                    <div class="bg-white/20 p-3 rounded-lg col-span-1 md:col-span-2">
+                         <div class="flex justify-between items-center mb-2">
+                            <p class="text-white/90 text-sm"><i class="fas fa-solar-panel ml-1"></i> تجویز کردہ سولر پلیٹس</p>
+                            
+                            <!-- Panel Selector -->
+                            <select id="panel-size" onchange="calculate()" class="text-black text-xs p-1 rounded bg-white/90 w-32 focus:outline-none">
+                                <option value="550" selected>550 واٹ (بڑی)</option>
+                                <option value="300">300 واٹ</option>
+                                <option value="250">250 واٹ</option>
+                                <option value="225">225 واٹ</option>
+                                <option value="200">200 واٹ</option>
+                                <option value="180">180 واٹ</option>
+                                <option value="150">150 واٹ</option>
+                            </select>
+                        </div>
+                        
+                        <p class="text-3xl font-bold text-yellow-100" id="solar-rec">Calculate...</p>
+                        <p class="text-xs text-white/80 mt-1" id="panel-details">550W والی پلیٹس کا حساب</p>
+                        
+                        <!-- Breakdown -->
+                        <div class="mt-3 text-sm bg-black/20 p-2 rounded">
+                            <p class="flex justify-between mb-1">
+                                <span>لوڈ کے لیے (دن کے وقت):</span>
+                                <span id="load-solar-watts" class="font-bold">0W</span>
+                            </p>
+                            <p class="flex justify-between border-t border-white/20 pt-1">
+                                <span>بیٹری چارجنگ (رات کے لیے):</span>
+                                <span id="charging-solar-watts" class="font-bold text-yellow-200">0W</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-4 pt-4 border-t border-white/20 text-center text-xs opacity-80">
+                   نوٹ: استری یا راڈ چلاتے وقت کوشش کریں کہ باقی لائٹیں/پنکھے بند ہوں تاکہ انورٹر پر لوڈ نہ بڑھے۔
+                </div>
+            </div>
+
+            <div id="empty-state" class="text-center text-gray-400 py-8">
+                <i class="fas fa-arrow-up text-4xl mb-3 animate-bounce"></i>
+                <p>کوئی چیز منتخب کریں تاکہ حساب شروع ہو سکے</p>
+            </div>
+
+        </div>
+    </div>
+
+<script>
+    let counts = {
+        fan: 0,
+        bulb: 0,
+        tv: 0,
+        fridge: 0,
+        wifi: 0,
+        machine: 0,
+        iron: 0,
+        heater: 0
+    };
+
+    function updateCount(item, change) {
+        if (counts[item] + change >= 0) {
+            counts[item] += change;
+            document.getElementById(`${item}-count`).innerText = counts[item];
+            calculate();
+        }
+    }
+
+    function calculate() {
+        // Read watts dynamically from inputs
+        const getWatts = (id) => parseInt(document.getElementById(id + '-watts').value) || 0;
+
+        let totalWatts = 0;
+        
+        // Loop through items to calculate total watts based on current counts and input values
+        for (let item in counts) {
+            totalWatts += counts[item] * getWatts(item);
+        }
+
+        const resultSection = document.getElementById('result-section');
+        const emptyState = document.getElementById('empty-state');
+        const hours = parseInt(document.getElementById('backupHours').value);
+        
+        document.getElementById('hours-display').innerText = `${hours} گھنٹے`;
+
+        if (totalWatts === 0) {
+            resultSection.classList.add('hidden');
+            emptyState.classList.remove('hidden');
+            return;
+        }
+
+        resultSection.classList.remove('hidden');
+        emptyState.classList.add('hidden');
+
+        document.getElementById('total-watts').innerText = `${totalWatts} Watts`;
+
+        // --- 1. Inverter Size Recommendation ---
+        let requiredVA = totalWatts * 1.25; // 25% Safety margin
+        let inverterText = "1.2 KVA (12V)";
+        let systemVoltage = 12;
+
+        if (requiredVA > 1000 && requiredVA <= 2200) {
+            inverterText = "2.4 KVA (24V)";
+            systemVoltage = 24;
+        } else if (requiredVA > 2200 && requiredVA <= 3500) {
+            inverterText = "3.2 KVA (24V/48V)";
+            systemVoltage = 24; // Sometimes 48V
+        } else if (requiredVA > 3500) {
+             inverterText = "5 KVA یا 6 KVA (48V)";
+             systemVoltage = 48;
+        } else if (requiredVA <= 1000) {
+             inverterText = "1.2 KVA (12V)";
+        }
+
+        document.getElementById('inverter-size').innerText = inverterText;
+
+        // --- 2. Battery Calculation ---
+        let continuousWatts = (counts.fan * getWatts('fan')) + 
+                              (counts.bulb * getWatts('bulb')) + 
+                              (counts.tv * getWatts('tv')) + 
+                              (counts.fridge * getWatts('fridge')) + 
+                              (counts.wifi * getWatts('wifi'));
+        
+        let batteryCalcWatts = totalWatts; 
+        
+        let requiredWh = batteryCalcWatts * hours;
+        let requiredAh = (requiredWh / systemVoltage) / 0.8; 
+        
+        let batteryText = "";
+        if (systemVoltage === 12) {
+            if (requiredAh < 100) batteryText = "1 x 100Ah";
+            else if (requiredAh < 180) batteryText = "1 x 185Ah (بڑی بیٹری)";
+            else batteryText = `2 x 185Ah (متوازی) یا 220Ah ٹیوبلر`;
+        } else if (systemVoltage === 24) {
+             if (requiredAh < 100) batteryText = "2 x 100Ah";
+             else batteryText = `2 x ${Math.ceil(requiredAh)}Ah (سیریز)`;
+        } else {
+            batteryText = `4 x ${Math.ceil(requiredAh)}Ah (سیریز)`;
+        }
+
+        document.getElementById('battery-rec').innerText = batteryText;
+
+        // --- 3. Solar Panel Calculation ---
+        let solarForLoad = totalWatts * 1.2; 
+        let nightEnergyToReplace = continuousWatts * hours * 1.3; 
+        let solarForCharging = nightEnergyToReplace / 5; 
+        
+        let totalSolarWattsNeeded = solarForLoad + solarForCharging;
+
+        // Get selected panel size
+        let panelSize = parseInt(document.getElementById('panel-size').value);
+        
+        // Calculate practical output (approx 75-80% efficiency for smaller/older tech, slightly better for 550W)
+        // Adjusting efficiency factor slightly based on size
+        let efficiency = 0.76; 
+        if(panelSize >= 500) efficiency = 0.78; // Newer split cell tech
+        
+        let practicalPlateOutput = panelSize * efficiency; 
+        let platesNeeded = Math.ceil(totalSolarWattsNeeded / practicalPlateOutput);
+        
+        document.getElementById('solar-rec').innerText = `${platesNeeded} پلیٹس`;
+        document.getElementById('panel-details').innerText = `${panelSize} واٹ والی پلیٹس کا حساب`;
+        document.getElementById('load-solar-watts').innerText = `~${Math.round(solarForLoad)} Watts`;
+        document.getElementById('charging-solar-watts').innerText = `~${Math.round(solarForCharging)} Watts`;
+
+    }
+</script>
+
+</body>
+</html>
