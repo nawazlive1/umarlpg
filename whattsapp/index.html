@@ -200,14 +200,14 @@
                 </div>
             </div>
 
-            <!-- ACTIVE CHAT ROOM (Embedded for Desktop, Fullscreen Overlay for Mobile) -->
-            <!-- We use dynamic classes to switch between mobile overlay and desktop embedded -->
-            <div id="chatRoom" class="hidden fixed inset-0 z-[80] md:static md:z-0 md:flex flex-col h-full bg-chat-light dark:bg-chat-bg">
+            <!-- ACTIVE CHAT ROOM -->
+            <!-- FIX: Added justify-start to force top alignment on desktop -->
+            <div id="chatRoom" class="hidden fixed inset-0 z-[80] md:static md:z-0 md:flex flex-col h-full bg-chat-light dark:bg-chat-bg justify-start">
                 <!-- Background Pattern Layer -->
                 <div class="absolute inset-0 z-0 opacity-40 dark:opacity-5 bg-chat-pattern-light dark:bg-chat-pattern-dark pointer-events-none"></div>
 
                 <!-- Header -->
-                <div class="bg-wa-primary dark:bg-wa-header text-white px-4 py-2 flex items-center justify-between shadow z-10 relative">
+                <div class="bg-wa-primary dark:bg-wa-header text-white px-4 py-2 flex items-center justify-between shadow z-10 relative flex-shrink-0 w-full">
                     <div class="flex items-center gap-3">
                         <button onclick="closeChatRoom()" class="md:hidden p-1 mr-1"><i class="fas fa-arrow-right"></i></button>
                         <div class="w-10 h-10 rounded-full bg-gray-300 overflow-hidden cursor-pointer">
@@ -226,10 +226,10 @@
                 </div>
 
                 <!-- Messages -->
-                <div id="messagesContainer" class="flex-1 overflow-y-auto p-4 md:p-8 space-y-1 relative z-10 custom-scrollbar"></div>
+                <div id="messagesContainer" class="flex-1 overflow-y-auto p-4 md:p-8 space-y-1 relative z-10 custom-scrollbar w-full"></div>
 
                 <!-- Input -->
-                <div class="bg-gray-100 dark:bg-wa-header p-2 md:px-4 flex items-end gap-2 z-20 shadow-inner relative">
+                <div class="bg-gray-100 dark:bg-wa-header p-2 md:px-4 flex items-end gap-2 z-20 shadow-inner relative flex-shrink-0 w-full">
                     <button class="p-3 text-gray-500 hover:text-gray-700 dark:text-gray-400"><i class="far fa-smile text-xl"></i></button>
                     <button class="p-3 text-gray-500 hover:text-gray-700 dark:text-gray-400"><i class="fas fa-paperclip text-lg"></i></button>
                     
@@ -237,7 +237,8 @@
                         <textarea id="msgInput" rows="1" placeholder="پیغام لکھیں..." class="flex-1 bg-transparent p-2 outline-none max-h-32 resize-none urdu-text dark:text-white" oninput="autoResize(this)"></textarea>
                     </div>
                     
-                    <button onclick="sendMessage()" class="p-3 rounded-full text-gray-500 hover:text-wa-primary dark:text-gray-400 transition-colors">
+                    <!-- FIX: Type button and proper z-index for mobile -->
+                    <button type="button" onclick="sendMessage()" class="p-3 rounded-full text-gray-500 hover:text-wa-primary dark:text-gray-400 transition-colors z-50">
                         <i class="fas fa-microphone text-xl" id="sendIcon"></i>
                     </button>
                 </div>
