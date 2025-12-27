@@ -91,12 +91,23 @@
             color: #4b5563;
         }
         .dark .toggle-btn { color: #cbd5e1; }
+        
+        /* Loading Overlay */
+        #loadingOverlay {
+            backdrop-filter: blur(5px);
+        }
     </style>
 </head>
 <body class="text-gray-800 bg-slate-100 dark:bg-black transition-colors duration-300">
 
     <div class="mobile-container bg-white dark:bg-darkbg shadow-2xl relative overflow-hidden">
         
+        <!-- Loading Overlay -->
+        <div id="loadingOverlay" class="hidden fixed inset-0 z-[100] bg-white/80 dark:bg-black/80 flex flex-col items-center justify-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mb-4"></div>
+            <p class="text-emerald-700 dark:text-emerald-400 font-bold urdu-text text-lg" id="loadingText">پلیز ویٹ...</p>
+        </div>
+
         <!-- Auth Section -->
         <div id="authSection" class="flex-1 flex flex-col justify-center p-6 bg-emerald-50 dark:bg-slate-900 z-50 absolute inset-0 h-full">
             <div class="text-center mb-10">
@@ -319,12 +330,29 @@
         let allTrans = [];
         let currentTransType = 'in';
 
+        // Helper to show/hide loading
+        const showLoading = (msg = "پلیز ویٹ...") => {
+            const ol = document.getElementById('loadingOverlay');
+            const txt = document.getElementById('loadingText');
+            if(ol && txt) {
+                txt.innerText = msg;
+                ol.classList.remove('hidden');
+            }
+        };
+        const hideLoading = () => {
+            const ol = document.getElementById('loadingOverlay');
+            if(ol) ol.classList.add('hidden');
+        };
+
         // --- AUTH & SETUP ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 // Ensure auth section is hidden if we have a user
                 document.getElementById('authSection').classList.add('hidden');
                 
+                // Show loading initially
+                showLoading();
+
                 try {
                     const isAdmin = user.email && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
 
@@ -339,12 +367,14 @@
                         setupUserListener(user, false);
                     }
                 } catch (e) {
+                    hideLoading();
                     showToast("System Error: " + e.message);
                 }
             } else {
                 // No user
                 currentUser = null;
                 if(userDocUnsub) userDocUnsub();
+                hideLoading();
                 document.getElementById('authSection').classList.remove('hidden');
                 document.getElementById('appSection').classList.add('hidden');
                 document.getElementById('pendingScreen').classList.add('hidden');
@@ -357,9 +387,24 @@
 
             const userRef = doc(db, "users", user.uid);
             
+            // Auto-create fallback timer
+            let fallbackTimer = setTimeout(async () => {
+                console.log("Fallback: Auto-creating user doc...");
+                try {
+                     await setDoc(userRef, {
+                        email: user.email,
+                        displayName: user.displayName || "User",
+                        status: forceAdmin ? 'active' : 'pending',
+                        createdAt: serverTimestamp()
+                    }, { merge: true });
+                } catch(e) { console.error("Fallback failed", e); }
+            }, 5000); // 5 seconds fallback
+
             // This listener fires automatically whenever the doc is created/updated
             userDocUnsub = onSnapshot(userRef, async (docSnap) => {
                 if (docSnap.exists()) {
+                    clearTimeout(fallbackTimer); // Doc found, cancel fallback
+                    
                     const userData = docSnap.data();
                     
                     // Admin Override fix
@@ -371,31 +416,24 @@
                     if (userData.status === 'active' || forceAdmin) {
                         initializeUser(user);
                     } else {
+                        hideLoading();
                         showPendingScreen();
                     }
                 } else {
-                    // Doc doesn't exist yet (Signup in progress OR deleted)
-                    // We can try to create it here to be safe, if it's missing for > 2 seconds?
-                    // For now, let's just create it if it's missing, ensuring no user is stuck in limbo
-                    // This handles the "Silence" issue if signupUser failed to write
-                    try {
-                        await setDoc(userRef, {
-                            email: user.email,
-                            displayName: user.displayName || "User",
-                            status: forceAdmin ? 'active' : 'pending',
-                            createdAt: serverTimestamp()
-                        }, { merge: true });
-                    } catch(e) {
-                        console.error("Auto-create failed", e);
-                    }
+                    // Doc doesn't exist yet. Keep waiting (Loading screen is shown).
+                    // The fallback timer will handle it if it takes too long.
                 }
             }, (error) => {
+                clearTimeout(fallbackTimer);
+                hideLoading();
                 showToast("Connection Error: " + error.message);
             });
         }
 
         function initializeUser(user) {
             currentUser = user;
+            hideLoading();
+            
             // Force UI update
             document.getElementById('authSection').classList.add('hidden');
             document.getElementById('pendingScreen').classList.add('hidden');
