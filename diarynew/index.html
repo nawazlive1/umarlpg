@@ -102,7 +102,7 @@
             <div class="text-center mb-10">
                 <div class="bg-white dark:bg-slate-800 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 shadow-md text-4xl">🔐</div>
                 <h1 class="text-3xl font-bold text-emerald-800 dark:text-emerald-400">اسمارٹ ڈائری پرو</h1>
-                <p class="text-sm text-emerald-600 dark:text-emerald-300 font-sans mt-1">محفوظ ذاتی اور گروپ جرنل</p>
+                <p class="text-sm text-emerald-600 dark:text-emerald-300 font-sans mt-1">ایڈمن اپروول سسٹم</p>
             </div>
 
             <div id="loginForm" class="bg-white dark:bg-darkcard p-6 rounded-3xl shadow-xl border border-emerald-100 dark:border-slate-700">
@@ -128,28 +128,20 @@
                 </div>
                 <div class="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-xl mt-4">
                     <p class="text-[10px] text-blue-700 dark:text-blue-400 urdu-text text-center">
-                        نوٹ: اکاؤنٹ بنانے کے بعد آپ کی ای میل پر ایک لنک بھیجا جائے گا۔ اس کی تصدیق کے بعد ایڈمن آپ کو منظوری دے گا۔
+                        نوٹ: اکاؤنٹ بنانے کے بعد آپ کو ایڈمن کی منظوری کا انتظار کرنا ہوگا۔ (ای میل ویریفکیشن کی ضرورت نہیں)
                     </p>
                 </div>
-                <button onclick="window.signupUser()" class="w-full mt-4 bg-emerald-600 text-white font-bold py-3 rounded-xl btn-press">درخواست بھیجیں</button>
+                <button onclick="window.signupUser()" class="w-full mt-4 bg-emerald-600 text-white font-bold py-3 rounded-xl btn-press">اکاؤنٹ بنائیں</button>
                 <button onclick="window.showScreen('loginForm')" class="w-full mt-3 text-slate-400 py-2 text-sm font-sans">واپس جائیں</button>
             </div>
         </div>
 
-        <!-- Verification/Pending Screen -->
+        <!-- Pending Screen -->
         <div id="pendingScreen" class="hidden fixed inset-0 z-[60] bg-white dark:bg-darkbg flex flex-col items-center justify-center p-8 text-center">
-            <div id="emailVerifyMsg" class="hidden">
-                <div class="text-5xl mb-4">📧</div>
-                <h2 class="text-2xl font-bold mb-2 dark:text-white">ای میل چیک کریں</h2>
-                <p class="text-sm text-slate-500 mb-6">ہم نے آپ کو ایک تصدیقی لنک بھیجا ہے۔ برائے مہربانی اپنی ای میل چیک کریں اور لنک پر کلک کریں۔ (سپیم فولڈر بھی چیک کریں)</p>
-                <button onclick="window.checkVerification()" class="bg-emerald-600 text-white px-6 py-2 rounded-xl text-sm mb-4">میں نے تصدیق کر لی ہے</button>
-                <button onclick="window.resendLink()" class="block w-full text-emerald-600 text-xs">لنک دوبارہ بھیجیں</button>
-            </div>
-
-            <div id="adminApprovalMsg" class="hidden">
+            <div id="adminApprovalMsg">
                 <div class="text-5xl mb-4">⏳</div>
                 <h2 class="text-2xl font-bold mb-2 dark:text-white">انتظار فرمائیں</h2>
-                <p class="text-sm text-slate-500 mb-6">آپ کا ای میل تصدیق ہو چکا ہے لیکن ابھی ایڈمن نے آپ کا اکاؤنٹ منظور نہیں کیا۔</p>
+                <p class="text-sm text-slate-500 mb-6">آپ کا اکاؤنٹ بن گیا ہے لیکن ابھی ایڈمن نے منظور نہیں کیا۔ براہ کرم ایڈمن سے رابطہ کریں۔</p>
                 <div class="bg-slate-100 dark:bg-slate-800 p-4 rounded-xl text-xs text-slate-600 dark:text-slate-300">
                     اسٹیٹس: <span class="font-bold text-orange-500">زیرِ التواء (Pending)</span>
                 </div>
@@ -296,7 +288,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile, sendEmailVerification } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
         import { getFirestore, collection, addDoc, updateDoc, query, where, onSnapshot, deleteDoc, doc, setDoc, getDoc, serverTimestamp, arrayUnion } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -329,37 +321,38 @@
         // --- AUTH & SETUP ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                // 1. Check Email Verification
-                if (!user.emailVerified) {
-                    showPendingScreen('email');
-                    return;
-                }
-
-                // 2. Check Admin Approval Status from Firestore
                 const userRef = doc(db, "users", user.uid);
                 const userSnap = await getDoc(userRef);
+                
+                // Helper to normalize email check (case insensitive)
+                const isAdmin = user.email && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
 
                 if (userSnap.exists()) {
                     const userData = userSnap.data();
                     
-                    // Allow if status is active OR if the user is the Hardcoded Admin
-                    if (userData.status === 'active' || user.email === ADMIN_EMAIL) {
-                        // Access Granted
+                    // If user is Admin, force update status to 'active' if not already
+                    if (isAdmin && userData.status !== 'active') {
+                        await updateDoc(userRef, { status: 'active' });
+                        userData.status = 'active'; // Local update
+                    }
+
+                    // Check access
+                    if (userData.status === 'active' || isAdmin) {
                         initializeUser(user);
                     } else {
-                        // Access Denied (Pending)
-                        showPendingScreen('approval');
+                        showPendingScreen();
                     }
                 } else {
-                    // Fallback if doc doesn't exist (legacy users or error)
-                    // Create it now
+                    // Create new doc. If Admin, set Active immediately.
                     await setDoc(userRef, {
                         email: user.email,
                         displayName: user.displayName,
-                        status: 'pending', // Default to pending
+                        status: isAdmin ? 'active' : 'pending',
                         createdAt: serverTimestamp()
                     });
-                    showPendingScreen('approval');
+                    
+                    if (isAdmin) initializeUser(user);
+                    else showPendingScreen();
                 }
 
             } else {
@@ -381,7 +374,7 @@
             document.getElementById('headerSub').innerText = `${displayName}`;
             
             // Show Admin Button if Admin
-            if (user.email === ADMIN_EMAIL) {
+            if (user.email && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
                 document.getElementById('adminPanelBtn').classList.remove('hidden');
                 listenForPendingUsers();
             }
@@ -438,27 +431,11 @@
         }
 
         // --- VERIFICATION SCREENS ---
-        function showPendingScreen(type) {
+        function showPendingScreen() {
             document.getElementById('authSection').classList.add('hidden');
             document.getElementById('appSection').classList.add('hidden');
             document.getElementById('pendingScreen').classList.remove('hidden');
-            
-            if(type === 'email') {
-                document.getElementById('emailVerifyMsg').classList.remove('hidden');
-                document.getElementById('adminApprovalMsg').classList.add('hidden');
-            } else {
-                document.getElementById('emailVerifyMsg').classList.add('hidden');
-                document.getElementById('adminApprovalMsg').classList.remove('hidden');
-            }
         }
-
-        window.checkVerification = () => location.reload();
-        window.resendLink = async () => {
-             if(auth.currentUser) {
-                 await sendEmailVerification(auth.currentUser);
-                 alert("لنک دوبارہ بھیج دیا گیا ہے");
-             }
-        };
 
         // --- CORE LOGIC: MODE SWITCHING ---
         window.setMode = (mode) => {
@@ -699,12 +676,9 @@
                 // 2. Update Display Name
                 await updateProfile(user, { displayName: name });
                 
-                // 3. Send Verification Email
-                await sendEmailVerification(user);
-
-                // 4. Create User Doc in Firestore with "Pending" Status
-                // If it's the specific Admin Email, auto-approve
-                const status = (email === ADMIN_EMAIL) ? 'active' : 'pending';
+                // 3. Create User Doc in Firestore with "Pending" Status
+                const isAdmin = email && email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+                const status = isAdmin ? 'active' : 'pending';
                 await setDoc(doc(db, "users", user.uid), {
                     email: email,
                     displayName: name,
@@ -713,7 +687,6 @@
                 });
 
                 showToast("درخواست بھیج دی گئی!");
-                // Note: Auth state change listener will handle the UI redirect to Pending Screen
             }
             catch(e) { showToast("مسئلہ: " + e.message); }
         };
