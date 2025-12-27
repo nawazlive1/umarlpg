@@ -313,6 +313,7 @@
         let currentUser = null;
         let currentMode = 'personal'; 
         let myGroupId = localStorage.getItem('myGroupId') || null;
+        let userDocUnsub = null; // Unsubscribe from user doc listener
 
         let allTasks = [];
         let allTrans = [];
@@ -321,57 +322,81 @@
         // --- AUTH & SETUP ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                const userRef = doc(db, "users", user.uid);
+                // Ensure auth section is hidden if we have a user
+                document.getElementById('authSection').classList.add('hidden');
                 
-                // --- FIX: RACE CONDITION ---
-                // Wait for up to 1.5 seconds for signupUser to write the doc
-                let attempts = 0;
-                let userSnap = await getDoc(userRef);
-                while (!userSnap.exists() && attempts < 3) {
-                    await new Promise(r => setTimeout(r, 500));
-                    userSnap = await getDoc(userRef);
-                    attempts++;
-                }
-                // ---------------------------
+                try {
+                    const isAdmin = user.email && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
 
-                const isAdmin = user.email && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
-
-                if (userSnap.exists()) {
-                    const userData = userSnap.data();
-                    
-                    if (isAdmin && userData.status !== 'active') {
-                        await updateDoc(userRef, { status: 'active' });
-                        userData.status = 'active'; 
-                    }
-
-                    if (userData.status === 'active' || isAdmin) {
-                        initializeUser(user);
+                    // If Admin, bypass everything immediately
+                    if (isAdmin) {
+                        // Ensure doc exists, then init
+                        const userRef = doc(db, "users", user.uid);
+                        // We don't block for getDoc here for speed, just start listening
+                        setupUserListener(user, true); 
                     } else {
-                        showPendingScreen();
+                        // Regular user: Listen to their doc to decide screen
+                        setupUserListener(user, false);
                     }
-                } else {
-                    // Fallback: Create doc if still missing (no name)
-                    await setDoc(userRef, {
-                        email: user.email,
-                        displayName: user.displayName,
-                        status: isAdmin ? 'active' : 'pending',
-                        createdAt: serverTimestamp()
-                    });
-                    
-                    if (isAdmin) initializeUser(user);
-                    else showPendingScreen();
+                } catch (e) {
+                    showToast("System Error: " + e.message);
                 }
-
             } else {
+                // No user
                 currentUser = null;
+                if(userDocUnsub) userDocUnsub();
                 document.getElementById('authSection').classList.remove('hidden');
                 document.getElementById('appSection').classList.add('hidden');
                 document.getElementById('pendingScreen').classList.add('hidden');
             }
         });
 
+        // --- NEW REAL-TIME USER DOC LISTENER ---
+        function setupUserListener(user, forceAdmin) {
+            if(userDocUnsub) userDocUnsub();
+
+            const userRef = doc(db, "users", user.uid);
+            
+            // This listener fires automatically whenever the doc is created/updated
+            userDocUnsub = onSnapshot(userRef, async (docSnap) => {
+                if (docSnap.exists()) {
+                    const userData = docSnap.data();
+                    
+                    // Admin Override fix
+                    if (forceAdmin && userData.status !== 'active') {
+                        await updateDoc(userRef, { status: 'active' });
+                        return; // The update will trigger this listener again
+                    }
+
+                    if (userData.status === 'active' || forceAdmin) {
+                        initializeUser(user);
+                    } else {
+                        showPendingScreen();
+                    }
+                } else {
+                    // Doc doesn't exist yet (Signup in progress OR deleted)
+                    // We can try to create it here to be safe, if it's missing for > 2 seconds?
+                    // For now, let's just create it if it's missing, ensuring no user is stuck in limbo
+                    // This handles the "Silence" issue if signupUser failed to write
+                    try {
+                        await setDoc(userRef, {
+                            email: user.email,
+                            displayName: user.displayName || "User",
+                            status: forceAdmin ? 'active' : 'pending',
+                            createdAt: serverTimestamp()
+                        }, { merge: true });
+                    } catch(e) {
+                        console.error("Auto-create failed", e);
+                    }
+                }
+            }, (error) => {
+                showToast("Connection Error: " + error.message);
+            });
+        }
+
         function initializeUser(user) {
             currentUser = user;
+            // Force UI update
             document.getElementById('authSection').classList.add('hidden');
             document.getElementById('pendingScreen').classList.add('hidden');
             document.getElementById('appSection').classList.remove('hidden');
