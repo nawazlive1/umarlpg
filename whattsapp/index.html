@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>اسمارٹ چیٹ ڈائری</title>
+    <title>واٹس ایپ کلون</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -14,15 +14,17 @@
                 extend: {
                     colors: {
                         wa: {
-                            teal: '#008069',
-                            dark: '#1f2c34',
-                            light: '#f0f2f5',
-                            chat_me: '#d9fdd3', // WhatsApp Green Bubble
+                            primary: '#008069', // Original WA Teal
+                            dark: '#1f2c34',    // Dark BG
+                            header: '#202c33',  // Dark Header
+                            chat_me: '#e2f7cb', // Green Bubble (Light Mode)
                             chat_other: '#ffffff', // White Bubble
                             chat_dark_me: '#005c4b',
                             chat_dark_other: '#202c33',
-                            bg_dark: '#0b141a',
-                            accent: '#25D366'
+                            bg_default: '#f0f2f5',
+                            accent: '#25d366',
+                            tab_active: '#ffffff',
+                            tab_inactive: '#b4d9d2'
                         }
                     },
                     fontFamily: {
@@ -42,197 +44,317 @@
         body { font-family: 'Noto Sans Arabic', sans-serif; -webkit-tap-highlight-color: transparent; }
         .urdu-text { font-family: 'Noto Nastaliq Urdu', serif; line-height: 2.2; }
         
-        /* WhatsApp Chat Background Pattern */
+        /* WhatsApp Background */
         .chat-bg {
-            background-color: #e5ddd5;
-            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M15 15h10v10H15zM55 55h10v10H55z' fill='%23000000' fill-opacity='0.03'/%3E%3C/svg%3E");
-            background-attachment: fixed;
+            background-color: #efeae2;
+            background-image: url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png");
+            background-repeat: repeat;
         }
         .dark .chat-bg {
             background-color: #0b141a;
-            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M15 15h10v10H15zM55 55h10v10H55z' fill='%23ffffff' fill-opacity='0.03'/%3E%3C/svg%3E");
+            background-image: url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png");
+            opacity: 0.06;
         }
 
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        .btn-press:active { transform: scale(0.95); }
+        .btn-press:active { transform: scale(0.96); }
 
-        /* Reply Animation */
-        @keyframes slideUp {
-            from { transform: translateY(100%); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-        .reply-preview { animation: slideUp 0.2s ease-out; }
+        /* Animations */
+        @keyframes slideInRight { from { transform: translateX(100%); } to { transform: translateX(0); } }
+        @keyframes slideOutRight { from { transform: translateX(0); } to { transform: translateX(100%); } }
+        .slide-in { animation: slideInRight 0.2s ease-out forwards; }
+        .slide-out { animation: slideOutRight 0.2s ease-in forwards; }
 
-        /* Message Tail Logic */
-        .msg-me { border-radius: 10px 0px 10px 10px; }
-        .msg-other { border-radius: 0px 10px 10px 10px; }
-
-        /* Emoji Reaction Popup */
-        .reaction-popover {
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            background: white;
-            padding: 5px;
-            border-radius: 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            display: flex;
-            gap: 5px;
-            z-index: 50;
-            margin-bottom: 5px;
-        }
-        .dark .reaction-popover { background: #1f2c34; border: 1px solid #333; }
-        
-        /* Pulse for Recording */
-        @keyframes pulse-red {
-            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
-        }
-        .recording-active { animation: pulse-red 1.5s infinite; background-color: #ef4444 !important; color: white !important; }
+        /* Ticks */
+        .tick-read { color: #53bdeb; }
+        .tick-sent { color: #8696a0; }
     </style>
 </head>
-<body class="bg-gray-100 dark:bg-black h-[100dvh] w-full overflow-hidden flex justify-center">
+<body class="bg-gray-100 dark:bg-black h-[100dvh] w-full overflow-hidden flex justify-center text-gray-800 dark:text-gray-100 selection:bg-wa-primary selection:text-white">
 
     <div class="w-full max-w-md h-full flex flex-col bg-white dark:bg-wa-dark shadow-2xl relative overflow-hidden">
         
-        <!-- Loading -->
+        <!-- Loading Overlay -->
         <div id="loadingOverlay" class="hidden absolute inset-0 z-[100] bg-white/90 dark:bg-black/90 flex flex-col items-center justify-center">
-            <i class="fas fa-circle-notch fa-spin text-4xl text-wa-teal mb-4"></i>
-            <p class="font-bold text-wa-teal urdu-text">لوڈنگ...</p>
+            <div class="w-12 h-12 border-4 border-wa-primary border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p class="font-bold text-wa-primary urdu-text" id="loadingText">براہ کرم انتظار کریں...</p>
         </div>
 
-        <!-- AUTH SCREEN -->
-        <div id="authScreen" class="absolute inset-0 z-50 bg-white dark:bg-wa-dark flex flex-col p-6 items-center justify-center">
-            <div class="text-6xl text-wa-teal mb-4"><i class="fab fa-whatsapp"></i></div>
-            <h1 class="text-2xl font-bold mb-8 dark:text-white urdu-text">اسمارٹ گروپ ڈائری</h1>
+        <!-- ================= AUTH SCREENS (Email/Pass) ================= -->
+        
+        <div id="authScreen" class="absolute inset-0 z-50 bg-white dark:bg-wa-dark flex flex-col items-center justify-center p-6">
+            <div class="mb-8 flex flex-col items-center">
+                <div class="w-20 h-20 bg-wa-primary rounded-2xl flex items-center justify-center text-white text-4xl mb-4 shadow-lg">
+                    <i class="fab fa-whatsapp"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-wa-primary mb-1 urdu-text">واٹس ایپ میں خوش آمدید</h1>
+                <p class="text-xs text-gray-500">اپنے اکاؤنٹ میں لاگ ان کریں</p>
+            </div>
             
-            <div id="loginForm" class="w-full space-y-4">
-                <input type="email" id="email" placeholder="ای میل" class="w-full p-3 rounded-lg border border-gray-300 dark:bg-gray-800 dark:text-white dark:border-gray-700 outline-none focus:border-wa-teal">
-                <input type="password" id="pass" placeholder="پاسورڈ" class="w-full p-3 rounded-lg border border-gray-300 dark:bg-gray-800 dark:text-white dark:border-gray-700 outline-none focus:border-wa-teal">
-                <button onclick="authAction('login')" class="w-full bg-wa-teal text-white py-3 rounded-lg font-bold btn-press">لاگ ان</button>
-                <p class="text-center text-sm text-gray-500 mt-4 cursor-pointer hover:text-wa-teal" onclick="toggleAuth('signup')">نیا اکاؤنٹ بنائیں</p>
+            <!-- Tabs for Login/Signup -->
+            <div class="flex w-full mb-6 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
+                <button onclick="toggleAuthMode('login')" id="tabLogin" class="flex-1 py-2 text-sm font-bold rounded-md bg-white dark:bg-gray-700 shadow text-wa-primary transition-all">لاگ ان</button>
+                <button onclick="toggleAuthMode('signup')" id="tabSignup" class="flex-1 py-2 text-sm font-bold rounded-md text-gray-500 transition-all">اکاؤنٹ بنائیں</button>
             </div>
 
-            <div id="signupForm" class="hidden w-full space-y-4">
-                <input type="text" id="signupName" placeholder="اپنا نام لکھیں" class="w-full p-3 rounded-lg border border-gray-300 dark:bg-gray-800 dark:text-white dark:border-gray-700 outline-none urdu-text">
-                <input type="email" id="signupEmail" placeholder="ای میل" class="w-full p-3 rounded-lg border border-gray-300 dark:bg-gray-800 dark:text-white dark:border-gray-700 outline-none">
-                <input type="password" id="signupPass" placeholder="پاسورڈ" class="w-full p-3 rounded-lg border border-gray-300 dark:bg-gray-800 dark:text-white dark:border-gray-700 outline-none">
-                <button onclick="authAction('signup')" class="w-full bg-wa-teal text-white py-3 rounded-lg font-bold btn-press">اکاؤنٹ بنائیں</button>
-                <p class="text-center text-sm text-gray-500 mt-4 cursor-pointer hover:text-wa-teal" onclick="toggleAuth('login')">واپس لاگ ان پر جائیں</p>
+            <!-- LOGIN FORM -->
+            <div id="loginForm" class="w-full space-y-4 animate-fade-in">
+                <div class="bg-gray-50 dark:bg-gray-800 rounded-lg px-4 py-2 border border-gray-200 dark:border-gray-700">
+                    <label class="text-[10px] text-wa-primary font-bold">ای میل</label>
+                    <input type="email" id="loginEmail" class="w-full bg-transparent outline-none text-sm dark:text-white" dir="ltr">
+                </div>
+                <div class="bg-gray-50 dark:bg-gray-800 rounded-lg px-4 py-2 border border-gray-200 dark:border-gray-700">
+                    <label class="text-[10px] text-wa-primary font-bold">پاسورڈ</label>
+                    <input type="password" id="loginPass" class="w-full bg-transparent outline-none text-sm dark:text-white" dir="ltr">
+                </div>
+                <button onclick="authAction('login')" class="w-full bg-wa-primary text-white py-3 rounded-full font-bold shadow-lg btn-press mt-4">لاگ ان کریں</button>
             </div>
-            
-            <div id="pendingMsg" class="hidden text-center">
-                <h2 class="text-xl font-bold text-orange-500 mb-2">انتظار فرمائیں</h2>
-                <p class="text-sm text-gray-500">آپ کا اکاؤنٹ ایڈمن کی منظوری کا منتظر ہے۔</p>
-                <button onclick="location.reload()" class="mt-4 text-wa-teal font-bold text-sm">ریفریش</button>
-                <button onclick="signOutApp()" class="mt-4 block mx-auto text-red-400 text-xs">لاگ آؤٹ</button>
+
+            <!-- SIGNUP FORM -->
+            <div id="signupForm" class="hidden w-full space-y-4 animate-fade-in">
+                <div class="bg-gray-50 dark:bg-gray-800 rounded-lg px-4 py-2 border border-gray-200 dark:border-gray-700">
+                    <label class="text-[10px] text-wa-primary font-bold">آپ کا نام</label>
+                    <input type="text" id="signupName" class="w-full bg-transparent outline-none text-sm dark:text-white urdu-text">
+                </div>
+                <div class="bg-gray-50 dark:bg-gray-800 rounded-lg px-4 py-2 border border-gray-200 dark:border-gray-700">
+                    <label class="text-[10px] text-wa-primary font-bold">ای میل</label>
+                    <input type="email" id="signupEmail" class="w-full bg-transparent outline-none text-sm dark:text-white" dir="ltr">
+                </div>
+                <div class="bg-gray-50 dark:bg-gray-800 rounded-lg px-4 py-2 border border-gray-200 dark:border-gray-700">
+                    <label class="text-[10px] text-wa-primary font-bold">پاسورڈ</label>
+                    <input type="password" id="signupPass" class="w-full bg-transparent outline-none text-sm dark:text-white" dir="ltr">
+                </div>
+                <button onclick="authAction('signup')" class="w-full bg-wa-primary text-white py-3 rounded-full font-bold shadow-lg btn-press mt-4">اکاؤنٹ بنائیں</button>
             </div>
+
+            <p class="mt-auto text-[10px] text-gray-400">from Meta</p>
         </div>
 
-        <!-- MAIN APP -->
+        <!-- ================= MAIN APP UI ================= -->
+        
         <div id="mainApp" class="hidden flex-1 flex flex-col h-full overflow-hidden">
             
-            <!-- Header (WhatsApp Style) -->
-            <header class="bg-wa-teal dark:bg-wa-dark text-white p-3 flex items-center justify-between shadow-md z-20 flex-shrink-0">
-                <div class="flex items-center gap-3 cursor-pointer" onclick="openGroupSettings()">
-                    <button class="text-white mr-1"><i class="fas fa-arrow-left"></i></button>
-                    <div class="relative">
-                        <div id="groupAvatar" class="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 font-bold text-lg overflow-hidden">
-                            <i class="fas fa-users"></i>
+            <!-- Main Header -->
+            <header class="bg-wa-primary dark:bg-wa-header text-white shadow-md z-20 flex-shrink-0">
+                <div class="flex justify-between items-center p-4 pb-2">
+                    <h1 class="text-xl font-bold tracking-wide">WhatsApp</h1>
+                    <div class="flex gap-5 text-lg">
+                        <button onclick="toggleTheme()" class="opacity-80 hover:opacity-100"><i class="far fa-moon"></i></button>
+                        <button class="opacity-80 hover:opacity-100"><i class="fas fa-camera"></i></button>
+                        <button class="opacity-80 hover:opacity-100"><i class="fas fa-search"></i></button>
+                        <div class="relative group">
+                            <button class="opacity-80 hover:opacity-100"><i class="fas fa-ellipsis-v"></i></button>
+                            <!-- Dropdown -->
+                            <div class="absolute right-0 top-6 w-40 bg-white dark:bg-wa-header shadow-xl rounded-lg hidden group-hover:block py-2 text-gray-800 dark:text-gray-200 text-sm animate-fade-in z-50">
+                                <div onclick="openCreateGroupModal()" class="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">نیا گروپ</div>
+                                <div onclick="openProfileModal()" class="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">سیٹنگز</div>
+                                <div onclick="signOutApp()" class="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-red-500">لاگ آؤٹ</div>
+                            </div>
                         </div>
                     </div>
-                    <div class="flex flex-col justify-center">
-                        <h1 id="chatTitle" class="font-bold text-base leading-tight urdu-text">پرسنل ڈائری</h1>
-                        <p id="chatSub" class="text-xs text-wa-light opacity-80 truncate max-w-[150px]">ٹیپ کر کے گروپ انفو دیکھیں</p>
-                    </div>
                 </div>
-                <div class="flex items-center gap-4">
-                    <button onclick="toggleTheme()"><i class="fas fa-moon"></i></button>
-                    <button onclick="openAdminPanel()" id="adminBtn" class="hidden relative">
-                        <i class="fas fa-shield-alt"></i>
-                        <span id="pendingBadge" class="hidden absolute -top-1 -right-1 bg-red-500 text-[10px] w-4 h-4 rounded-full flex items-center justify-center">0</span>
-                    </button>
-                    <button onclick="signOutApp()"><i class="fas fa-sign-out-alt"></i></button>
+                
+                <!-- Navigation Tabs -->
+                <div class="flex justify-between text-center uppercase text-xs font-bold pt-2">
+                    <div class="w-10 pb-3 opacity-60"><i class="fas fa-users"></i></div>
+                    <div onclick="switchTab('chats')" id="tab-chats" class="flex-1 pb-3 border-b-[3px] border-white text-white cursor-pointer transition-colors">چیٹس</div>
+                    <div onclick="switchTab('updates')" id="tab-updates" class="flex-1 pb-3 border-b-[3px] border-transparent text-wa-tab_inactive hover:text-white cursor-pointer transition-colors">اپڈیٹس</div>
+                    <div onclick="switchTab('calls')" id="tab-calls" class="flex-1 pb-3 border-b-[3px] border-transparent text-wa-tab_inactive hover:text-white cursor-pointer transition-colors">کالز</div>
                 </div>
             </header>
 
-            <!-- Mode Switcher -->
-            <div class="flex-shrink-0 flex bg-wa-teal/10 dark:bg-wa-dark border-b border-gray-200 dark:border-gray-700 p-1">
-                <button onclick="setMode('personal')" id="btnPersonal" class="flex-1 py-1 rounded text-xs font-bold transition-all bg-wa-teal text-white">ذاتی نوٹس</button>
-                <button onclick="setMode('group')" id="btnGroup" class="flex-1 py-1 rounded text-xs font-bold transition-all text-gray-500">گروپ چیٹ</button>
-            </div>
+            <!-- CHATS TAB -->
+            <div id="viewChats" class="flex-1 overflow-y-auto relative bg-white dark:bg-wa-dark custom-scrollbar">
+                <!-- Chat List -->
+                <div id="chatList" class="pb-24"></div>
 
-            <!-- Chat Area -->
-            <div id="chatContainer" class="flex-1 overflow-y-auto p-4 chat-bg relative">
-                <div id="emptyState" class="hidden flex flex-col items-center justify-center h-full opacity-60">
-                    <div class="bg-[#dcf8c6] dark:bg-wa-dark p-6 rounded-full mb-4">
-                        <i class="fas fa-comments text-4xl text-wa-teal"></i>
-                    </div>
-                    <p class="text-sm bg-white/50 dark:bg-black/50 px-3 py-1 rounded-lg">یہاں پیغامات نظر آئیں گے</p>
-                </div>
-                <!-- Messages will be injected here -->
-                <div id="messagesList" class="flex flex-col space-y-2 pb-4"></div>
-            </div>
-
-            <!-- Reply Preview Bar -->
-            <div id="replyPreview" class="hidden bg-gray-100 dark:bg-gray-800 p-2 border-l-4 border-wa-teal flex justify-between items-center reply-preview z-20 relative flex-shrink-0">
-                <div class="bg-white/50 dark:bg-black/20 p-2 rounded w-full">
-                    <p class="text-[10px] font-bold text-wa-teal mb-1" id="replyAuthor">جواب دے رہے ہیں...</p>
-                    <p class="text-xs text-gray-600 dark:text-gray-300 truncate urdu-text" id="replyText">...</p>
-                </div>
-                <button onclick="cancelReply()" class="ml-2 text-gray-500 p-2"><i class="fas fa-times"></i></button>
-            </div>
-
-            <!-- Input Area -->
-            <div class="flex-shrink-0 bg-white dark:bg-wa-dark p-2 px-3 flex items-end gap-2 z-30 shadow-[0_-1px_5px_rgba(0,0,0,0.1)]" style="padding-bottom: max(8px, env(safe-area-inset-bottom));">
-                <div class="flex-1 bg-white dark:bg-[#2a3942] rounded-3xl flex items-center border border-gray-100 dark:border-none shadow-sm px-2">
-                    <button class="p-2 text-gray-400 hover:text-yellow-500 transition"><i class="far fa-smile"></i></button>
-                    <textarea id="msgInput" rows="1" placeholder="پیغام لکھیں..." class="flex-1 bg-transparent p-3 outline-none max-h-32 resize-none urdu-text dark:text-white" oninput="autoResize(this)"></textarea>
-                    <button onclick="sendMessage()" class="p-2 text-wa-teal font-bold transform rotate-180"><i class="fas fa-paper-plane"></i></button>
-                </div>
-                <!-- Mic / Send Button -->
-                <button id="micBtn" onmousedown="startListening()" onmouseup="stopListening()" ontouchstart="startListening()" ontouchend="stopListening()" class="w-12 h-12 rounded-full bg-wa-teal text-white shadow-lg flex items-center justify-center btn-press transition-colors duration-300">
-                    <i class="fas fa-microphone"></i>
+                <!-- FAB -->
+                <button onclick="openNewChatModal()" class="absolute bottom-5 right-5 w-14 h-14 bg-wa-primary text-white rounded-2xl shadow-lg flex items-center justify-center text-xl btn-press z-30 transition-transform hover:scale-105">
+                    <i class="fas fa-comment-alt"></i>
                 </button>
             </div>
+
+            <!-- UPDATES TAB (Mock) -->
+            <div id="viewUpdates" class="hidden flex-1 overflow-y-auto bg-white dark:bg-wa-dark p-4">
+                <h2 class="font-bold text-lg mb-4">اسٹیٹس</h2>
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="relative">
+                        <div class="w-12 h-12 rounded-full bg-gray-300 flex items-center justify-center overflow-hidden">
+                            <span id="myStatusAvatar" class="text-xl font-bold text-gray-500">U</span>
+                        </div>
+                        <div class="absolute bottom-0 right-0 bg-wa-accent text-white rounded-full w-5 h-5 flex items-center justify-center border-2 border-white dark:border-wa-dark text-xs font-bold">+</div>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-sm">میرا اسٹیٹس</h3>
+                        <p class="text-xs text-gray-500">اسٹیٹس لگانے کے لیے ٹیپ کریں</p>
+                    </div>
+                </div>
+                <p class="text-xs text-gray-500 font-bold mb-2">حالیہ اپڈیٹس</p>
+                <div class="opacity-50 text-center py-10 text-sm">کوئی حالیہ اپڈیٹ نہیں</div>
+            </div>
+
+            <!-- CALLS TAB (Mock) -->
+            <div id="viewCalls" class="hidden flex-1 overflow-y-auto bg-white dark:bg-wa-dark p-4">
+                <h2 class="font-bold text-lg mb-4">کالز</h2>
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-12 h-12 rounded-full bg-wa-primary flex items-center justify-center text-white transform -rotate-45">
+                        <i class="fas fa-link"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-sm">کال لنک بنائیں</h3>
+                        <p class="text-xs text-gray-500">اپنی واٹس ایپ کال کا لنک شیئر کریں</p>
+                    </div>
+                </div>
+                <p class="text-xs text-gray-500 font-bold mb-2">حالیہ</p>
+                <div class="opacity-50 text-center py-10 text-sm">کوئی کال ہسٹری نہیں</div>
+            </div>
+
         </div>
     </div>
 
-    <!-- Group Settings Modal -->
-    <div id="groupModal" class="hidden fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-wa-dark p-6 rounded-2xl w-full max-w-sm shadow-2xl">
-            <h3 class="text-xl font-bold mb-4 dark:text-white text-center urdu-text">گروپ سیٹنگز</h3>
-            <div class="flex justify-center mb-6">
-                <div class="w-20 h-20 rounded-full bg-wa-teal text-white flex items-center justify-center text-3xl">
-                    <i class="fas fa-users"></i>
+    <!-- ================= MODALS ================= -->
+
+    <!-- New Chat / Contacts Modal -->
+    <div id="newChatModal" class="hidden fixed inset-0 z-[60] bg-white dark:bg-wa-dark flex flex-col slide-in">
+        <div class="bg-wa-primary dark:bg-wa-header text-white p-3 flex items-center gap-3 shadow pt-4">
+            <button onclick="closeModal('newChatModal')"><i class="fas fa-arrow-right"></i></button>
+            <div class="flex-1">
+                <h2 class="font-bold text-lg">رابطہ منتخب کریں</h2>
+                <p class="text-xs opacity-80" id="contactsCount">0 رابطے</p>
+            </div>
+            <button><i class="fas fa-search"></i></button>
+        </div>
+        
+        <div class="flex-1 overflow-y-auto p-2">
+            <!-- Options -->
+            <div onclick="openCreateGroupModal()" class="flex items-center gap-4 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer rounded-lg">
+                <div class="w-10 h-10 rounded-full bg-wa-primary text-white flex items-center justify-center"><i class="fas fa-users"></i></div>
+                <p class="font-bold">نیا گروپ بنائیں</p>
+            </div>
+            <div class="flex items-center gap-4 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer rounded-lg mb-2">
+                <div class="w-10 h-10 rounded-full bg-wa-primary text-white flex items-center justify-center"><i class="fas fa-user-plus"></i></div>
+                <p class="font-bold">نیا رابطہ</p>
+            </div>
+            
+            <p class="px-3 text-xs font-bold text-gray-500 mb-2">واٹس ایپ پر رابطے</p>
+            <div id="contactsList" class="space-y-1"></div>
+        </div>
+    </div>
+
+    <!-- Create Group Modal -->
+    <div id="createGroupModal" class="hidden fixed inset-0 z-[70] bg-white dark:bg-wa-dark flex flex-col slide-in">
+        <div class="bg-wa-primary dark:bg-wa-header text-white p-3 flex items-center gap-3 shadow pt-4">
+            <button onclick="closeModal('createGroupModal')"><i class="fas fa-arrow-right"></i></button>
+            <div>
+                <h2 class="font-bold text-lg">نیا گروپ</h2>
+                <p class="text-xs opacity-80">ممبرز شامل کریں</p>
+            </div>
+        </div>
+        <div class="p-4 flex-1 flex flex-col">
+            <div class="flex items-center gap-3 mb-6 border-b border-wa-primary pb-2">
+                <div class="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center text-gray-500">
+                    <i class="fas fa-camera"></i>
+                </div>
+                <input type="text" id="newGroupName" placeholder="گروپ کا نام لکھیں" class="flex-1 bg-transparent outline-none urdu-text text-lg">
+                <i class="far fa-smile text-gray-400"></i>
+            </div>
+            
+            <p class="text-sm font-bold mb-3 text-gray-500">ممبرز منتخب کریں:</p>
+            <div id="groupSelectionList" class="flex-1 overflow-y-auto space-y-2"></div>
+            
+            <button onclick="createGroup()" class="w-12 h-12 bg-wa-primary text-white rounded-full shadow-lg flex items-center justify-center self-end mt-4 btn-press">
+                <i class="fas fa-check"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Profile/Settings Modal -->
+    <div id="profileModal" class="hidden fixed inset-0 z-[70] bg-white dark:bg-wa-dark flex flex-col slide-in">
+        <div class="bg-wa-primary dark:bg-wa-header text-white p-3 flex items-center gap-3 shadow pt-4">
+            <button onclick="closeModal('profileModal')"><i class="fas fa-arrow-right"></i></button>
+            <h2 class="font-bold text-lg">پروفائل</h2>
+        </div>
+        <div class="p-6 flex flex-col items-center">
+            <div class="relative mb-6">
+                <div class="w-32 h-32 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-5xl text-gray-400 overflow-hidden">
+                    <span id="profileAvatarText">U</span>
+                </div>
+                <div class="absolute bottom-0 right-0 bg-wa-primary p-3 rounded-full text-white shadow-lg cursor-pointer">
+                    <i class="fas fa-camera"></i>
                 </div>
             </div>
-            <label class="text-xs font-bold text-wa-teal">گروپ کوڈ (ID)</label>
-            <input type="text" id="groupIdInput" placeholder="مثلاً: FAMILY123" class="w-full p-3 bg-gray-100 dark:bg-[#2a3942] dark:text-white rounded-xl mt-2 mb-6 outline-none text-center font-bold tracking-widest uppercase border-b-2 border-wa-teal">
-            <button onclick="saveGroup()" class="w-full bg-wa-teal text-white py-3 rounded-xl font-bold mb-2">محفوظ کریں</button>
-            <button onclick="document.getElementById('groupModal').classList.add('hidden')" class="w-full text-gray-400 py-2 text-sm">بند کریں</button>
+
+            <div class="w-full mb-4">
+                <div class="flex justify-between items-center text-gray-500 text-xs mb-1 px-2">
+                    <span>نام</span>
+                    <i class="fas fa-pen cursor-pointer" onclick="enableEditName()"></i>
+                </div>
+                <div class="flex items-center gap-2 border-b-2 border-transparent focus-within:border-wa-primary bg-gray-50 dark:bg-gray-800 p-3 rounded-t-lg transition-colors">
+                    <input type="text" id="editProfileName" class="w-full bg-transparent outline-none font-bold text-lg urdu-text" disabled>
+                    <i class="far fa-smile text-gray-400"></i>
+                </div>
+                <p class="text-[10px] text-gray-400 mt-1 px-2">یہ نام آپ کے واٹس ایپ رابطوں کو نظر آئے گا۔</p>
+            </div>
+            
+            <div class="w-full">
+                <p class="text-gray-500 text-xs mb-1 px-2">ای میل</p>
+                <div class="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg text-gray-400 text-sm" id="profileEmail">user@example.com</div>
+            </div>
+
+            <button id="saveProfileBtn" onclick="saveProfile()" class="mt-8 bg-wa-primary text-white px-8 py-2 rounded-full font-bold hidden">محفوظ کریں</button>
         </div>
     </div>
 
-    <!-- Admin Modal -->
-    <div id="adminModal" class="hidden fixed inset-0 z-[60] bg-black/60 flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-wa-dark p-6 rounded-2xl w-full max-w-sm h-[60vh] flex flex-col">
-            <h3 class="text-lg font-bold mb-4 dark:text-white border-b pb-2">نئی ممبرشپ درخواستیں</h3>
-            <div id="pendingList" class="flex-1 overflow-y-auto space-y-3"></div>
-            <button onclick="document.getElementById('adminModal').classList.add('hidden')" class="mt-4 text-red-500 font-bold text-sm">بند کریں</button>
+    <!-- Chat Room -->
+    <div id="chatRoom" class="hidden fixed inset-0 z-[80] bg-gray-200 dark:bg-black flex flex-col h-full w-full max-w-md mx-auto slide-in">
+        <!-- Chat Header -->
+        <div class="bg-wa-primary dark:bg-wa-header text-white px-2 py-1.5 flex items-center justify-between shadow z-10">
+            <div class="flex items-center gap-1">
+                <button onclick="closeChatRoom()" class="p-1 rounded-full hover:bg-white/10 flex items-center gap-1">
+                    <i class="fas fa-arrow-right"></i>
+                    <div class="w-9 h-9 rounded-full bg-gray-300 overflow-hidden relative">
+                        <div id="chatHeaderAvatar" class="w-full h-full flex items-center justify-center text-gray-600 font-bold bg-gray-200">U</div>
+                    </div>
+                </button>
+                <div class="flex flex-col ml-1 cursor-pointer">
+                    <h2 id="chatHeaderTitle" class="font-bold text-base leading-tight truncate w-32">User</h2>
+                    <p class="text-[10px] opacity-80 truncate" id="chatHeaderStatus">tap for info</p>
+                </div>
+            </div>
+            <div class="flex gap-4 text-lg pr-2 items-center">
+                <button class="hover:opacity-80"><i class="fas fa-video"></i></button>
+                <button class="hover:opacity-80"><i class="fas fa-phone"></i></button>
+                <button class="hover:opacity-80"><i class="fas fa-ellipsis-v"></i></button>
+            </div>
+        </div>
+
+        <!-- Messages Area -->
+        <div id="messagesContainer" class="flex-1 overflow-y-auto p-4 chat-bg space-y-1 relative">
+            <!-- Messages injected here -->
+        </div>
+
+        <!-- Input Area -->
+        <div class="bg-transparent p-1 px-2 flex items-end gap-1 z-20 mb-1" style="padding-bottom: max(6px, env(safe-area-inset-bottom));">
+            <div class="flex-1 bg-white dark:bg-wa-header rounded-[24px] flex items-end border border-gray-100 dark:border-none shadow-sm px-1 py-1 min-h-[45px]">
+                <button class="p-2.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 mb-[2px]"><i class="far fa-smile text-xl"></i></button>
+                <textarea id="msgInput" rows="1" placeholder="پیغام..." class="flex-1 bg-transparent p-2.5 outline-none max-h-32 resize-none urdu-text dark:text-white mb-[1px]" oninput="autoResize(this)"></textarea>
+                <button class="p-2.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 mb-[2px]"><i class="fas fa-paperclip text-lg"></i></button>
+                <button class="p-2.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 mb-[2px] mr-[-5px]"><i class="fas fa-camera text-lg"></i></button>
+            </div>
+            <button onclick="sendMessage()" class="w-11 h-11 rounded-full bg-wa-primary text-white shadow-lg flex items-center justify-center btn-press mb-[2px] transition-all hover:bg-wa-dark">
+                <i class="fas fa-microphone" id="sendIcon"></i>
+            </button>
         </div>
     </div>
 
     <!-- Toast -->
-    <div id="toast" class="fixed top-10 left-1/2 transform -translate-x-1/2 bg-black/80 text-white text-xs px-4 py-2 rounded-full opacity-0 pointer-events-none transition-opacity z-[100]"></div>
+    <div id="toast" class="fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-4 py-2 rounded-full opacity-0 pointer-events-none transition-opacity z-[150] shadow-lg"></div>
 
     <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, updateDoc, query, where, onSnapshot, doc, setDoc, serverTimestamp, arrayUnion } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, updateDoc, query, where, onSnapshot, doc, setDoc, getDoc, serverTimestamp, orderBy } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCwrfDXG8pRpkqDYht0EpRZ8h_ElRu0N_w",
@@ -247,445 +369,466 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // --- GLOBAL VARIABLES ---
-        const ADMIN_EMAIL = "nawazlive1@gmail.com";
         let currentUser = null;
-        let currentMode = 'personal'; // 'personal' or 'group'
-        let currentGroupId = localStorage.getItem('groupId') || null;
-        let replyingTo = null; // { id, text, author }
+        let activeChatId = null;
 
         // --- AUTH LOGIC ---
+        window.toggleAuthMode = (mode) => {
+            const loginForm = document.getElementById('loginForm');
+            const signupForm = document.getElementById('signupForm');
+            const tabLogin = document.getElementById('tabLogin');
+            const tabSignup = document.getElementById('tabSignup');
+
+            if(mode === 'login') {
+                loginForm.classList.remove('hidden');
+                signupForm.classList.add('hidden');
+                tabLogin.classList.add('bg-white', 'shadow', 'text-wa-primary');
+                tabLogin.classList.remove('text-gray-500');
+                tabSignup.classList.remove('bg-white', 'shadow', 'text-wa-primary');
+                tabSignup.classList.add('text-gray-500');
+            } else {
+                loginForm.classList.add('hidden');
+                signupForm.classList.remove('hidden');
+                tabSignup.classList.add('bg-white', 'shadow', 'text-wa-primary');
+                tabSignup.classList.remove('text-gray-500');
+                tabLogin.classList.remove('bg-white', 'shadow', 'text-wa-primary');
+                tabLogin.classList.add('text-gray-500');
+            }
+        };
+
         window.authAction = async (type) => {
-            const email = document.getElementById(type === 'login' ? 'email' : 'signupEmail').value;
-            const pass = document.getElementById(type === 'login' ? 'pass' : 'signupPass').value;
+            const email = document.getElementById(type === 'login' ? 'loginEmail' : 'signupEmail').value;
+            const pass = document.getElementById(type === 'login' ? 'loginPass' : 'signupPass').value;
+            
+            if(!email || !pass) return showToast("براہ کرم تمام خانے پُر کریں");
             
             showLoading(true);
             try {
                 if(type === 'signup') {
                     const name = document.getElementById('signupName').value;
                     if(!name) throw new Error("نام لکھنا ضروری ہے");
+                    
                     const cred = await createUserWithEmailAndPassword(auth, email, pass);
                     await updateProfile(cred.user, { displayName: name });
-                    // Create user doc
+                    
+                    // Create User Doc
                     await setDoc(doc(db, "users", cred.user.uid), {
-                        email, displayName: name, status: 'pending', createdAt: serverTimestamp()
+                        displayName: name,
+                        email: email,
+                        uid: cred.user.uid,
+                        createdAt: serverTimestamp(),
+                        about: "Hey there! I am using WhatsApp."
                     });
                 } else {
                     await signInWithEmailAndPassword(auth, email, pass);
                 }
             } catch(e) {
-                showToast(e.message);
+                showToast("ایرر: " + e.message);
                 showLoading(false);
             }
         };
 
         onAuthStateChanged(auth, async (user) => {
             if(user) {
-                // Check Status in Firestore
-                const userRef = doc(db, "users", user.uid);
-                onSnapshot(userRef, (snap) => {
-                    if(snap.exists()) {
-                        const data = snap.data();
-                        if(data.status === 'active' || user.email === ADMIN_EMAIL) {
-                            currentUser = user;
-                            initApp(user, data);
-                        } else {
-                            showLoading(false);
-                            document.getElementById('authScreen').classList.remove('hidden');
-                            document.getElementById('loginForm').classList.add('hidden');
-                            document.getElementById('signupForm').classList.add('hidden');
-                            document.getElementById('pendingMsg').classList.remove('hidden');
-                        }
-                    } else if (user.email === ADMIN_EMAIL) {
-                        // Create admin doc if missing
-                        setDoc(userRef, { email: user.email, displayName: 'Admin', status: 'active' });
+                currentUser = user;
+                // Update Name in UI if ready
+                if(user.displayName) {
+                    initApp();
+                } else {
+                    // Fallback for missing name
+                    const docSnap = await getDoc(doc(db, "users", user.uid));
+                    if(docSnap.exists() && docSnap.data().displayName) {
+                        initApp();
+                    } else {
+                        // Edge case: logged in but no name set
+                        initApp(); // Proceed anyway, can set in settings
                     }
-                });
+                }
             } else {
-                currentUser = null;
-                document.getElementById('mainApp').classList.add('hidden');
-                document.getElementById('authScreen').classList.remove('hidden');
-                document.getElementById('loginForm').classList.remove('hidden');
-                document.getElementById('pendingMsg').classList.add('hidden');
                 showLoading(false);
+                document.getElementById('authScreen').classList.remove('hidden');
+                document.getElementById('mainApp').classList.add('hidden');
             }
         });
 
-        function initApp(user, data) {
+        function initApp() {
+            showLoading(false);
             document.getElementById('authScreen').classList.add('hidden');
             document.getElementById('mainApp').classList.remove('hidden');
-            showLoading(false);
             
-            // Setup Admin
-            if(user.email === ADMIN_EMAIL) {
-                document.getElementById('adminBtn').classList.remove('hidden');
-                listenAdmin();
-            }
+            // Setup Profile Data
+            const name = currentUser.displayName || "User";
+            document.getElementById('profileAvatarText').innerText = name[0].toUpperCase();
+            document.getElementById('myStatusAvatar').innerText = name[0].toUpperCase();
+            document.getElementById('editProfileName').value = name;
+            document.getElementById('profileEmail').innerText = currentUser.email;
 
-            setMode(currentMode);
+            loadChats();
         }
 
-        // --- APP LOGIC ---
-        window.setMode = (mode) => {
-            currentMode = mode;
-            document.getElementById('btnPersonal').className = mode === 'personal' ? 'flex-1 py-1 rounded text-xs font-bold transition-all bg-wa-teal text-white shadow' : 'flex-1 py-1 rounded text-xs font-bold transition-all text-gray-500';
-            document.getElementById('btnGroup').className = mode === 'group' ? 'flex-1 py-1 rounded text-xs font-bold transition-all bg-wa-teal text-white shadow' : 'flex-1 py-1 rounded text-xs font-bold transition-all text-gray-500';
-            
-            const title = document.getElementById('chatTitle');
-            const sub = document.getElementById('chatSub');
-            
-            if(mode === 'personal') {
-                title.innerText = "ذاتی نوٹس 🔒";
-                sub.innerText = "صرف آپ کو نظر آئیں گے";
-                document.getElementById('groupAvatar').innerHTML = '<i class="fas fa-lock"></i>';
-            } else {
-                if(currentGroupId) {
-                    title.innerText = currentGroupId;
-                    sub.innerText = "ٹیپ کر کے گروپ تبدیل کریں";
-                    document.getElementById('groupAvatar').innerHTML = '<i class="fas fa-users"></i>';
-                    // Colored Avatar for Group
-                    document.getElementById('groupAvatar').style.backgroundColor = stringToColor(currentGroupId);
-                    document.getElementById('groupAvatar').style.color = 'white';
-                } else {
-                    title.innerText = "کوئی گروپ نہیں";
-                    sub.innerText = "سیٹنگز میں جا کر گروپ جوائن کریں";
-                }
-            }
-            loadMessages();
-        };
+        // --- TABS ---
+        window.switchTab = (tab) => {
+            const tabs = ['chats', 'updates', 'calls'];
+            tabs.forEach(t => {
+                document.getElementById(`view${t.charAt(0).toUpperCase() + t.slice(1)}`).classList.add('hidden');
+                document.getElementById(`tab-${t}`).classList.remove('border-white', 'text-white');
+                document.getElementById(`tab-${t}`).classList.add('border-transparent', 'text-wa-tab_inactive');
+            });
 
-        window.openGroupSettings = () => {
-            document.getElementById('groupModal').classList.remove('hidden');
-            document.getElementById('groupIdInput').value = currentGroupId || "";
-        };
-
-        window.saveGroup = () => {
-            const id = document.getElementById('groupIdInput').value.trim().toUpperCase();
-            if(id) {
-                currentGroupId = id;
-                localStorage.setItem('groupId', id);
-                showToast("گروپ محفوظ ✅");
-            } else {
-                currentGroupId = null;
-                localStorage.removeItem('groupId');
-            }
-            document.getElementById('groupModal').classList.add('hidden');
-            if(currentMode === 'group') setMode('group');
+            document.getElementById(`view${tab.charAt(0).toUpperCase() + tab.slice(1)}`).classList.remove('hidden');
+            document.getElementById(`tab-${tab}`).classList.add('border-white', 'text-white');
+            document.getElementById(`tab-${tab}`).classList.remove('border-transparent', 'text-wa-tab_inactive');
+            
+            // Adjust scroll container flex
+            if(tab === 'chats') document.getElementById('viewChats').classList.add('flex-1');
         };
 
         // --- CHAT SYSTEM ---
-        let msgUnsub = null;
-
-        function loadMessages() {
-            if(msgUnsub) msgUnsub();
-            const list = document.getElementById('messagesList');
-            const empty = document.getElementById('emptyState');
-            list.innerHTML = "";
+        function loadChats() {
+            // Remove orderBy from the query to avoid index requirement
+            const q = query(collection(db, "chats"), where("participants", "array-contains", currentUser.uid));
             
-            if(currentMode === 'group' && !currentGroupId) {
-                empty.classList.remove('hidden');
-                return;
+            onSnapshot(q, (snapshot) => {
+                const list = document.getElementById('chatList');
+                list.innerHTML = "";
+                
+                if(snapshot.empty) {
+                    list.innerHTML = `
+                        <div class="flex flex-col items-center justify-center mt-20 opacity-50 px-10 text-center">
+                            <i class="fas fa-comments text-6xl text-gray-300 mb-4"></i>
+                            <p class="text-sm">ابھی تک کوئی چیٹ نہیں ہے۔ نیچے دیے گئے بٹن سے نئی چیٹ شروع کریں۔</p>
+                        </div>`;
+                    return;
+                }
+
+                let chats = [];
+                snapshot.forEach(docSnap => {
+                    chats.push({id: docSnap.id, ...docSnap.data()});
+                });
+
+                // Sort client-side
+                chats.sort((a, b) => {
+                    const dateA = a.lastUpdated ? a.lastUpdated.seconds : 0;
+                    const dateB = b.lastUpdated ? b.lastUpdated.seconds : 0;
+                    return dateB - dateA; // Descending
+                });
+
+                chats.forEach(chat => {
+                    const chatId = chat.id;
+                    
+                    let chatName = "User";
+                    let avatarInitial = "U";
+                    const isGroup = chat.type === 'group';
+
+                    if(isGroup) {
+                        chatName = chat.groupName;
+                        avatarInitial = chatName ? chatName[0] : "G";
+                    } else {
+                        // Extract other user's name
+                        const otherId = chat.participants.find(id => id !== currentUser.uid);
+                        chatName = (chat.names && chat.names[otherId]) ? chat.names[otherId] : "Unknown";
+                        avatarInitial = chatName[0];
+                    }
+
+                    const date = chat.lastUpdated ? new Date(chat.lastUpdated.seconds * 1000) : new Date();
+                    const timeStr = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+                    const div = document.createElement('div');
+                    div.className = "flex items-center gap-3 p-3 px-4 bg-white dark:bg-wa-dark hover:bg-gray-50 dark:hover:bg-wa-header/50 cursor-pointer active:bg-gray-100";
+                    div.onclick = () => openChat(chatId, chatName, isGroup);
+                    
+                    div.innerHTML = `
+                        <div class="w-12 h-12 rounded-full ${isGroup ? 'bg-gray-300' : 'bg-gray-200'} flex items-center justify-center text-lg font-bold text-white overflow-hidden flex-shrink-0 relative">
+                             ${!isGroup && chatName ? `<div class="absolute inset-0 bg-gray-400 flex items-center justify-center text-white">${avatarInitial.toUpperCase()}</div>` : `<i class="fas fa-users text-gray-500"></i>`}
+                        </div>
+                        <div class="flex-1 min-w-0 border-b border-gray-100 dark:border-gray-800 pb-3">
+                            <div class="flex justify-between items-baseline mb-0.5">
+                                <h3 class="font-bold text-[16px] text-gray-900 dark:text-gray-100 truncate">${chatName}</h3>
+                                <span class="text-[11px] text-gray-400 font-sans">${timeStr}</span>
+                            </div>
+                            <p class="text-[13px] text-gray-500 dark:text-gray-400 truncate urdu-text flex items-center gap-1">
+                                <i class="fas fa-check-double text-[10px] text-gray-400"></i>
+                                ${chat.lastMessage || "تصویر"}
+                            </p>
+                        </div>
+                    `;
+                    list.appendChild(div);
+                });
+            });
+        }
+
+        // --- NEW CHAT & GROUP ---
+        window.openNewChatModal = () => {
+            document.getElementById('newChatModal').classList.remove('hidden');
+            loadAllUsers();
+        };
+
+        window.closeModal = (id) => {
+            const modal = document.getElementById(id);
+            modal.classList.remove('slide-in');
+            modal.classList.add('slide-out');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('slide-out');
+                modal.classList.add('slide-in'); // Reset for next open
+            }, 200);
+        };
+
+        function loadAllUsers() {
+            const list = document.getElementById('contactsList');
+            list.innerHTML = '<div class="flex justify-center p-4"><div class="w-6 h-6 border-2 border-wa-primary border-t-transparent rounded-full animate-spin"></div></div>';
+            
+            // Fetch All Users (Demo: In prod, query contacts)
+            const q = query(collection(db, "users"), orderBy('displayName'));
+            onSnapshot(q, (snap) => {
+                list.innerHTML = "";
+                let count = 0;
+                snap.forEach(d => {
+                    if(d.id === currentUser.uid) return;
+                    const u = d.data();
+                    const div = document.createElement('div');
+                    div.className = "flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer rounded-lg";
+                    div.onclick = () => startDirectChat(d.id, u.displayName);
+                    div.innerHTML = `
+                        <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center font-bold text-gray-500">${u.displayName ? u.displayName[0].toUpperCase() : "?"}</div>
+                        <div class="flex-1 border-b border-gray-100 dark:border-gray-700 pb-2">
+                            <p class="font-bold text-sm text-gray-900 dark:text-gray-100">${u.displayName}</p>
+                            <p class="text-xs text-gray-500 truncate">${u.about || "Available"}</p>
+                        </div>
+                    `;
+                    list.appendChild(div);
+                    count++;
+                });
+                document.getElementById('contactsCount').innerText = `${count} رابطے`;
+            });
+        }
+
+        async function startDirectChat(otherUid, otherName) {
+            closeModal('newChatModal');
+            showLoading(true);
+            
+            const ids = [currentUser.uid, otherUid].sort();
+            const chatId = ids.join("_");
+
+            const chatRef = doc(db, "chats", chatId);
+            const chatSnap = await getDoc(chatRef);
+
+            if(!chatSnap.exists()) {
+                await setDoc(chatRef, {
+                    participants: ids,
+                    type: 'private',
+                    lastUpdated: serverTimestamp(),
+                    lastMessage: '',
+                    names: {
+                        [currentUser.uid]: currentUser.displayName,
+                        [otherUid]: otherName
+                    }
+                });
             }
 
-            let q = query(collection(db, "messages"), 
-                         where("uid", "==", currentUser.uid), 
-                         where("mode", "==", "personal"));
+            showLoading(false);
+            openChat(chatId, otherName, false);
+        }
 
-            if(currentMode === 'group') {
-                q = query(collection(db, "messages"), 
-                         where("groupId", "==", currentGroupId), 
-                         where("mode", "==", "group"));
+        window.openCreateGroupModal = () => {
+            closeModal('newChatModal');
+            document.getElementById('createGroupModal').classList.remove('hidden');
+            const list = document.getElementById('groupSelectionList');
+            // Reuse logic but with checkboxes
+            onSnapshot(collection(db, "users"), (snap) => {
+                list.innerHTML = "";
+                snap.forEach(d => {
+                    if(d.id === currentUser.uid) return;
+                    const u = d.data();
+                    const div = document.createElement('div');
+                    div.className = "flex items-center gap-3 p-2 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer rounded-lg";
+                    div.onclick = (e) => {
+                         // Toggle checkbox on row click
+                         if(e.target.type !== 'checkbox') {
+                             const cb = div.querySelector('input');
+                             cb.checked = !cb.checked;
+                         }
+                    };
+                    div.innerHTML = `
+                        <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center font-bold text-gray-500">${u.displayName ? u.displayName[0] : "?"}</div>
+                        <div class="flex-1">
+                            <p class="font-bold text-sm dark:text-white">${u.displayName}</p>
+                        </div>
+                        <input type="checkbox" value="${d.id}" class="w-5 h-5 accent-wa-primary group-checkbox">
+                    `;
+                    list.appendChild(div);
+                });
+            });
+        };
+
+        window.createGroup = async () => {
+            const name = document.getElementById('newGroupName').value.trim();
+            if(!name) return showToast("گروپ کا نام لکھیں");
+            
+            const checkboxes = document.querySelectorAll('.group-checkbox:checked');
+            if(checkboxes.length === 0) return showToast("کم از کم ایک ممبر منتخب کریں");
+            
+            const selectedUids = Array.from(checkboxes).map(cb => cb.value);
+            selectedUids.push(currentUser.uid);
+
+            showLoading(true);
+            try {
+                const groupRef = await addDoc(collection(db, "chats"), {
+                    type: 'group',
+                    groupName: name,
+                    participants: selectedUids,
+                    createdBy: currentUser.uid,
+                    lastUpdated: serverTimestamp(),
+                    lastMessage: 'گروپ بن گیا'
+                });
+                
+                showLoading(false);
+                closeModal('createGroupModal');
+                openChat(groupRef.id, name, true);
+            } catch(e) {
+                showToast(e.message);
+                showLoading(false);
             }
+        };
 
-            // Client side sort because compound query requires index
-            msgUnsub = onSnapshot(q, (snap) => {
-                const msgs = [];
-                snap.forEach(d => msgs.push({id: d.id, ...d.data()}));
-                msgs.sort((a,b) => (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0)); // Oldest top
+        // --- MESSAGING ---
+        window.openChat = (chatId, title, isGroup) => {
+            activeChatId = chatId;
+            document.getElementById('chatRoom').classList.remove('hidden');
+            
+            document.getElementById('chatHeaderTitle').innerText = title;
+            document.getElementById('chatHeaderAvatar').innerText = title ? title[0].toUpperCase() : "?";
+            document.getElementById('chatHeaderStatus').innerText = isGroup ? "ممبرز کے لیے ٹیپ کریں" : "آن لائن";
+            
+            const q = query(collection(db, `chats/${chatId}/messages`), orderBy('createdAt', 'asc'));
+            
+            onSnapshot(q, (snap) => {
+                const container = document.getElementById('messagesContainer');
+                container.innerHTML = "";
                 
-                if(msgs.length === 0) empty.classList.remove('hidden');
-                else empty.classList.add('hidden');
-                
-                renderMessages(msgs);
-                // Scroll to bottom
-                const container = document.getElementById('chatContainer');
+                let lastDate = "";
+
+                snap.forEach(d => {
+                    const msg = d.data();
+                    const isMe = msg.senderId === currentUser.uid;
+                    const time = msg.createdAt ? new Date(msg.createdAt.seconds * 1000).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : "";
+                    
+                    const div = document.createElement('div');
+                    div.className = `flex w-full mb-1 ${isMe ? 'justify-end' : 'justify-start'}`;
+                    
+                    const senderHtml = (isGroup && !isMe) ? `<p class="text-[10px] font-bold text-orange-600 mb-0.5">${msg.senderName}</p>` : '';
+                    const tailClass = isMe ? 'rounded-tr-none' : 'rounded-tl-none';
+                    const bgClass = isMe ? 'bg-wa-chat_me dark:bg-wa-chat_dark_me' : 'bg-white dark:bg-wa-chat_dark_other';
+
+                    div.innerHTML = `
+                        <div class="max-w-[75%] p-1.5 px-2.5 shadow-sm rounded-lg ${tailClass} ${bgClass} relative text-sm group">
+                            ${senderHtml}
+                            <p class="urdu-text leading-relaxed whitespace-pre-wrap dark:text-gray-100 pb-1">${msg.text}</p>
+                            <div class="flex justify-end items-end gap-1 select-none float-right ml-2 mt-[-5px]">
+                                <span class="text-[10px] text-gray-500 dark:text-gray-400 font-sans">${time}</span>
+                                ${isMe ? `<i class="fas fa-check-double text-[10px] tick-read"></i>` : ''}
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(div);
+                });
                 container.scrollTop = container.scrollHeight;
             });
-        }
-
-        function renderMessages(msgs) {
-            const list = document.getElementById('messagesList');
-            list.innerHTML = "";
-            
-            let lastDate = null;
-
-            msgs.forEach(msg => {
-                const isMe = msg.uid === currentUser.uid;
-                
-                // Date Separator
-                const msgDate = new Date(msg.createdAt?.seconds * 1000).toLocaleDateString('ur-PK');
-                if(msgDate !== lastDate) {
-                    list.innerHTML += `<div class="flex justify-center my-2"><span class="bg-gray-200 dark:bg-gray-700 text-[10px] px-2 py-1 rounded shadow text-gray-600 dark:text-gray-300">${msgDate}</span></div>`;
-                    lastDate = msgDate;
-                }
-
-                const time = new Date(msg.createdAt?.seconds * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                const color = stringToColor(msg.uid);
-                
-                // Reply Block
-                let replyHtml = '';
-                if(msg.replyTo) {
-                    replyHtml = `
-                    <div class="mb-1 p-1 pl-2 bg-black/5 rounded border-l-4 border-wa-teal dark:bg-white/10 text-xs cursor-pointer opacity-80">
-                        <span class="font-bold text-wa-teal block">${msg.replyTo.author}</span>
-                        <span class="truncate block opacity-70">${msg.replyTo.text}</span>
-                    </div>`;
-                }
-
-                // Reactions
-                let reactionHtml = '';
-                if(msg.reactions) {
-                    const reacts = Object.values(msg.reactions);
-                    if(reacts.length > 0) {
-                        // Count unique reactions
-                        const counts = {};
-                        reacts.forEach(r => counts[r] = (counts[r]||0)+1);
-                        let rStr = "";
-                        Object.keys(counts).forEach(k => rStr += k + (counts[k]>1 ? counts[k] : ""));
-                        reactionHtml = `<div class="absolute -bottom-2 ${isMe ? 'right-2':'left-2'} bg-white dark:bg-gray-700 shadow border rounded-full px-1 text-[10px] z-10">${rStr}</div>`;
-                    }
-                }
-
-                const div = document.createElement('div');
-                div.className = `flex w-full mb-1 group relative ${isMe ? 'justify-end' : 'justify-start'}`;
-                
-                div.innerHTML = `
-                    <div class="max-w-[80%] flex ${isMe ? 'flex-row-reverse' : 'flex-row'} items-end gap-1">
-                        <!-- Avatar for Groups (Others) -->
-                        ${!isMe && currentMode === 'group' ? `<div class="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] text-white font-bold" style="background:${color}">${msg.author[0]}</div>` : ''}
-                        
-                        <div class="relative shadow-sm p-2 pb-1 min-w-[120px] ${isMe ? 'bg-wa-chat_me dark:bg-wa-chat_dark_me msg-me' : 'bg-white dark:bg-wa-chat_dark_other msg-other'}">
-                            
-                            <!-- Header (Name in Group) -->
-                            ${!isMe && currentMode === 'group' ? `<p class="text-[10px] font-bold mb-0.5" style="color:${color}">${msg.author}</p>` : ''}
-                            
-                            ${replyHtml}
-                            
-                            <p class="text-sm urdu-text dark:text-white leading-relaxed pr-1 whitespace-pre-wrap">${msg.text}</p>
-                            
-                            <div class="flex justify-end items-center gap-1 mt-1 opacity-60">
-                                <span class="text-[9px] dark:text-gray-300 font-sans">${time}</span>
-                                ${isMe ? '<i class="fas fa-check-double text-[10px] text-blue-400"></i>' : ''}
-                            </div>
-                            
-                            ${reactionHtml}
-
-                            <!-- Actions Overlay (Hidden by default, shown on click/longpress simulation) -->
-                            <button onclick="toggleActions('${msg.id}')" class="absolute top-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition"><i class="fas fa-chevron-down text-[10px] text-gray-500 bg-white/50 rounded-full px-1"></i></button>
-                            
-                            <div id="actions-${msg.id}" class="hidden reaction-popover">
-                                <span onclick="react('${msg.id}', '👍')">👍</span>
-                                <span onclick="react('${msg.id}', '❤️')">❤️</span>
-                                <span onclick="react('${msg.id}', '😂')">😂</span>
-                                <span onclick="react('${msg.id}', '😮')">😮</span>
-                                <span onclick="react('${msg.id}', '🤲')">🤲</span>
-                                <div class="w-[1px] bg-gray-300 mx-1"></div>
-                                <span onclick="initReply('${msg.id}', '${msg.text}', '${msg.author}')"><i class="fas fa-reply text-gray-500"></i></span>
-                            </div>
-
-                        </div>
-                    </div>
-                `;
-                // Swipe logic can be added here, for now click chevron
-                list.appendChild(div);
-            });
-        }
-
-        window.toggleActions = (id) => {
-            const el = document.getElementById(`actions-${id}`);
-            // Close others
-            document.querySelectorAll('.reaction-popover').forEach(e => { if(e.id !== `actions-${id}`) e.classList.add('hidden'); });
-            el.classList.toggle('hidden');
         };
 
-        window.react = async (msgId, emoji) => {
-            const ref = doc(db, "messages", msgId);
-            const key = `reactions.${currentUser.uid}`;
-            await updateDoc(ref, { [key]: emoji });
-            document.getElementById(`actions-${msgId}`).classList.add('hidden');
-        };
-
-        window.initReply = (id, text, author) => {
-            replyingTo = { id, text, author };
-            document.getElementById('replyPreview').classList.remove('hidden');
-            document.getElementById('replyAuthor').innerText = author;
-            document.getElementById('replyText').innerText = text;
-            document.getElementById('msgInput').focus();
-            document.getElementById(`actions-${id}`).classList.add('hidden');
-        };
-
-        window.cancelReply = () => {
-            replyingTo = null;
-            document.getElementById('replyPreview').classList.add('hidden');
+        window.closeChatRoom = () => {
+            activeChatId = null;
+            document.getElementById('chatRoom').classList.add('hidden');
         };
 
         window.sendMessage = async () => {
+            if(!activeChatId) return;
             const input = document.getElementById('msgInput');
             const text = input.value.trim();
-            if(!text) return;
+            const btnIcon = document.getElementById('sendIcon');
 
-            const payload = {
-                text,
-                uid: currentUser.uid,
-                author: currentUser.displayName,
-                createdAt: serverTimestamp(),
-                mode: currentMode,
-                groupId: currentMode === 'group' ? currentGroupId : null,
-                reactions: {}
-            };
-
-            if(replyingTo) {
-                payload.replyTo = replyingTo;
-                cancelReply();
-            }
-
+            if(!text) return; // In real WA this switches to mic
+            
             input.value = "";
             autoResize(input);
-
-            try {
-                await addDoc(collection(db, "messages"), payload);
-            } catch(e) {
-                showToast("پیغام نہیں گیا");
-            }
-        };
-
-        // --- SPEECH TO TEXT (URDU) ---
-        let recognition = null;
-        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-            recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-            recognition.lang = 'ur-PK'; // Urdu Pakistan
-            recognition.continuous = false;
-            recognition.interimResults = false;
-
-            recognition.onresult = (event) => {
-                const transcript = event.results[0][0].transcript;
-                const input = document.getElementById('msgInput');
-                input.value += (input.value ? " " : "") + transcript;
-                autoResize(input);
-                stopListening();
-            };
-
-            recognition.onerror = (event) => {
-                showToast("آواز صاف نہیں ہے");
-                stopListening();
-            };
+            btnIcon.className = "fas fa-microphone"; // Reset icon
             
-            recognition.onend = () => {
-                 stopListening();
-            }
-        } else {
-            document.getElementById('micBtn').style.display = 'none';
-        }
-
-        window.startListening = () => {
-            if(recognition) {
-                try {
-                    recognition.start();
-                    document.getElementById('micBtn').classList.add('recording-active');
-                    document.getElementById('micBtn').innerHTML = '<i class="fas fa-stop"></i>';
-                    showToast("بولیں...");
-                } catch(e) {} // Already started
-            }
-        };
-
-        window.stopListening = () => {
-            if(recognition) {
-                recognition.stop();
-                document.getElementById('micBtn').classList.remove('recording-active');
-                document.getElementById('micBtn').innerHTML = '<i class="fas fa-microphone"></i>';
+            try {
+                await addDoc(collection(db, `chats/${activeChatId}/messages`), {
+                    text: text,
+                    senderId: currentUser.uid,
+                    senderName: currentUser.displayName,
+                    createdAt: serverTimestamp()
+                });
+                
+                await updateDoc(doc(db, "chats", activeChatId), {
+                    lastMessage: text,
+                    lastUpdated: serverTimestamp()
+                });
+            } catch(e) {
+                showToast("پیغام فیل ہو گیا");
             }
         };
 
+        // --- PROFILE ---
+        window.openProfileModal = () => {
+            document.getElementById('profileModal').classList.remove('hidden');
+        };
+        
+        window.enableEditName = () => {
+            const input = document.getElementById('editProfileName');
+            const btn = document.getElementById('saveProfileBtn');
+            input.disabled = false;
+            input.focus();
+            input.classList.remove('bg-transparent');
+            input.classList.add('bg-white', 'dark:bg-gray-600', 'border-b-2', 'border-wa-primary');
+            btn.classList.remove('hidden');
+        };
+
+        window.saveProfile = async () => {
+            const newName = document.getElementById('editProfileName').value.trim();
+            if(!newName) return;
+            
+            showLoading(true);
+            try {
+                await updateProfile(currentUser, { displayName: newName });
+                await updateDoc(doc(db, "users", currentUser.uid), { displayName: newName });
+                showLoading(false);
+                closeModal('profileModal');
+                initApp(); // Refresh UI
+                showToast("پروفائل اپ ڈیٹ ہو گئی");
+            } catch(e) {
+                showToast(e.message);
+                showLoading(false);
+            }
+        };
 
         // --- UTILS ---
-        window.autoResize = (el) => {
-            el.style.height = 'auto';
-            el.style.height = el.scrollHeight + 'px';
-        };
-
-        function stringToColor(str) {
-            if(!str) return '#ccc';
-            let hash = 0;
-            for (let i = 0; i < str.length; i++) {
-                hash = str.charCodeAt(i) + ((hash << 5) - hash);
-            }
-            const c = (hash & 0x00FFFFFF).toString(16).toUpperCase();
-            return '#' + "00000".substring(0, 6 - c.length) + c;
-        }
-
-        function showLoading(show) {
-            document.getElementById('loadingOverlay').classList.toggle('hidden', !show);
-        }
-
-        function showToast(msg) {
+        window.showToast = (msg) => {
             const t = document.getElementById('toast');
             t.innerText = msg;
             t.style.opacity = '1';
             setTimeout(() => t.style.opacity = '0', 3000);
-        }
-
-        window.toggleAuth = (target) => {
-            document.getElementById('loginForm').classList.toggle('hidden', target !== 'login');
-            document.getElementById('signupForm').classList.toggle('hidden', target !== 'signup');
         };
         
-        window.toggleTheme = () => {
-            document.documentElement.classList.toggle('dark');
+        window.showLoading = (show) => document.getElementById('loadingOverlay').classList.toggle('hidden', !show);
+        
+        window.toggleTheme = () => document.documentElement.classList.toggle('dark');
+        
+        window.autoResize = (el) => {
+            el.style.height = 'auto';
+            el.style.height = el.scrollHeight + 'px';
+            const btnIcon = document.getElementById('sendIcon');
+            if(el.value.trim().length > 0) {
+                 btnIcon.className = "fas fa-paper-plane";
+            } else {
+                 btnIcon.className = "fas fa-microphone";
+            }
         };
-
+        
         window.signOutApp = () => {
             signOut(auth);
             location.reload();
-        };
-
-        // --- ADMIN ---
-        window.openAdminPanel = () => {
-            document.getElementById('adminModal').classList.remove('hidden');
-        };
-
-        function listenAdmin() {
-            const q = query(collection(db, "users"), where("status", "==", "pending"));
-            onSnapshot(q, (snap) => {
-                const badge = document.getElementById('pendingBadge');
-                if(snap.size > 0) {
-                    badge.innerText = snap.size;
-                    badge.classList.remove('hidden');
-                } else {
-                    badge.classList.add('hidden');
-                }
-
-                const list = document.getElementById('pendingList');
-                list.innerHTML = "";
-                snap.forEach(d => {
-                    const u = d.data();
-                    const el = document.createElement('div');
-                    el.className = "flex justify-between items-center p-3 bg-gray-50 dark:bg-black/20 rounded border";
-                    el.innerHTML = `
-                        <div>
-                            <p class="font-bold text-sm urdu-text dark:text-white">${u.displayName}</p>
-                            <p class="text-xs text-gray-500">${u.email}</p>
-                        </div>
-                        <button onclick="approveUser('${d.id}')" class="bg-wa-teal text-white text-xs px-3 py-1 rounded">Approve</button>
-                    `;
-                    list.appendChild(el);
-                });
-            });
-        }
-
-        window.approveUser = async (uid) => {
-            if(confirm("منظور کریں؟")) {
-                await updateDoc(doc(db, "users", uid), { status: "active" });
-            }
         };
 
     </script>
