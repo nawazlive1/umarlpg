@@ -293,7 +293,7 @@
                 </div>
             </div>
 
-            <div id="toast" class="fixed top-24 left-1/2 transform -translate-x-1/2 bg-emerald-800 text-white text-[11px] px-6 py-2.5 rounded-full shadow-2xl opacity-0 transition-all duration-300 pointer-events-none z-[100] font-sans">پیغام</div>
+            <div id="toast" class="fixed top-24 left-1/2 transform -translate-x-1/2 bg-emerald-800 text-white text-[11px] px-6 py-2.5 rounded-full shadow-2xl opacity-0 transition-all duration-300 pointer-events-none z-[200] font-sans">پیغام</div>
         </div>
     </div>
 
@@ -325,6 +325,7 @@
         let currentMode = 'personal'; 
         let myGroupId = localStorage.getItem('myGroupId') || null;
         let userDocUnsub = null; // Unsubscribe from user doc listener
+        let tempSignupName = ""; // NEW: Temp storage for name
 
         let allTasks = [];
         let allTrans = [];
@@ -387,24 +388,9 @@
 
             const userRef = doc(db, "users", user.uid);
             
-            // Auto-create fallback timer
-            let fallbackTimer = setTimeout(async () => {
-                console.log("Fallback: Auto-creating user doc...");
-                try {
-                     await setDoc(userRef, {
-                        email: user.email,
-                        displayName: user.displayName || "User",
-                        status: forceAdmin ? 'active' : 'pending',
-                        createdAt: serverTimestamp()
-                    }, { merge: true });
-                } catch(e) { console.error("Fallback failed", e); }
-            }, 5000); // 5 seconds fallback
-
             // This listener fires automatically whenever the doc is created/updated
             userDocUnsub = onSnapshot(userRef, async (docSnap) => {
                 if (docSnap.exists()) {
-                    clearTimeout(fallbackTimer); // Doc found, cancel fallback
-                    
                     const userData = docSnap.data();
                     
                     // Admin Override fix
@@ -420,11 +406,27 @@
                         showPendingScreen();
                     }
                 } else {
-                    // Doc doesn't exist yet. Keep waiting (Loading screen is shown).
-                    // The fallback timer will handle it if it takes too long.
+                    // Doc doesn't exist yet.
+                    // IMPORTANT: We create it HERE immediately.
+                    // This handles cases where signupUser function crashed or didn't finish.
+                    console.log("Creating missing user doc...");
+                    const nameToUse = tempSignupName || user.displayName || "User";
+                    
+                    try {
+                         await setDoc(userRef, {
+                            email: user.email,
+                            displayName: nameToUse,
+                            status: forceAdmin ? 'active' : 'pending',
+                            createdAt: serverTimestamp()
+                        }, { merge: true });
+                        // Don't need to do anything else, the snapshot will fire again automatically
+                    } catch(e) {
+                        console.error("Auto-create failed", e);
+                        hideLoading();
+                        showToast("Error creating profile: " + e.message);
+                    }
                 }
             }, (error) => {
-                clearTimeout(fallbackTimer);
                 hideLoading();
                 showToast("Connection Error: " + error.message);
             });
@@ -743,23 +745,18 @@
             btn.disabled = true;
             btn.classList.add('opacity-50');
 
+            // Store name globally for fallback usage in onAuthStateChanged
+            tempSignupName = name;
+
             try { 
-                // 1. Create Auth User
-                const userCred = await createUserWithEmailAndPassword(auth, email, pass);
-                const user = userCred.user;
+                // 1. Just Create Auth User. 
+                // The onAuthStateChanged listener will handle the Firestore creation immediately.
+                await createUserWithEmailAndPassword(auth, email, pass);
                 
-                // 2. Update Display Name
-                await updateProfile(user, { displayName: name });
-                
-                // 3. Create User Doc in Firestore with "Pending" Status
-                const isAdmin = email && email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
-                const status = isAdmin ? 'active' : 'pending';
-                await setDoc(doc(db, "users", user.uid), {
-                    email: email,
-                    displayName: name,
-                    status: status,
-                    createdAt: serverTimestamp()
-                });
+                // Update profile async (optional, doesn't block flow)
+                if (auth.currentUser) {
+                    updateProfile(auth.currentUser, { displayName: name }).catch(err => console.log(err));
+                }
 
                 showToast("درخواست بھیج دی گئی!");
             }
@@ -768,6 +765,8 @@
                 btn.innerText = originalText;
                 btn.disabled = false;
                 btn.classList.remove('opacity-50');
+                // Hide loading if it was triggered by auth state change flicker
+                hideLoading();
             }
         };
 
