@@ -93,7 +93,7 @@
         .recording-active { animation: pulse-red 1.5s infinite; background-color: #ef4444 !important; color: white !important; }
     </style>
 </head>
-<body class="bg-gray-100 dark:bg-black h-screen overflow-hidden flex justify-center">
+<body class="bg-gray-100 dark:bg-black h-[100dvh] w-full overflow-hidden flex justify-center">
 
     <div class="w-full max-w-md h-full flex flex-col bg-white dark:bg-wa-dark shadow-2xl relative overflow-hidden">
         
@@ -132,10 +132,10 @@
         </div>
 
         <!-- MAIN APP -->
-        <div id="mainApp" class="hidden flex-1 flex flex-col h-full">
+        <div id="mainApp" class="hidden flex-1 flex flex-col h-full overflow-hidden">
             
             <!-- Header (WhatsApp Style) -->
-            <header class="bg-wa-teal dark:bg-wa-dark text-white p-3 flex items-center justify-between shadow-md z-20">
+            <header class="bg-wa-teal dark:bg-wa-dark text-white p-3 flex items-center justify-between shadow-md z-20 flex-shrink-0">
                 <div class="flex items-center gap-3 cursor-pointer" onclick="openGroupSettings()">
                     <button class="text-white mr-1"><i class="fas fa-arrow-left"></i></button>
                     <div class="relative">
@@ -159,7 +159,7 @@
             </header>
 
             <!-- Mode Switcher -->
-            <div class="flex bg-wa-teal/10 dark:bg-wa-dark border-b border-gray-200 dark:border-gray-700 p-1">
+            <div class="flex-shrink-0 flex bg-wa-teal/10 dark:bg-wa-dark border-b border-gray-200 dark:border-gray-700 p-1">
                 <button onclick="setMode('personal')" id="btnPersonal" class="flex-1 py-1 rounded text-xs font-bold transition-all bg-wa-teal text-white">ذاتی نوٹس</button>
                 <button onclick="setMode('group')" id="btnGroup" class="flex-1 py-1 rounded text-xs font-bold transition-all text-gray-500">گروپ چیٹ</button>
             </div>
@@ -173,11 +173,11 @@
                     <p class="text-sm bg-white/50 dark:bg-black/50 px-3 py-1 rounded-lg">یہاں پیغامات نظر آئیں گے</p>
                 </div>
                 <!-- Messages will be injected here -->
-                <div id="messagesList" class="flex flex-col space-y-2 pb-20"></div>
+                <div id="messagesList" class="flex flex-col space-y-2 pb-4"></div>
             </div>
 
             <!-- Reply Preview Bar -->
-            <div id="replyPreview" class="hidden bg-gray-100 dark:bg-gray-800 p-2 border-l-4 border-wa-teal flex justify-between items-center reply-preview z-20 relative">
+            <div id="replyPreview" class="hidden bg-gray-100 dark:bg-gray-800 p-2 border-l-4 border-wa-teal flex justify-between items-center reply-preview z-20 relative flex-shrink-0">
                 <div class="bg-white/50 dark:bg-black/20 p-2 rounded w-full">
                     <p class="text-[10px] font-bold text-wa-teal mb-1" id="replyAuthor">جواب دے رہے ہیں...</p>
                     <p class="text-xs text-gray-600 dark:text-gray-300 truncate urdu-text" id="replyText">...</p>
@@ -186,7 +186,7 @@
             </div>
 
             <!-- Input Area -->
-            <div class="bg-white dark:bg-wa-dark p-2 px-3 flex items-end gap-2 z-30 mb-safe">
+            <div class="flex-shrink-0 bg-white dark:bg-wa-dark p-2 px-3 flex items-end gap-2 z-30 shadow-[0_-1px_5px_rgba(0,0,0,0.1)]" style="padding-bottom: max(8px, env(safe-area-inset-bottom));">
                 <div class="flex-1 bg-white dark:bg-[#2a3942] rounded-3xl flex items-center border border-gray-100 dark:border-none shadow-sm px-2">
                     <button class="p-2 text-gray-400 hover:text-yellow-500 transition"><i class="far fa-smile"></i></button>
                     <textarea id="msgInput" rows="1" placeholder="پیغام لکھیں..." class="flex-1 bg-transparent p-3 outline-none max-h-32 resize-none urdu-text dark:text-white" oninput="autoResize(this)"></textarea>
