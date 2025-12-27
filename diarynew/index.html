@@ -131,7 +131,7 @@
                         نوٹ: اکاؤنٹ بنانے کے بعد آپ کو ایڈمن کی منظوری کا انتظار کرنا ہوگا۔ (ای میل ویریفکیشن کی ضرورت نہیں)
                     </p>
                 </div>
-                <button onclick="window.signupUser()" class="w-full mt-4 bg-emerald-600 text-white font-bold py-3 rounded-xl btn-press">اکاؤنٹ بنائیں</button>
+                <button onclick="window.signupUser()" id="signupBtn" class="w-full mt-4 bg-emerald-600 text-white font-bold py-3 rounded-xl btn-press">اکاؤنٹ بنائیں</button>
                 <button onclick="window.showScreen('loginForm')" class="w-full mt-3 text-slate-400 py-2 text-sm font-sans">واپس جائیں</button>
             </div>
         </div>
@@ -282,7 +282,7 @@
                 </div>
             </div>
 
-            <div id="toast" class="fixed top-24 left-1/2 transform -translate-x-1/2 bg-emerald-800 text-white text-[11px] px-6 py-2.5 rounded-full shadow-2xl opacity-0 transition-all duration-300 pointer-events-none z-50 font-sans">پیغام</div>
+            <div id="toast" class="fixed top-24 left-1/2 transform -translate-x-1/2 bg-emerald-800 text-white text-[11px] px-6 py-2.5 rounded-full shadow-2xl opacity-0 transition-all duration-300 pointer-events-none z-[100] font-sans">پیغام</div>
         </div>
     </div>
 
@@ -322,28 +322,35 @@
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const userRef = doc(db, "users", user.uid);
-                const userSnap = await getDoc(userRef);
                 
-                // Helper to normalize email check (case insensitive)
+                // --- FIX: RACE CONDITION ---
+                // Wait for up to 1.5 seconds for signupUser to write the doc
+                let attempts = 0;
+                let userSnap = await getDoc(userRef);
+                while (!userSnap.exists() && attempts < 3) {
+                    await new Promise(r => setTimeout(r, 500));
+                    userSnap = await getDoc(userRef);
+                    attempts++;
+                }
+                // ---------------------------
+
                 const isAdmin = user.email && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
 
                 if (userSnap.exists()) {
                     const userData = userSnap.data();
                     
-                    // If user is Admin, force update status to 'active' if not already
                     if (isAdmin && userData.status !== 'active') {
                         await updateDoc(userRef, { status: 'active' });
-                        userData.status = 'active'; // Local update
+                        userData.status = 'active'; 
                     }
 
-                    // Check access
                     if (userData.status === 'active' || isAdmin) {
                         initializeUser(user);
                     } else {
                         showPendingScreen();
                     }
                 } else {
-                    // Create new doc. If Admin, set Active immediately.
+                    // Fallback: Create doc if still missing (no name)
                     await setDoc(userRef, {
                         email: user.email,
                         displayName: user.displayName,
@@ -373,7 +380,6 @@
             document.getElementById('userAvatar').innerText = displayName.charAt(0).toUpperCase();
             document.getElementById('headerSub').innerText = `${displayName}`;
             
-            // Show Admin Button if Admin
             if (user.email && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
                 document.getElementById('adminPanelBtn').classList.remove('hidden');
                 listenForPendingUsers();
@@ -398,7 +404,6 @@
                     badge.classList.add('hidden');
                 }
                 
-                // Populate List
                 const list = document.getElementById('pendingUsersList');
                 list.innerHTML = "";
                 if(pendingCount === 0) {
@@ -665,8 +670,15 @@
             const name = document.getElementById('signupName').value.trim();
             const email = document.getElementById('signupEmail').value;
             const pass = document.getElementById('signupPass').value;
+            const btn = document.getElementById('signupBtn');
             
             if(!name) return showToast("برائے مہربانی اپنا نام لکھیں");
+
+            // UI Feedback: Loading
+            const originalText = btn.innerText;
+            btn.innerText = "کام جاری ہے...";
+            btn.disabled = true;
+            btn.classList.add('opacity-50');
 
             try { 
                 // 1. Create Auth User
@@ -688,7 +700,12 @@
 
                 showToast("درخواست بھیج دی گئی!");
             }
-            catch(e) { showToast("مسئلہ: " + e.message); }
+            catch(e) { 
+                showToast("مسئلہ: " + e.message); 
+                btn.innerText = originalText;
+                btn.disabled = false;
+                btn.classList.remove('opacity-50');
+            }
         };
 
         window.logoutUser = () => signOut(auth);
