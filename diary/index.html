@@ -64,17 +64,6 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        .floating-input {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 95%;
-            max-width: 600px;
-            border-radius: 24px;
-            z-index: 40;
-        }
-
         .calendar-dot { width: 6px; height: 6px; background-color: #10b981; border-radius: 50%; margin-top: 2px; }
         
         @keyframes slideDown {
@@ -100,7 +89,7 @@
         /* Print Styles */
         @media print {
             body * { visibility: hidden; }
-            html, body, .app-container, #appSection, #mainContent, #financeView {
+            html, body, .app-container, #appSection, #mainContent, #financeView, #diaryView {
                 height: auto !important;
                 min-height: auto !important;
                 overflow: visible !important;
@@ -111,7 +100,7 @@
                 padding: 0 !important;
                 background: white !important;
             }
-            #printableArea {
+            #printableArea, #diaryScroll {
                 visibility: visible !important;
                 position: absolute;
                 left: 0;
@@ -122,12 +111,12 @@
                 background: white;
                 color: black;
             }
-            #printableArea * {
+            #printableArea *, #diaryScroll * {
                 visibility: visible !important;
                 color: black !important;
                 box-shadow: none !important;
             }
-            #transList {
+            #transList, #taskList {
                 display: block !important;
                 overflow: visible !important;
                 height: auto !important;
@@ -144,31 +133,34 @@
         <div id="authSection" class="flex-1 flex flex-col justify-center p-6 bg-emerald-50 dark:bg-slate-900 z-50 absolute inset-0 h-full">
             <div class="max-w-md mx-auto w-full">
                 <div class="text-center mb-10">
-                    <div class="bg-white dark:bg-slate-800 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 shadow-md text-4xl">📖</div>
-                    <h1 class="text-3xl font-bold text-emerald-800 dark:text-emerald-400">میری ڈائری پرو</h1>
-                    <p class="text-sm text-emerald-600 dark:text-emerald-300 font-sans mt-1">حساب کتاب اور ڈائری ایک ساتھ</p>
+                    <div class="bg-white dark:bg-slate-800 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-md text-4xl">📖</div>
+                    <!-- Fixed Title Spacing -->
+                    <h1 class="text-4xl font-bold text-emerald-800 dark:text-emerald-400 mb-4 leading-normal">میری ڈائری</h1>
+                    <p class="text-sm text-emerald-600 dark:text-emerald-300 font-sans mt-2 tracking-wide">حساب کتاب اور ڈائری ایک ساتھ</p>
                 </div>
 
+                <!-- Login Form (Now supports Enter Key) -->
                 <div id="loginForm" class="bg-white dark:bg-darkcard p-6 rounded-3xl shadow-xl border border-emerald-100 dark:border-slate-700">
                     <h2 class="text-xl font-bold text-center mb-6 text-slate-700 dark:text-slate-200">لاگ ان کریں</h2>
-                    <div class="space-y-4">
+                    <form onsubmit="event.preventDefault(); window.loginUser();" class="space-y-4">
                         <input type="email" id="loginEmail" placeholder="ای میل" class="w-full p-3 bg-slate-50 dark:bg-darkinput dark:text-white border border-slate-200 dark:border-slate-600 rounded-xl outline-none font-sans" dir="ltr">
                         <input type="password" id="loginPass" placeholder="پاسورڈ" class="w-full p-3 bg-slate-50 dark:bg-darkinput dark:text-white border border-slate-200 dark:border-slate-600 rounded-xl outline-none font-sans" dir="ltr">
-                    </div>
-                    <button onclick="window.loginUser()" class="w-full mt-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl btn-press shadow-lg">داخل ہوں</button>
+                        <button type="submit" class="w-full mt-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl btn-press shadow-lg">داخل ہوں</button>
+                    </form>
                     <div class="mt-8 pt-6 border-t border-slate-100 dark:border-slate-700 text-center">
-                        <button onclick="window.showScreen('signupForm')" class="text-emerald-600 dark:text-emerald-400 font-bold hover:underline">نیا اکاؤنٹ بنائیں</button>
+                        <button type="button" onclick="window.showScreen('signupForm')" class="text-emerald-600 dark:text-emerald-400 font-bold hover:underline">نیا اکاؤنٹ بنائیں</button>
                     </div>
                 </div>
 
+                <!-- Signup Form -->
                 <div id="signupForm" class="hidden bg-white dark:bg-darkcard p-6 rounded-3xl shadow-xl border border-emerald-100 dark:border-slate-700">
                     <h2 class="text-xl font-bold text-center mb-6 text-slate-700 dark:text-slate-200">رجسٹریشن</h2>
-                    <div class="space-y-4">
+                    <form onsubmit="event.preventDefault(); window.signupUser();" class="space-y-4">
                         <input type="email" id="signupEmail" placeholder="ای میل لکھیں" class="w-full p-3 bg-slate-50 dark:bg-darkinput dark:text-white border border-slate-200 dark:border-slate-600 rounded-xl font-sans" dir="ltr">
                         <input type="password" id="signupPass" placeholder="پاسورڈ" class="w-full p-3 bg-slate-50 dark:bg-darkinput dark:text-white border border-slate-200 dark:border-slate-600 rounded-xl font-sans" dir="ltr">
-                    </div>
-                    <button onclick="window.signupUser()" class="w-full mt-6 bg-emerald-600 text-white font-bold py-3 rounded-xl btn-press">اکاؤنٹ بنائیں</button>
-                    <button onclick="window.showScreen('loginForm')" class="w-full mt-3 text-slate-400 py-2 text-sm font-sans">واپس جائیں</button>
+                        <button type="submit" class="w-full mt-6 bg-emerald-600 text-white font-bold py-3 rounded-xl btn-press">اکاؤنٹ بنائیں</button>
+                    </form>
+                    <button type="button" onclick="window.showScreen('loginForm')" class="w-full mt-3 text-slate-400 py-2 text-sm font-sans">واپس جائیں</button>
                 </div>
             </div>
         </div>
@@ -176,15 +168,22 @@
         <!-- App Section -->
         <div id="appSection" class="hidden flex flex-col h-screen bg-slate-50 dark:bg-darkbg relative">
             
-            <!-- Dynamic Header -->
+            <!-- Dynamic Header (Centered Title) -->
             <header class="bg-emerald-600 dark:bg-emerald-900 pt-4 pb-2 text-white shadow-lg z-30 sticky top-0 transition-all duration-500">
-                <div class="px-5 flex justify-between items-center h-12 max-w-4xl mx-auto w-full">
-                    <div class="flex flex-col">
-                        <h2 class="text-xl font-bold leading-tight">میری ڈائری پرو</h2>
-                        <span id="headerSub" class="text-[10px] text-emerald-100 font-sans opacity-80">خوش آمدید!</span>
+                <div class="px-5 flex items-center justify-between h-12 max-w-4xl mx-auto w-full relative">
+                    
+                    <!-- Right Side: Welcome Text (Visually Right in RTL) -->
+                    <div class="flex-shrink-0 z-20">
+                        <span id="headerSub" class="text-[10px] text-emerald-100 font-sans opacity-80 block font-bold">خوش آمدید!</span>
+                    </div>
+
+                    <!-- Center: Title (Absolute Center) -->
+                    <div class="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+                        <h2 class="text-xl font-bold leading-tight text-white drop-shadow-md">میری ڈائری</h2>
                     </div>
                     
-                    <div class="flex items-center gap-3">
+                    <!-- Left Side: Buttons (Visually Left in RTL) -->
+                    <div class="flex items-center gap-3 flex-shrink-0 z-20">
                         <button onclick="window.toggleCalendar()" id="calBtn" class="bg-emerald-500/30 p-2 rounded-xl hover:bg-emerald-500/50 transition">📅</button>
                         <button onclick="window.toggleDarkMode()" class="bg-emerald-500/30 p-2 rounded-xl hover:bg-emerald-500/50 transition"><span id="darkModeIcon">🌙</span></button>
                         <div onclick="window.logoutUser()" id="userAvatar" class="w-9 h-9 rounded-full bg-white text-emerald-700 flex items-center justify-center font-bold text-sm cursor-pointer border-2 border-emerald-400">U</div>
@@ -195,7 +194,7 @@
                 <div class="px-5 mt-4 max-w-4xl mx-auto w-full">
                     <div class="flex p-1 bg-emerald-900 dark:bg-slate-800 rounded-2xl relative shadow-inner border border-emerald-800 dark:border-slate-700">
                         <!-- Default positioned at left (Diary) -->
-                        <div id="tabIndicator" class="absolute top-1 bottom-1 w-[49%] bg-emerald-200 dark:bg-emerald-600 shadow-md rounded-xl transition-all duration-300 left-[1%]"></div>
+                        <div id="tabIndicator" class="absolute top-1 bottom-1 w-[49%] bg-emerald-200 dark:bg-emerald-600 shadow-md rounded-xl transition-all duration-300 left-[50%]"></div>
                         
                         <button onclick="window.switchTab('diary')" id="btnDiary" class="flex-1 py-2 text-sm font-bold relative z-10 text-emerald-950 dark:text-white transition-colors">ڈائری 📖</button>
                         <button onclick="window.switchTab('finance')" id="btnFinance" class="flex-1 py-2 text-sm font-bold relative z-10 text-emerald-100/70 dark:text-slate-400 transition-colors">کیش بک 💰</button>
@@ -224,46 +223,55 @@
             <div id="mainContent" class="flex-1 overflow-hidden flex flex-col max-w-4xl mx-auto w-full">
                 
                 <!-- DIARY VIEW -->
-                <div id="diaryView" class="flex-1 flex flex-col overflow-hidden w-full">
-                    <div class="px-5 py-3 bg-emerald-50 dark:bg-slate-900 shadow-inner">
-                        <div class="relative">
-                            <input type="text" id="searchInput" placeholder="نوٹس میں تلاش کریں..." class="w-full p-3 pr-10 bg-white dark:bg-darkinput dark:text-white rounded-2xl text-sm outline-none shadow-sm urdu-text" oninput="window.filterData()">
-                            <span class="absolute right-3 top-3 opacity-40">🔍</span>
+                <div id="diaryView" class="flex-1 flex flex-col overflow-y-auto no-scrollbar w-full p-5">
+                    
+                    <!-- Search Bar -->
+                    <div class="mb-5 relative no-print">
+                        <input type="text" id="searchInput" placeholder="نوٹس میں تلاش کریں..." class="w-full p-3 pr-10 bg-white dark:bg-darkinput dark:text-white rounded-2xl text-sm outline-none shadow-sm urdu-text border border-slate-100 dark:border-slate-700" oninput="window.filterData()">
+                        <span class="absolute right-3 top-3 opacity-40">🔍</span>
+                    </div>
+
+                    <!-- NEW: Static Diary Input Form (Just like Finance) -->
+                    <div class="bg-white dark:bg-darkcard p-5 rounded-3xl shadow-md border dark:border-slate-700 mb-6 no-print">
+                        <h3 class="text-sm font-bold text-center mb-3 urdu-text" id="taskFormTitle">نیا نوٹ لکھیں</h3>
+                        
+                        <div class="flex gap-2 mb-3">
+                            <input type="datetime-local" id="taskDate" class="flex-[1.5] p-2 bg-slate-50 dark:bg-darkinput dark:text-white rounded-xl text-[10px] outline-none font-sans border border-slate-100 dark:border-slate-600">
+                            <select id="taskCategory" class="flex-1 bg-slate-50 dark:bg-darkinput dark:text-white text-[10px] rounded-xl outline-none p-2 border border-slate-100 dark:border-slate-600">
+                                <option value="عام">📌 عام</option><option value="ذاتی">👤 ذاتی</option><option value="کام">💼 کام</option><option value="ضروری">🔥 ضروری</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <!-- Changed to textarea for better writing experience -->
+                            <textarea id="taskInput" placeholder="آج کیا لکھنا ہے؟..." class="w-full p-3 h-24 bg-slate-50 dark:bg-darkinput dark:text-white rounded-xl outline-none urdu-text border border-slate-100 dark:border-slate-600 resize-none"></textarea>
+                        </div>
+
+                        <input type="hidden" id="editTaskId" value="">
+                        
+                        <div class="flex gap-2">
+                             <button onclick="window.cancelTaskEdit()" id="cancelTaskBtn" class="hidden flex-1 bg-gray-400 text-white font-bold py-3 rounded-2xl shadow-lg btn-press">منسوخ</button>
+                             <button onclick="window.addTask()" id="saveBtn" class="flex-[2] bg-emerald-600 text-white font-bold py-3 rounded-2xl shadow-lg btn-press flex justify-center items-center gap-2">
+                                <span>محفوظ کریں</span>
+                                <svg id="saveIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                             </button>
                         </div>
                     </div>
 
-                    <div class="flex-1 overflow-y-auto p-5 no-scrollbar" id="diaryScroll">
+                    <!-- Diary List -->
+                    <div id="diaryScroll" class="flex-1">
                         <div id="filterHeader" class="hidden bg-emerald-100 dark:bg-emerald-900/40 p-2 rounded-xl mb-4 text-center">
                             <span id="filterText" class="text-xs font-bold text-emerald-700 dark:text-emerald-300 urdu-text">تاریخ فلٹر</span>
                             <button onclick="window.clearFilter()" class="mr-2 text-red-500 text-xs font-bold">صاف کریں ✖</button>
                         </div>
-                        <ul id="taskList" class="space-y-4 pb-48"></ul>
-                    </div>
-
-                    <!-- Floating Entry for Diary -->
-                    <div class="floating-input bg-white dark:bg-darkcard border border-slate-100 dark:border-slate-700 p-4 shadow-2xl">
-                        <div class="flex flex-col gap-3">
-                            <div class="flex gap-2">
-                                <input type="datetime-local" id="taskDate" class="flex-[1.5] p-2 bg-slate-50 dark:bg-darkinput dark:text-white rounded-xl text-[10px] outline-none font-sans border border-slate-100 dark:border-slate-600">
-                                <select id="taskCategory" class="flex-1 bg-slate-50 dark:bg-darkinput dark:text-white text-[10px] rounded-xl outline-none p-2 border border-slate-100 dark:border-slate-600">
-                                    <option value="عام">📌 عام</option><option value="ذاتی">👤 ذاتی</option><option value="کام">💼 کام</option><option value="ضروری">🔥 ضروری</option>
-                                </select>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <input type="text" id="taskInput" placeholder="آج کیا لکھنا ہے؟" class="flex-1 p-3 bg-slate-50 dark:bg-darkinput dark:text-white rounded-2xl outline-none urdu-text shadow-inner border border-slate-100 dark:border-slate-600">
-                                <input type="hidden" id="editTaskId" value="">
-                                <button onclick="window.addTask()" id="saveBtn" class="bg-emerald-600 text-white p-3.5 rounded-2xl shadow-lg btn-press">
-                                    <svg id="saveIcon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
-                                </button>
-                            </div>
-                        </div>
+                        <ul id="taskList" class="space-y-4 pb-10"></ul>
                     </div>
                 </div>
 
                 <!-- FINANCE VIEW -->
                 <div id="financeView" class="hidden flex-1 flex flex-col overflow-y-auto no-scrollbar pb-32 w-full">
                     
-                    <!-- NEW: Search for Finance -->
+                    <!-- Search for Finance -->
                     <div class="px-5 py-3 bg-emerald-50 dark:bg-slate-900 shadow-inner no-print">
                         <div class="relative">
                             <input type="text" id="transSearchInput" placeholder="لین دین تلاش کریں..." class="w-full p-3 pr-10 bg-white dark:bg-darkinput dark:text-white rounded-2xl text-sm outline-none shadow-sm urdu-text" oninput="window.filterData()">
@@ -279,7 +287,6 @@
                             <div class="bg-gradient-to-br from-emerald-600 to-teal-700 rounded-3xl p-6 text-white shadow-xl mb-5">
                                 <div class="flex justify-between items-center mb-6">
                                     <div>
-                                        <!-- Changed label to reflect dynamic sum -->
                                         <p class="text-emerald-100 text-xs font-sans" id="balLabel">کل بیلنس</p>
                                         <h2 class="text-4xl font-bold font-sans mt-1" id="finBalance">0</h2>
                                     </div>
@@ -297,7 +304,7 @@
                                 </div>
                             </div>
 
-                            <!-- Tools & Export (Fixed Text Color) -->
+                            <!-- Tools & Export -->
                             <div class="bg-white dark:bg-darkcard p-3 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 mb-5 flex justify-around gap-2">
                                 <button onclick="window.exportData()" class="flex flex-col items-center gap-1 p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 flex-1 text-slate-700 dark:text-slate-200">
                                     <span class="text-lg">📥</span>
@@ -531,10 +538,10 @@
                 const isIn = t.type === 'in';
                 const balClass = t.currentBalance >= 0 ? 'text-slate-500 dark:text-slate-400' : 'text-red-500';
 
-                // New SVG Arrows
+                // Professional Icons: Tray In (Download) and Tray Out (Upload)
                 const iconArrow = isIn 
-                    ? `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>` // Down Arrow
-                    : `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" /></svg>`; // Up Arrow
+                    ? `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>` 
+                    : `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>`;
 
                 const li = document.createElement('li');
                 li.className = "flex flex-col gap-2 p-4 bg-white dark:bg-darkcard rounded-2xl border dark:border-slate-700 shadow-sm relative overflow-hidden group hover:border-emerald-200 dark:hover:border-emerald-800 transition-colors";
@@ -603,14 +610,30 @@
         window.editTask = (id) => {
             const task = allTasks.find(t => t.id === id);
             if(task) {
+                // Scroll to top of diary view to see the form
+                const diaryView = document.getElementById('diaryView');
+                if(diaryView) diaryView.scrollTop = 0;
+
                 document.getElementById('taskInput').value = task.text;
                 document.getElementById('taskDate').value = task.dateDue || "";
                 document.getElementById('taskCategory').value = task.category || "عام";
                 document.getElementById('editTaskId').value = id;
-                document.getElementById('saveIcon').innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />';
+                document.getElementById('saveBtn').innerHTML = '<span>اپ ڈیٹ کریں</span><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>';
+                document.getElementById('taskFormTitle').innerText = "نوٹ تبدیل کریں";
+                document.getElementById('cancelTaskBtn').classList.remove('hidden');
+                
                 document.getElementById('taskInput').focus();
                 showToast("ایڈٹ موڈ آن ہے");
             }
+        };
+
+        window.cancelTaskEdit = () => {
+            document.getElementById('editTaskId').value = "";
+            document.getElementById('taskInput').value = "";
+            document.getElementById('taskFormTitle').innerText = "نیا نوٹ لکھیں";
+            document.getElementById('cancelTaskBtn').classList.add('hidden');
+            document.getElementById('saveBtn').innerHTML = '<span>محفوظ کریں</span><svg id="saveIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>';
+            setDefaultDateTime();
         };
 
         window.addTask = async () => {
@@ -625,9 +648,8 @@
                         dateDue: document.getElementById('taskDate').value,
                         category: document.getElementById('taskCategory').value
                     });
-                    document.getElementById('editTaskId').value = "";
-                    document.getElementById('saveIcon').innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />';
                     showToast("تبدیلی محفوظ ہو گئی ✨");
+                    window.cancelTaskEdit();
                 } else {
                     await addDoc(collection(db, "tasks"), {
                         text, uid: currentUser.uid, 
@@ -636,9 +658,9 @@
                         createdAt: serverTimestamp()
                     });
                     showToast("محفوظ ہو گیا ✅");
+                    document.getElementById('taskInput').value = "";
+                    setDefaultDateTime();
                 }
-                document.getElementById('taskInput').value = "";
-                setDefaultDateTime();
             } catch(e) { showToast("ایرر پیش آیا"); }
         };
 
@@ -646,7 +668,10 @@
         window.editTransaction = (id) => {
             const t = allTrans.find(tr => tr.id === id);
             if(t) {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                // Scroll to top to see form
+                const financeView = document.getElementById('financeView');
+                if(financeView) financeView.scrollTop = 0;
+                
                 document.getElementById('transAmount').value = t.amount;
                 document.getElementById('transDesc').value = t.description;
                 document.getElementById('transDateOverride').value = t.date;
@@ -759,7 +784,7 @@
             const isDiary = tab === 'diary';
             document.getElementById('diaryView').classList.toggle('hidden', !isDiary);
             document.getElementById('financeView').classList.toggle('hidden', isDiary);
-            document.getElementById('tabIndicator').style.left = isDiary ? '1%' : '50%';
+            document.getElementById('tabIndicator').style.left = isDiary ? '50%' : '1%'; // Fixed Logic Here
             
             const btnD = document.getElementById('btnDiary');
             const btnF = document.getElementById('btnFinance');
