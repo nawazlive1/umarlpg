@@ -86,15 +86,32 @@
             color: #34d399;
         }
 
+        /* Professional Reply Box Styling */
         .reply-box {
-            background-color: rgba(0,0,0,0.03);
-            border-right: 3px solid #10b981;
-            padding: 8px;
-            margin-top: 8px;
-            border-radius: 8px;
+            background-color: #f8fafc; /* Very light slate */
+            border-right: 4px solid #10b981;
+            padding: 12px;
+            margin-top: 10px;
+            border-radius: 12px 2px 2px 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            position: relative;
+            transition: all 0.2s;
         }
         .dark .reply-box {
-            background-color: rgba(255,255,255,0.05);
+            background-color: #334155; /* Slate 700 */
+            border-right-color: #34d399;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .reply-box:hover {
+            transform: translateX(-2px);
+        }
+
+        /* Like Animation */
+        .like-btn:active {
+            transform: scale(1.2);
+        }
+        .liked {
+            color: #ef4444; /* Red */
         }
 
         /* Toggle Switch Style */
@@ -465,7 +482,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, updateDoc, query, where, onSnapshot, deleteDoc, doc, setDoc, getDoc, serverTimestamp, arrayUnion } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, updateDoc, query, where, onSnapshot, deleteDoc, doc, setDoc, getDoc, serverTimestamp, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCwrfDXG8pRpkqDYht0EpRZ8h_ElRu0N_w",
@@ -818,6 +835,25 @@
             }
         }
 
+        // --- TOGGLE LIKE FUNCTION ---
+        window.toggleLike = async (collectionName, docId) => {
+            if(!currentUser) return;
+            const docRef = doc(db, collectionName, docId);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                const likes = data.likes || [];
+                const uid = currentUser.uid;
+                try {
+                    if (likes.includes(uid)) {
+                        await updateDoc(docRef, { likes: arrayRemove(uid) });
+                    } else {
+                        await updateDoc(docRef, { likes: arrayUnion(uid) });
+                    }
+                } catch(e) { console.error(e); }
+            }
+        };
+
         function renderTasks(tasks) {
             const ul = document.getElementById('taskList');
             ul.innerHTML = "";
@@ -832,17 +868,24 @@
                 
                 const formattedDate = task.dateDue ? task.dateDue.replace('T', ' ') : 'بغیر تاریخ';
                 const isMine = task.uid === currentUser.uid;
+                const likes = task.likes || [];
+                const isLiked = likes.includes(currentUser.uid);
+                const likeCount = likes.length > 0 ? likes.length : '';
                 
                 let repliesHtml = '';
                 if(task.replies && task.replies.length > 0) {
                     task.replies.forEach(rep => {
+                        const avatarInitial = rep.author ? rep.author.charAt(0).toUpperCase() : '?';
                         repliesHtml += `
-                            <div class="reply-box mt-2">
-                                <div class="flex justify-between items-center">
-                                    <span class="text-[10px] font-bold text-emerald-600">${rep.author}</span>
-                                    <span class="text-[9px] text-slate-400 font-sans">${rep.time}</span>
+                            <div class="reply-box">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <div class="w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-900 flex items-center justify-center text-[10px] font-bold text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                                        ${avatarInitial}
+                                    </div>
+                                    <span class="text-[11px] font-bold text-slate-700 dark:text-slate-200">${rep.author}</span>
+                                    <span class="text-[9px] text-slate-400 font-sans ml-auto">${rep.time}</span>
                                 </div>
-                                <p class="text-xs mt-1 urdu-text dark:text-slate-300">${rep.text}</p>
+                                <p class="text-sm urdu-text text-slate-600 dark:text-slate-300 pr-1 leading-relaxed">${rep.text}</p>
                             </div>`;
                     });
                 }
@@ -856,11 +899,17 @@
                                 ${task.category ? '• '+task.category : ''}
                              </span>
                         </div>
-                         ${isMine ? `
-                        <div class="flex gap-2">
-                            <button onclick="window.editTask('${task.id}')" class="text-[11px] text-emerald-500 font-bold urdu-text">تبدیل</button>
-                            <button onclick="window.deleteDocById('tasks', '${task.id}')" class="text-[11px] text-red-400 font-bold urdu-text">حذف</button>
-                        </div>` : ''}
+                        <div class="flex gap-2 items-center">
+                            <!-- Like Button -->
+                            <button onclick="window.toggleLike('tasks', '${task.id}')" class="like-btn flex items-center gap-1 text-slate-400 hover:text-red-500 transition-colors ${isLiked ? 'liked' : ''}">
+                                <span class="text-base">${isLiked ? '❤️' : '🤍'}</span>
+                                <span class="text-[10px] font-sans font-bold">${likeCount}</span>
+                            </button>
+                             ${isMine ? `
+                                <button onclick="window.editTask('${task.id}')" class="text-[11px] text-emerald-500 font-bold urdu-text ml-2">تبدیل</button>
+                                <button onclick="window.deleteDocById('tasks', '${task.id}')" class="text-[11px] text-red-400 font-bold urdu-text">حذف</button>
+                             ` : ''}
+                        </div>
                     </div>
                     <p class="urdu-text text-lg dark:text-slate-200 text-right leading-relaxed mb-3">${task.text}</p>
                     <div class="mb-3">${repliesHtml}</div>
@@ -893,10 +942,13 @@
                 }
 
                 const isIn = t.type === 'in';
-                // Edit/Delete for imported data: 
-                // Since import sets uid = current user, check strictly
                 const isMine = t.uid === currentUser.uid;
                 const balClass = t.currentBalance >= 0 ? 'text-slate-500 dark:text-slate-400' : 'text-red-500';
+                
+                // Likes logic
+                const likes = t.likes || [];
+                const isLiked = likes.includes(currentUser.uid);
+                const likeCount = likes.length > 0 ? likes.length : '';
 
                 // Time Display Logic
                 let timeDisplay = "--:--";
@@ -908,13 +960,17 @@
                 let repliesHtml = '';
                 if(t.replies && t.replies.length > 0) {
                     t.replies.forEach(rep => {
+                        const avatarInitial = rep.author ? rep.author.charAt(0).toUpperCase() : '?';
                         repliesHtml += `
-                            <div class="reply-box mt-2">
-                                <div class="flex justify-between items-center">
-                                    <span class="text-[10px] font-bold text-emerald-600">${rep.author}</span>
-                                    <span class="text-[9px] text-slate-400 font-sans">${rep.time}</span>
+                            <div class="reply-box">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <div class="w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-900 flex items-center justify-center text-[10px] font-bold text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                                        ${avatarInitial}
+                                    </div>
+                                    <span class="text-[11px] font-bold text-slate-700 dark:text-slate-200">${rep.author}</span>
+                                    <span class="text-[9px] text-slate-400 font-sans ml-auto">${rep.time}</span>
                                 </div>
-                                <p class="text-xs mt-1 urdu-text dark:text-slate-300">${rep.text}</p>
+                                <p class="text-sm urdu-text text-slate-600 dark:text-slate-300 pr-1 leading-relaxed">${rep.text}</p>
                             </div>`;
                     });
                 }
@@ -954,11 +1010,18 @@
                             </p>
                         </div>
 
-                        ${isMine ? `
-                        <div class="flex gap-2">
-                            <button onclick="window.editTransaction('${t.id}')" class="text-xs text-blue-500 font-bold bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded hover:bg-blue-100 transition">✏️</button>
+                        <div class="flex gap-2 items-center">
+                            <!-- Like Button -->
+                            <button onclick="window.toggleLike('transactions', '${t.id}')" class="like-btn flex items-center gap-1 text-slate-400 hover:text-red-500 transition-colors ${isLiked ? 'liked' : ''}">
+                                <span class="text-base">${isLiked ? '❤️' : '🤍'}</span>
+                                <span class="text-[10px] font-sans font-bold">${likeCount}</span>
+                            </button>
+
+                            ${isMine ? `
+                            <button onclick="window.editTransaction('${t.id}')" class="text-xs text-blue-500 font-bold bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded hover:bg-blue-100 transition ml-2">✏️</button>
                             <button onclick="window.deleteDocById('transactions', '${t.id}')" class="text-xs text-red-400 font-bold bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded hover:bg-red-100 transition">🗑️</button>
-                        </div>` : ''}
+                            ` : ''}
+                        </div>
                     </div>
 
                     <!-- Replies Section -->
@@ -1000,6 +1063,7 @@
                     window.cancelTaskEdit();
                 } else {
                     payload.replies = [];
+                    payload.likes = [];
                     await addDoc(collection(db, "tasks"), payload);
                     showToast(currentMode === 'personal' ? "محفوظ (ذاتی) 🔒" : "شیئر کر دیا (گروپ) 👥");
                     document.getElementById('taskInput').value = "";
@@ -1036,7 +1100,8 @@
                     showToast("اپ ڈیٹ ہو گیا ✅");
                     window.cancelTransEdit();
                 } else {
-                    payload.replies = []; // Ensure replies array exists
+                    payload.replies = []; 
+                    payload.likes = [];
                     await addDoc(collection(db, "transactions"), payload);
                     showToast("حساب محفوظ ہو گیا 💰");
                     document.getElementById('transAmount').value = "";
