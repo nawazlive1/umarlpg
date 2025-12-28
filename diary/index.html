@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>میری اسمارٹ ڈائری پرو (بہتر شدہ)</title>
+    <title>میری اسمارٹ ڈائری پرو (فکسڈ)</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -347,7 +347,10 @@
                                 <span id="finFilterText" class="text-xs font-bold text-emerald-700 dark:text-emerald-300 urdu-text">تاریخ فلٹر</span>
                                 <button onclick="window.clearFilter()" class="mr-2 text-red-500 text-xs font-bold">صاف کریں ✖</button>
                             </div>
-                            <h3 class="text-xs font-bold text-slate-400 mb-4 px-2 no-print">حالیہ لین دین</h3>
+                            <div class="flex justify-between items-center mb-4 px-2 no-print">
+                                <h3 class="text-xs font-bold text-slate-400">حالیہ لین دین</h3>
+                                <span id="entryCount" class="text-[10px] font-sans text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">0 entries</span>
+                            </div>
                             <ul id="transList" class="space-y-4"></ul>
                         </div>
 
@@ -431,11 +434,34 @@
             const transSearchInput = document.getElementById('transSearchInput');
             const transSearch = transSearchInput ? transSearchInput.value.toLowerCase() : '';
 
-            let filteredTrans = [...allTrans];
+            // --- THE FIX: DEDUPLICATION LOGIC START ---
+            // This ensures if duplicate data exists in DB, we only take one instance for calculation
+            let distinctTrans = [];
+            const seenSet = new Set();
+            
+            // Sort by ID to ensure consistency
+            allTrans.sort((a,b) => a.id.localeCompare(b.id));
+
+            allTrans.forEach(t => {
+                // Create a unique key based on content
+                const desc = t.description ? t.description.trim().toLowerCase() : "";
+                const key = `${t.date}|${t.amount}|${t.type}|${desc}`;
+
+                if (!seenSet.has(key)) {
+                    seenSet.add(key);
+                    distinctTrans.push(t);
+                } else {
+                    // console.log("Duplicate hidden:", t);
+                }
+            });
+            // --- DEDUPLICATION LOGIC END ---
+
+            let filteredTrans = [...distinctTrans];
+
             if (filterDate) filteredTrans = filteredTrans.filter(t => t.date && t.date.startsWith(filterDate));
             if (transSearch) {
                 filteredTrans = filteredTrans.filter(t => 
-                    t.description.toLowerCase().includes(transSearch) || 
+                    (t.description && t.description.toLowerCase().includes(transSearch)) || 
                     t.amount.toString().includes(transSearch)
                 );
             }
@@ -445,6 +471,8 @@
                 const dateA = new Date(a.date + 'T00:00:00');
                 const dateB = new Date(b.date + 'T00:00:00');
                 if (dateA - dateB !== 0) return dateA - dateB;
+                
+                // Fallback if createdAt is missing
                 const createdA = a.createdAt ? a.createdAt.seconds : 0;
                 const createdB = b.createdAt ? b.createdAt.seconds : 0;
                 return createdA - createdB;
@@ -477,12 +505,14 @@
                  document.getElementById('balLabel').innerText = "موجودہ ٹوٹل (فلٹر)";
                  document.getElementById('balLabel').classList.add('text-yellow-200');
             } else {
-                 // For global balance, we usually want the TOTAL of everything, not just what's sorted
-                 // But since filteredTrans IS everything when no filter, this works.
                  document.getElementById('finBalance').innerText = (sumIn - sumOut).toLocaleString();
                  document.getElementById('balLabel').innerText = "کل بیلنس";
                  document.getElementById('balLabel').classList.remove('text-yellow-200');
             }
+
+            // Update count badge
+            const countEl = document.getElementById('entryCount');
+            if(countEl) countEl.innerText = `${filteredTrans.length} entries`;
 
             filteredTrans.reverse(); // Show newest first
             renderTransactions(filteredTrans);
@@ -637,10 +667,15 @@
         };
 
         window.addTask = async () => {
+            const btn = document.getElementById('saveBtn');
             const text = document.getElementById('taskInput').value.trim();
             const editId = document.getElementById('editTaskId').value;
             if(!text) return showToast("کچھ لکھیں!");
             
+            // Disable button
+            btn.disabled = true;
+            btn.style.opacity = '0.5';
+
             try {
                 if(editId) {
                     await updateDoc(doc(db, "tasks", editId), {
@@ -662,6 +697,10 @@
                     setDefaultDateTime();
                 }
             } catch(e) { showToast("ایرر پیش آیا"); }
+            
+            // Enable button
+            btn.disabled = false;
+            btn.style.opacity = '1';
         };
 
         // --- TRANSACTION FUNCTIONS ---
@@ -698,12 +737,18 @@
         }
 
         window.addTransaction = async () => {
+            const btn = document.getElementById('saveTransBtn');
             const amount = parseFloat(document.getElementById('transAmount').value);
             const desc = document.getElementById('transDesc').value.trim();
             const dateVal = document.getElementById('transDateOverride').value || new Date().toISOString().split('T')[0];
             const editId = document.getElementById('editTransId').value;
 
             if(!amount || !desc) return showToast("تفصیل مکمل کریں");
+            
+            // Prevent double click duplicate
+            btn.disabled = true;
+            btn.style.opacity = '0.5';
+
             try {
                 if(editId) {
                     await updateDoc(doc(db, "transactions", editId), {
@@ -712,6 +757,22 @@
                     showToast("اپ ڈیٹ ہو گیا ✅");
                     window.cancelTransEdit();
                 } else {
+                    // Check local duplicate before sending (Extra protection)
+                    const exists = allTrans.some(t => 
+                        t.amount === amount && 
+                        t.date === dateVal && 
+                        t.type === currentTransType &&
+                        t.description.trim().toLowerCase() === desc.toLowerCase()
+                    );
+                    
+                    if(exists) {
+                         if(!confirm("یہ اینٹری پہلے سے موجود لگ رہی ہے۔ کیا دوبارہ محفوظ کریں؟")) {
+                             btn.disabled = false;
+                             btn.style.opacity = '1';
+                             return;
+                         }
+                    }
+
                     await addDoc(collection(db, "transactions"), {
                         amount, description: desc, uid: currentUser.uid,
                         type: currentTransType, date: dateVal,
@@ -722,6 +783,10 @@
                     document.getElementById('transDesc').value = "";
                 }
             } catch(e) { showToast("ایرر پیش آیا"); }
+
+            // Re-enable button
+            btn.disabled = false;
+            btn.style.opacity = '1';
         };
 
         // --- DATA TOOLS ---
