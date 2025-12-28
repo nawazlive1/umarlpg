@@ -7,6 +7,9 @@
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js for Graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -88,7 +91,7 @@
 
         /* Professional Reply Box Styling */
         .reply-box {
-            background-color: #f8fafc; /* Very light slate */
+            background-color: #f8fafc;
             border-right: 4px solid #10b981;
             padding: 12px;
             margin-top: 10px;
@@ -98,21 +101,15 @@
             transition: all 0.2s;
         }
         .dark .reply-box {
-            background-color: #334155; /* Slate 700 */
+            background-color: #334155;
             border-right-color: #34d399;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
-        .reply-box:hover {
-            transform: translateX(-2px);
-        }
+        .reply-box:hover { transform: translateX(-2px); }
 
         /* Like Animation */
-        .like-btn:active {
-            transform: scale(1.2);
-        }
-        .liked {
-            color: #ef4444; /* Red */
-        }
+        .like-btn:active { transform: scale(1.2); }
+        .liked { color: #ef4444; }
 
         /* Toggle Switch Style */
         .toggle-btn.active {
@@ -120,16 +117,11 @@
             color: white;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
-        .toggle-btn {
-            background-color: transparent;
-            color: #4b5563;
-        }
+        .toggle-btn { background-color: transparent; color: #4b5563; }
         .dark .toggle-btn { color: #cbd5e1; }
         
         /* Loading Overlay */
-        #loadingOverlay {
-            backdrop-filter: blur(5px);
-        }
+        #loadingOverlay { backdrop-filter: blur(5px); }
 
         /* Print Styles */
         @media print {
@@ -319,6 +311,35 @@
                     <button onclick="document.getElementById('groupModal').classList.add('hidden')" class="w-full text-slate-400 py-2 text-sm">بند کریں</button>
                 </div>
             </div>
+            
+            <!-- Charts/Stats Modal (New) -->
+            <div id="statsModal" class="hidden fixed inset-0 z-[80] bg-black/50 backdrop-blur-sm flex items-center justify-center p-5">
+                <div class="bg-white dark:bg-darkcard w-full max-w-lg p-6 rounded-3xl shadow-2xl animate-slide-down max-h-[90vh] overflow-y-auto">
+                    <div class="flex justify-between items-center mb-4">
+                         <h3 class="text-lg font-bold dark:text-white urdu-text">📊 کاروباری تجزیہ (Charts)</h3>
+                         <button onclick="document.getElementById('statsModal').classList.add('hidden')" class="text-red-500 font-bold">✖</button>
+                    </div>
+                    <div class="mb-6">
+                        <h4 class="text-xs font-bold text-slate-500 mb-2 text-center">خرچ بلحاظ مدات (Expenses by Category)</h4>
+                        <div class="w-48 h-48 mx-auto">
+                            <canvas id="expenseChart"></canvas>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-bold text-slate-500 mb-2 text-center">آمدن بمقابلہ خرچ (Income vs Expense)</h4>
+                         <canvas id="barChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- History Modal (New) -->
+            <div id="historyModal" class="hidden fixed inset-0 z-[80] bg-black/50 backdrop-blur-sm flex items-center justify-center p-5">
+                <div class="bg-white dark:bg-darkcard w-full max-w-sm p-6 rounded-3xl shadow-2xl animate-slide-down max-h-[80vh] overflow-hidden flex flex-col">
+                    <h3 class="text-lg font-bold mb-4 text-center dark:text-white border-b pb-2">🕒 تبدیلی کا ریکارڈ (History)</h3>
+                    <div id="historyList" class="overflow-y-auto flex-1 space-y-3 min-h-[100px]"></div>
+                    <button onclick="document.getElementById('historyModal').classList.add('hidden')" class="w-full mt-4 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-white py-2 rounded-xl text-sm font-bold">بند کریں</button>
+                </div>
+            </div>
 
             <!-- Interactive Calendar -->
             <div id="calendarView" class="hidden absolute top-[160px] left-0 right-0 max-w-md mx-auto bg-white dark:bg-darkcard shadow-2xl z-40 p-5 rounded-3xl border border-slate-200 dark:border-slate-700 mx-5 animate-slide-down">
@@ -427,6 +448,10 @@
 
                             <!-- Tools & Export -->
                             <div class="bg-white dark:bg-darkcard p-3 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 mb-5 flex justify-around gap-2">
+                                <button onclick="window.openStats()" class="flex flex-col items-center gap-1 p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 flex-1 text-emerald-700 dark:text-emerald-400">
+                                    <span class="text-lg">📊</span>
+                                    <span class="text-[10px] font-bold urdu-text">تجزیہ</span>
+                                </button>
                                 <button onclick="window.exportData()" class="flex flex-col items-center gap-1 p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 flex-1 text-slate-700 dark:text-slate-200">
                                     <span class="text-lg">📥</span>
                                     <span class="text-[10px] font-bold urdu-text">ایکسپورٹ</span>
@@ -452,7 +477,20 @@
                                 <div class="flex flex-col gap-3 mb-4">
                                     <input type="number" id="transAmount" placeholder="رقم درج کریں" class="w-full p-4 bg-slate-50 dark:bg-darkinput dark:text-white rounded-xl outline-none font-sans font-bold text-center text-xl border-2 border-transparent focus:border-emerald-400 transition-colors">
                                     <input type="text" id="transDesc" placeholder="تفصیل..." class="w-full p-3 bg-slate-50 dark:bg-darkinput dark:text-white rounded-xl outline-none urdu-text text-right border border-slate-100 dark:border-slate-600">
-                                    <input type="date" id="transDateOverride" class="w-full p-2 bg-slate-50 dark:bg-darkinput dark:text-white rounded-xl text-xs font-sans text-center border border-slate-100 dark:border-slate-600">
+                                    <!-- New Feature: Category Select -->
+                                    <div class="flex gap-2">
+                                        <select id="transCategory" class="flex-1 p-2 bg-slate-50 dark:bg-darkinput dark:text-white rounded-xl text-xs urdu-text outline-none border border-slate-100 dark:border-slate-600">
+                                            <option value="General">عام (General)</option>
+                                            <option value="Food">کھانا (Food)</option>
+                                            <option value="Stock">مال (Stock)</option>
+                                            <option value="Rent">کرایہ (Rent)</option>
+                                            <option value="Bill">بل (Bill)</option>
+                                            <option value="Salary">تنخواہ (Salary)</option>
+                                            <option value="Travel">سفر (Travel)</option>
+                                            <option value="Other">دیگر (Other)</option>
+                                        </select>
+                                        <input type="date" id="transDateOverride" class="flex-1 p-2 bg-slate-50 dark:bg-darkinput dark:text-white rounded-xl text-xs font-sans text-center border border-slate-100 dark:border-slate-600">
+                                    </div>
                                 </div>
                                 <input type="hidden" id="editTransId" value="">
                                 <div class="flex gap-2">
@@ -783,14 +821,14 @@
                 );
             }
             
-            // --- NEW SORTING LOGIC FOR BALANCE CALCULATION ---
+            // --- LOGIC FOR BALANCE CALCULATION (Oldest First) ---
             filteredTrans.sort((a,b) => {
-                // 1. Date Ascending
+                // 1. Date Ascending (Oldest First)
                 const dateA = new Date(a.date);
                 const dateB = new Date(b.date);
                 if (dateA - dateB !== 0) return dateA - dateB;
 
-                // 2. Priority: Income ('in') comes BEFORE Expense ('out')
+                // 2. Priority: Income ('in') comes BEFORE Expense ('out') on same day
                 if (a.type !== b.type) {
                     return a.type === 'in' ? -1 : 1;
                 }
@@ -900,7 +938,6 @@
                              </span>
                         </div>
                         <div class="flex gap-2 items-center">
-                            <!-- Like Button -->
                             <button onclick="window.toggleLike('tasks', '${task.id}')" class="like-btn flex items-center gap-1 text-slate-400 hover:text-red-500 transition-colors ${isLiked ? 'liked' : ''}">
                                 <span class="text-base">${isLiked ? '❤️' : '🤍'}</span>
                                 <span class="text-[10px] font-sans font-bold">${likeCount}</span>
@@ -927,6 +964,12 @@
             const ul = document.getElementById('transList');
             ul.innerHTML = "";
             let lastDate = null;
+            
+            // Permission Logic
+            // Admin only can delete in group mode
+            // Everyone can edit in group mode
+            const isAdmin = currentUser && currentUser.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+            const canDelete = (currentMode === 'personal' && true) || (currentMode === 'group' && isAdmin);
 
             trans.forEach(t => {
                 if (t.date !== lastDate) {
@@ -943,12 +986,21 @@
 
                 const isIn = t.type === 'in';
                 const isMine = t.uid === currentUser.uid;
+                
+                // Permission Check: Personal Mode (Owner only) OR Group Mode (Anyone can edit)
+                const canEdit = (currentMode === 'personal' && isMine) || (currentMode === 'group');
+                // Deletion Check: Personal (Owner) OR Group (Admin only)
+                const canDel = (currentMode === 'personal' && isMine) || (currentMode === 'group' && isAdmin);
+
                 const balClass = t.currentBalance >= 0 ? 'text-slate-500 dark:text-slate-400' : 'text-red-500';
                 
                 // Likes logic
                 const likes = t.likes || [];
                 const isLiked = likes.includes(currentUser.uid);
                 const likeCount = likes.length > 0 ? likes.length : '';
+                
+                // History Check
+                const hasHistory = t.history && t.history.length > 0;
 
                 // Time Display Logic
                 let timeDisplay = "--:--";
@@ -956,7 +1008,6 @@
                     timeDisplay = new Date(t.createdAt.seconds * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
                 }
 
-                // --- NEW: Handle Replies in Transactions ---
                 let repliesHtml = '';
                 if(t.replies && t.replies.length > 0) {
                     t.replies.forEach(rep => {
@@ -989,7 +1040,10 @@
                                 ${iconArrow}
                             </div>
                             <div class="text-right min-w-0">
-                                <p class="text-[10px] text-slate-400 font-sans mt-0.5">${currentMode==='group' ? t.authorName : t.date}</p>
+                                <div class="flex items-center gap-2">
+                                    <p class="text-[10px] text-slate-400 font-sans mt-0.5">${currentMode==='group' ? t.authorName : t.date}</p>
+                                    ${t.category ? `<span class="bg-slate-100 dark:bg-slate-700 text-[9px] px-1.5 rounded text-slate-500">${t.category}</span>` : ''}
+                                </div>
                                 <p class="text-[9px] text-slate-300 font-sans">${timeDisplay}</p>
                             </div>
                         </div>
@@ -1011,14 +1065,22 @@
                         </div>
 
                         <div class="flex gap-2 items-center">
-                            <!-- Like Button -->
+                             ${hasHistory ? `
+                                <button onclick="window.viewHistory('${t.id}')" class="text-slate-400 hover:text-blue-500 transition" title="History">
+                                    🕒
+                                </button>
+                             ` : ''}
+                            
                             <button onclick="window.toggleLike('transactions', '${t.id}')" class="like-btn flex items-center gap-1 text-slate-400 hover:text-red-500 transition-colors ${isLiked ? 'liked' : ''}">
                                 <span class="text-base">${isLiked ? '❤️' : '🤍'}</span>
                                 <span class="text-[10px] font-sans font-bold">${likeCount}</span>
                             </button>
 
-                            ${isMine ? `
+                            ${canEdit ? `
                             <button onclick="window.editTransaction('${t.id}')" class="text-xs text-blue-500 font-bold bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded hover:bg-blue-100 transition ml-2">✏️</button>
+                            ` : ''}
+                            
+                            ${canDel ? `
                             <button onclick="window.deleteDocById('transactions', '${t.id}')" class="text-xs text-red-400 font-bold bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded hover:bg-red-100 transition">🗑️</button>
                             ` : ''}
                         </div>
@@ -1036,6 +1098,110 @@
             });
         }
 
+        // --- STATS & CHARTS (New Feature) ---
+        let expenseChart = null;
+        let barChart = null;
+
+        window.openStats = () => {
+            document.getElementById('statsModal').classList.remove('hidden');
+            renderCharts();
+        };
+
+        function renderCharts() {
+            // Prepare Data from allTrans
+            const expenses = {};
+            let totalIncome = 0;
+            let totalExpense = 0;
+
+            allTrans.forEach(t => {
+                if(t.type === 'out') {
+                    const cat = t.category || "General";
+                    expenses[cat] = (expenses[cat] || 0) + parseFloat(t.amount);
+                    totalExpense += parseFloat(t.amount);
+                } else {
+                    totalIncome += parseFloat(t.amount);
+                }
+            });
+
+            // Pie Chart Data
+            const labels = Object.keys(expenses);
+            const data = Object.values(expenses);
+            
+            // Destroy old charts if exist
+            if(expenseChart) expenseChart.destroy();
+            if(barChart) barChart.destroy();
+
+            // Render Pie Chart
+            const ctxPie = document.getElementById('expenseChart').getContext('2d');
+            expenseChart = new Chart(ctxPie, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: ['#10b981', '#f59e0b', '#3b82f6', '#ef4444', '#8b5cf6', '#ec4899', '#6366f1'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { font: { size: 10 } } }
+                    }
+                }
+            });
+
+            // Render Bar Chart
+            const ctxBar = document.getElementById('barChart').getContext('2d');
+            barChart = new Chart(ctxBar, {
+                type: 'bar',
+                data: {
+                    labels: ['آمدن (Income)', 'خرچ (Expense)'],
+                    datasets: [{
+                        label: 'PKR',
+                        data: [totalIncome, totalExpense],
+                        backgroundColor: ['#10b981', '#ef4444'],
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: { y: { beginAtZero: true } },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        // --- HISTORY (New Feature) ---
+        window.viewHistory = (id) => {
+            const t = allTrans.find(x => x.id === id);
+            if(!t || !t.history) return;
+            
+            const list = document.getElementById('historyList');
+            list.innerHTML = "";
+            
+            // Sort history new to old
+            const hist = [...t.history].reverse();
+            
+            hist.forEach(h => {
+                const date = new Date(h.timestamp).toLocaleString();
+                const div = document.createElement('div');
+                div.className = "bg-slate-50 dark:bg-slate-800 p-3 rounded-lg border border-slate-200 dark:border-slate-700 text-xs";
+                div.innerHTML = `
+                    <div class="flex justify-between mb-1">
+                        <strong class="text-emerald-600">${h.updatedBy}</strong>
+                        <span class="text-slate-400 font-sans text-[9px]">${date}</span>
+                    </div>
+                    <div class="text-slate-600 dark:text-slate-300 urdu-text">
+                        ${h.changes}
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+            
+            document.getElementById('historyModal').classList.remove('hidden');
+        };
+
         // --- CRUD ACTIONS (Merged Logic) ---
         window.addTask = async () => {
             const text = document.getElementById('taskInput').value.trim();
@@ -1044,7 +1210,6 @@
             const dateDue = document.getElementById('taskDate').value;
             
             if(!text) return showToast("کچھ لکھیں!");
-            // Auto-Dukaan safeguard
             if(currentMode === 'group' && !myGroupId) myGroupId = 'DUKAAN';
 
             const payload = {
@@ -1075,15 +1240,16 @@
         window.addTransaction = async () => {
             const amount = parseFloat(document.getElementById('transAmount').value);
             const desc = document.getElementById('transDesc').value.trim();
+            const cat = document.getElementById('transCategory').value;
             const dateVal = document.getElementById('transDateOverride').value || new Date().toISOString().split('T')[0];
             const editId = document.getElementById('editTransId').value;
             
             if(!amount || !desc) return showToast("ڈیٹا نامکمل ہے");
-            // Auto-Dukaan safeguard
             if(currentMode === 'group' && !myGroupId) myGroupId = 'DUKAAN';
 
             const payload = {
                 amount, description: desc,
+                category: cat, // New Field
                 type: currentTransType, date: dateVal,
                 uid: currentUser.uid,
                 authorName: currentUser.displayName,
@@ -1094,14 +1260,36 @@
 
             try {
                 if(editId) {
-                    await updateDoc(doc(db, "transactions", editId), {
-                        amount, description: desc, type: currentTransType, date: dateVal
-                    });
+                    // Audit Trail Logic
+                    const oldDoc = allTrans.find(t => t.id === editId);
+                    const changes = [];
+                    if(oldDoc.amount != amount) changes.push(`Amount: ${oldDoc.amount} ➔ ${amount}`);
+                    if(oldDoc.description != desc) changes.push(`Desc: ${oldDoc.description} ➔ ${desc}`);
+                    if(oldDoc.category != cat) changes.push(`Cat: ${oldDoc.category} ➔ ${cat}`);
+                    
+                    if(changes.length > 0) {
+                        const historyItem = {
+                            updatedBy: currentUser.displayName,
+                            timestamp: new Date().toISOString(),
+                            changes: changes.join(', ')
+                        };
+                        await updateDoc(doc(db, "transactions", editId), {
+                            amount, description: desc, category: cat, type: currentTransType, date: dateVal,
+                            history: arrayUnion(historyItem)
+                        });
+                    } else {
+                        // No changes detected, but updating anyway
+                        await updateDoc(doc(db, "transactions", editId), {
+                            amount, description: desc, category: cat, type: currentTransType, date: dateVal
+                        });
+                    }
+
                     showToast("اپ ڈیٹ ہو گیا ✅");
                     window.cancelTransEdit();
                 } else {
                     payload.replies = []; 
                     payload.likes = [];
+                    payload.history = []; // Init history
                     await addDoc(collection(db, "transactions"), payload);
                     showToast("حساب محفوظ ہو گیا 💰");
                     document.getElementById('transAmount').value = "";
@@ -1126,7 +1314,6 @@
             } catch(e) { console.log(e); }
         };
 
-        // --- NEW: Add Reply for Transactions ---
         window.addTransReply = async (transId) => {
             const input = document.getElementById(`transReplyInput_${transId}`);
             const text = input.value.trim();
@@ -1141,8 +1328,6 @@
                 });
                 showToast("تبصرہ بھیج دیا");
             } catch(e) { 
-                console.log(e); 
-                // Fallback: If document was old and didn't have replies array
                 try {
                     await setDoc(doc(db, "transactions", transId), {
                         replies: [{
@@ -1183,10 +1368,13 @@
 
         window.editTransaction = (id) => {
             const t = allTrans.find(tr => tr.id === id);
-            if(t && t.uid === currentUser.uid) {
+            // Permissions Logic handled in UI, but double check here if needed
+            // But since edit is open to group, we proceed
+            if(t) {
                 document.getElementById('financeView').scrollTop = 0;
                 document.getElementById('transAmount').value = t.amount;
                 document.getElementById('transDesc').value = t.description;
+                document.getElementById('transCategory').value = t.category || "General";
                 document.getElementById('transDateOverride').value = t.date;
                 window.setTransType(t.type);
                 document.getElementById('editTransId').value = id;
@@ -1195,12 +1383,13 @@
                 document.getElementById('cancelTransBtn').classList.remove('hidden');
                 document.getElementById('transAmount').focus();
                 showToast("ایڈٹ موڈ: کیش");
-            } else { showToast("آپ صرف اپنی انٹری ایڈٹ کر سکتے ہیں"); }
+            }
         };
         window.cancelTransEdit = () => {
             document.getElementById('editTransId').value = "";
             document.getElementById('transAmount').value = "";
             document.getElementById('transDesc').value = "";
+            document.getElementById('transCategory').value = "General";
             document.getElementById('transDateOverride').value = new Date().toISOString().split('T')[0];
             document.getElementById('saveTransBtn').innerText = "محفوظ کریں";
             document.getElementById('transFormTitle').innerText = "نیا اندراج";
@@ -1306,6 +1495,7 @@
                                     type: item.type, uid: currentUser.uid, authorName: currentUser.displayName,
                                     visibility: visibilityForImport,
                                     groupId: groupIdForImport,
+                                    category: item.category || "General", // Default cat for imported items
                                     createdAt: serverTimestamp()
                                 });
                                 count++;
