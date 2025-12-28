@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>اسمارٹ ڈائری پرو</title>
+    <title>میری اسمارٹ ڈائری پرو (الٹیمیٹ)</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -16,6 +16,10 @@
                         darkbg: '#0f172a',
                         darkcard: '#1e293b',
                         darkinput: '#334155',
+                        brand: {
+                            light: '#10b981',
+                            dark: '#064e3b',
+                        }
                     },
                     fontFamily: {
                         urdu: ['Noto Nastaliq Urdu', 'serif'],
@@ -32,21 +36,33 @@
     <style>
         body { font-family: 'Noto Sans Arabic', sans-serif; -webkit-tap-highlight-color: transparent; }
         h1, h2, h3, .urdu-text, button, input, select, option, textarea { font-family: 'Noto Nastaliq Urdu', serif; line-height: 2.0; }
-        .mobile-container { max-width: 480px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; position: relative; }
+        
+        /* Responsive Container */
+        .app-container { 
+            width: 100%;
+            margin: 0 auto; 
+            min-height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+            position: relative; 
+        }
+
+        /* Desktop specific adjustments */
+        @media (min-width: 768px) {
+            .app-container {
+                max-width: 1024px;
+                background-color: #f8fafc;
+                min-height: 100vh;
+                box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            }
+            .dark .app-container {
+                background-color: #0f172a;
+            }
+        }
+
         .btn-press:active { transform: scale(0.97); }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-        .floating-input {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 95%;
-            max-width: 460px;
-            border-radius: 24px;
-            z-index: 40;
-        }
 
         .calendar-dot { width: 6px; height: 6px; background-color: #10b981; border-radius: 50%; margin-top: 2px; }
         
@@ -56,6 +72,7 @@
         }
         .animate-slide-down { animation: slideDown 0.3s ease-out forwards; }
         
+        /* Modern Date Style */
         .date-badge {
             background: rgba(16, 185, 129, 0.1);
             color: #059669;
@@ -96,11 +113,49 @@
         #loadingOverlay {
             backdrop-filter: blur(5px);
         }
+
+        /* Print Styles */
+        @media print {
+            body * { visibility: hidden; }
+            html, body, .app-container, #appSection, #mainContent, #financeView, #diaryView {
+                height: auto !important;
+                min-height: auto !important;
+                overflow: visible !important;
+                position: static !important;
+                display: block !important;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                background: white !important;
+            }
+            #printableArea, #diaryScroll {
+                visibility: visible !important;
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                margin: 0;
+                padding: 20px;
+                background: white;
+                color: black;
+            }
+            #printableArea *, #diaryScroll * {
+                visibility: visible !important;
+                color: black !important;
+                box-shadow: none !important;
+            }
+            #transList, #taskList {
+                display: block !important;
+                overflow: visible !important;
+                height: auto !important;
+            }
+            .no-print { display: none !important; }
+        }
     </style>
 </head>
 <body class="text-gray-800 bg-slate-100 dark:bg-black transition-colors duration-300">
 
-    <div class="mobile-container bg-white dark:bg-darkbg shadow-2xl relative overflow-hidden">
+    <div class="app-container bg-white dark:bg-darkbg shadow-2xl relative overflow-hidden">
         
         <!-- Loading Overlay -->
         <div id="loadingOverlay" class="hidden fixed inset-0 z-[100] bg-white/80 dark:bg-black/80 flex flex-col items-center justify-center">
@@ -110,40 +165,43 @@
 
         <!-- Auth Section -->
         <div id="authSection" class="flex-1 flex flex-col justify-center p-6 bg-emerald-50 dark:bg-slate-900 z-50 absolute inset-0 h-full">
-            <div class="text-center mb-10">
-                <div class="bg-white dark:bg-slate-800 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 shadow-md text-4xl">🔐</div>
-                <h1 class="text-3xl font-bold text-emerald-800 dark:text-emerald-400">اسمارٹ ڈائری پرو</h1>
-                <p class="text-sm text-emerald-600 dark:text-emerald-300 font-sans mt-1">ایڈمن اپروول سسٹم</p>
-            </div>
+            <div class="max-w-md mx-auto w-full">
+                <div class="text-center mb-10">
+                    <div class="bg-white dark:bg-slate-800 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-md text-4xl">🔐</div>
+                    <h1 class="text-4xl font-bold text-emerald-800 dark:text-emerald-400 mb-4 leading-normal">میری ڈائری</h1>
+                    <p class="text-sm text-emerald-600 dark:text-emerald-300 font-sans mt-2 tracking-wide">ایڈمن اپروول سسٹم</p>
+                </div>
 
-            <div id="loginForm" class="bg-white dark:bg-darkcard p-6 rounded-3xl shadow-xl border border-emerald-100 dark:border-slate-700">
-                <h2 class="text-xl font-bold text-center mb-6 text-slate-700 dark:text-slate-200">لاگ ان کریں</h2>
-                <div class="space-y-4">
-                    <input type="email" id="loginEmail" placeholder="ای میل" class="w-full p-3 bg-slate-50 dark:bg-darkinput dark:text-white border border-slate-200 dark:border-slate-600 rounded-xl outline-none font-sans" dir="ltr">
-                    <input type="password" id="loginPass" placeholder="پاسورڈ" class="w-full p-3 bg-slate-50 dark:bg-darkinput dark:text-white border border-slate-200 dark:border-slate-600 rounded-xl outline-none font-sans" dir="ltr">
+                <div id="loginForm" class="bg-white dark:bg-darkcard p-6 rounded-3xl shadow-xl border border-emerald-100 dark:border-slate-700">
+                    <h2 class="text-xl font-bold text-center mb-6 text-slate-700 dark:text-slate-200">لاگ ان کریں</h2>
+                    <form onsubmit="event.preventDefault(); window.loginUser();" class="space-y-4">
+                        <input type="email" id="loginEmail" placeholder="ای میل" class="w-full p-3 bg-slate-50 dark:bg-darkinput dark:text-white border border-slate-200 dark:border-slate-600 rounded-xl outline-none font-sans" dir="ltr">
+                        <input type="password" id="loginPass" placeholder="پاسورڈ" class="w-full p-3 bg-slate-50 dark:bg-darkinput dark:text-white border border-slate-200 dark:border-slate-600 rounded-xl outline-none font-sans" dir="ltr">
+                        <button type="submit" class="w-full mt-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl btn-press shadow-lg">داخل ہوں</button>
+                    </form>
+                    <div class="mt-8 pt-6 border-t border-slate-100 dark:border-slate-700 text-center">
+                        <button type="button" onclick="window.showScreen('signupForm')" class="text-emerald-600 dark:text-emerald-400 font-bold hover:underline">نیا اکاؤنٹ بنائیں</button>
+                    </div>
                 </div>
-                <button onclick="window.loginUser()" class="w-full mt-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl btn-press shadow-lg">داخل ہوں</button>
-                <div class="mt-8 pt-6 border-t border-slate-100 dark:border-slate-700 text-center">
-                    <button onclick="window.showScreen('signupForm')" class="text-emerald-600 dark:text-emerald-400 font-bold hover:underline">نیا اکاؤنٹ بنائیں</button>
-                </div>
-            </div>
 
-            <div id="signupForm" class="hidden bg-white dark:bg-darkcard p-6 rounded-3xl shadow-xl border border-emerald-100 dark:border-slate-700">
-                <h2 class="text-xl font-bold text-center mb-6 text-slate-700 dark:text-slate-200">رجسٹریشن</h2>
-                <div class="space-y-4">
-                    <label class="text-[10px] text-slate-400 block mb-1">آپ کا نام (جو دوسروں کو نظر آئے)</label>
-                    <input type="text" id="signupName" placeholder="مثلاً: اجمل لائف" class="w-full p-3 bg-slate-50 dark:bg-darkinput dark:text-white border border-slate-200 dark:border-slate-600 rounded-xl outline-none urdu-text border-emerald-500">
-                    
-                    <input type="email" id="signupEmail" placeholder="ای میل لکھیں" class="w-full p-3 bg-slate-50 dark:bg-darkinput dark:text-white border border-slate-200 dark:border-slate-600 rounded-xl font-sans" dir="ltr">
-                    <input type="password" id="signupPass" placeholder="پاسورڈ" class="w-full p-3 bg-slate-50 dark:bg-darkinput dark:text-white border border-slate-200 dark:border-slate-600 rounded-xl font-sans" dir="ltr">
+                <div id="signupForm" class="hidden bg-white dark:bg-darkcard p-6 rounded-3xl shadow-xl border border-emerald-100 dark:border-slate-700">
+                    <h2 class="text-xl font-bold text-center mb-6 text-slate-700 dark:text-slate-200">رجسٹریشن</h2>
+                    <form onsubmit="event.preventDefault(); window.signupUser();" class="space-y-4">
+                        <label class="text-[10px] text-slate-400 block mb-1">آپ کا نام (جو دوسروں کو نظر آئے)</label>
+                        <input type="text" id="signupName" placeholder="مثلاً: اجمل لائف" class="w-full p-3 bg-slate-50 dark:bg-darkinput dark:text-white border border-slate-200 dark:border-slate-600 rounded-xl outline-none urdu-text border-emerald-500">
+                        
+                        <input type="email" id="signupEmail" placeholder="ای میل لکھیں" class="w-full p-3 bg-slate-50 dark:bg-darkinput dark:text-white border border-slate-200 dark:border-slate-600 rounded-xl font-sans" dir="ltr">
+                        <input type="password" id="signupPass" placeholder="پاسورڈ" class="w-full p-3 bg-slate-50 dark:bg-darkinput dark:text-white border border-slate-200 dark:border-slate-600 rounded-xl font-sans" dir="ltr">
+                        
+                        <div class="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-xl mt-4">
+                            <p class="text-[10px] text-blue-700 dark:text-blue-400 urdu-text text-center">
+                                نوٹ: اکاؤنٹ بنانے کے بعد آپ کو ایڈمن کی منظوری کا انتظار کرنا ہوگا۔
+                            </p>
+                        </div>
+                        <button type="submit" id="signupBtn" class="w-full mt-4 bg-emerald-600 text-white font-bold py-3 rounded-xl btn-press">اکاؤنٹ بنائیں</button>
+                    </form>
+                    <button type="button" onclick="window.showScreen('loginForm')" class="w-full mt-3 text-slate-400 py-2 text-sm font-sans">واپس جائیں</button>
                 </div>
-                <div class="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-xl mt-4">
-                    <p class="text-[10px] text-blue-700 dark:text-blue-400 urdu-text text-center">
-                        نوٹ: اکاؤنٹ بنانے کے بعد آپ کو ایڈمن کی منظوری کا انتظار کرنا ہوگا۔ (ای میل ویریفکیشن کی ضرورت نہیں)
-                    </p>
-                </div>
-                <button onclick="window.signupUser()" id="signupBtn" class="w-full mt-4 bg-emerald-600 text-white font-bold py-3 rounded-xl btn-press">اکاؤنٹ بنائیں</button>
-                <button onclick="window.showScreen('loginForm')" class="w-full mt-3 text-slate-400 py-2 text-sm font-sans">واپس جائیں</button>
             </div>
         </div>
 
@@ -158,7 +216,6 @@
                 </div>
                 <button onclick="location.reload()" class="mt-8 text-emerald-600 font-bold text-xs">ریفریش کریں</button>
             </div>
-            
             <button onclick="window.logoutUser()" class="mt-10 text-red-400 text-sm font-bold">لاگ آؤٹ</button>
         </div>
 
@@ -167,39 +224,57 @@
             
             <!-- Dynamic Header -->
             <header class="bg-emerald-600 dark:bg-emerald-900 pt-4 pb-2 text-white shadow-lg z-30 sticky top-0 transition-all duration-500">
-                <div class="px-5 flex justify-between items-center h-12">
-                    <div class="flex flex-col">
-                        <h2 class="text-xl font-bold leading-tight" id="headerTitle">میری ڈائری</h2>
-                        <span id="headerSub" class="text-[10px] text-emerald-100 font-sans opacity-80">...</span>
+                <div class="px-5 flex items-center justify-between h-12 max-w-4xl mx-auto w-full relative">
+                    
+                    <!-- Right Side: Welcome Text -->
+                    <div class="flex-shrink-0 z-20 flex flex-col items-end">
+                        <span id="headerSub" class="text-[10px] text-emerald-100 font-sans opacity-80 block font-bold">خوش آمدید!</span>
+                    </div>
+
+                    <!-- Center: Title -->
+                    <div class="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+                        <h2 class="text-xl font-bold leading-tight text-white drop-shadow-md" id="headerTitle">میری ڈائری</h2>
                     </div>
                     
-                    <div class="flex items-center gap-3">
+                    <!-- Left Side: Buttons -->
+                    <div class="flex items-center gap-2 flex-shrink-0 z-20">
+                        <!-- Admin Button -->
                         <button id="adminPanelBtn" onclick="window.openAdminPanel()" class="hidden bg-red-500/20 p-2 rounded-xl hover:bg-red-500/50 transition border border-red-400 relative">
                             👮‍♂️
                             <span id="pendingCountBadge" class="hidden absolute -top-1 -right-1 w-4 h-4 bg-red-600 text-white text-[9px] flex items-center justify-center rounded-full font-sans">0</span>
                         </button>
+
+                        <!-- Group Settings Button -->
                         <button onclick="window.openGroupSettings()" class="bg-emerald-500/30 p-2 rounded-xl hover:bg-emerald-500/50 transition relative">
                             ⚙️
                             <span id="groupStatusDot" class="absolute top-1 right-1 w-2 h-2 bg-green-500 rounded-full"></span>
                         </button>
+
+                        <!-- Calendar Button -->
+                        <button onclick="window.toggleCalendar()" id="calBtn" class="bg-emerald-500/30 p-2 rounded-xl hover:bg-emerald-500/50 transition">📅</button>
+                        
+                        <!-- Theme -->
                         <button onclick="window.toggleDarkMode()" class="bg-emerald-500/30 p-2 rounded-xl hover:bg-emerald-500/50 transition"><span id="darkModeIcon">🌙</span></button>
+                        
+                        <!-- User Avatar -->
                         <div onclick="window.logoutUser()" id="userAvatar" class="w-9 h-9 rounded-full bg-white text-emerald-700 flex items-center justify-center font-bold text-sm cursor-pointer border-2 border-emerald-400 uppercase">U</div>
                     </div>
                 </div>
 
                 <!-- Tabs -->
-                <div class="px-5 mt-4">
-                    <div class="flex p-1 bg-emerald-700/50 dark:bg-slate-900/50 rounded-2xl relative">
-                        <div id="tabIndicator" class="absolute top-1 bottom-1 w-[48%] bg-white dark:bg-slate-700 shadow-md rounded-xl transition-all duration-300 left-1"></div>
-                        <button onclick="window.switchTab('diary')" id="btnDiary" class="flex-1 py-2 text-sm font-bold relative z-10 text-emerald-900 dark:text-emerald-100 transition-colors">نوٹس 📖</button>
-                        <button onclick="window.switchTab('finance')" id="btnFinance" class="flex-1 py-2 text-sm font-bold relative z-10 text-white opacity-70 transition-colors">کیش بک 💰</button>
+                <div class="px-5 mt-4 max-w-4xl mx-auto w-full">
+                    <div class="flex p-1 bg-emerald-900 dark:bg-slate-800 rounded-2xl relative shadow-inner border border-emerald-800 dark:border-slate-700">
+                        <div id="tabIndicator" class="absolute top-1 bottom-1 w-[49%] bg-emerald-200 dark:bg-emerald-600 shadow-md rounded-xl transition-all duration-300 left-[50%]"></div>
+                        
+                        <button onclick="window.switchTab('diary')" id="btnDiary" class="flex-1 py-2 text-sm font-bold relative z-10 text-emerald-950 dark:text-white transition-colors">ڈائری 📖</button>
+                        <button onclick="window.switchTab('finance')" id="btnFinance" class="flex-1 py-2 text-sm font-bold relative z-10 text-emerald-100/70 dark:text-slate-400 transition-colors">کیش بک 💰</button>
                     </div>
                 </div>
             </header>
 
-            <!-- Mode Toggle (Personal / Group) -->
-            <div id="modeToggleBar" class="px-5 py-2 bg-slate-100 dark:bg-darkbg border-b border-slate-200 dark:border-slate-800 flex justify-center">
-                <div class="flex bg-slate-200 dark:bg-slate-800 rounded-lg p-1 w-full max-w-xs">
+            <!-- Mode Toggle Bar -->
+            <div id="modeToggleBar" class="px-5 py-2 bg-slate-100 dark:bg-darkbg border-b border-slate-200 dark:border-slate-800 flex justify-center sticky top-[108px] z-20">
+                <div class="flex bg-slate-200 dark:bg-slate-800 rounded-lg p-1 w-full max-w-xs shadow-inner">
                     <button onclick="window.setMode('personal')" id="btnModePersonal" class="toggle-btn active flex-1 py-1 text-xs font-bold rounded-md transition-all">🔒 ذاتی ڈائری</button>
                     <button onclick="window.setMode('group')" id="btnModeGroup" class="toggle-btn flex-1 py-1 text-xs font-bold rounded-md transition-all">👥 گروپ ڈائری</button>
                 </div>
@@ -209,11 +284,9 @@
             <div id="adminModal" class="hidden fixed inset-0 z-[70] bg-black/50 backdrop-blur-sm flex items-center justify-center p-5">
                 <div class="bg-white dark:bg-darkcard w-full max-w-sm p-6 rounded-3xl shadow-2xl animate-slide-down max-h-[80vh] overflow-hidden flex flex-col">
                     <h3 class="text-lg font-bold mb-4 text-center dark:text-white border-b pb-2 border-slate-100 dark:border-slate-700">نئے ممبرز کی درخواستیں</h3>
-                    
                     <div id="pendingUsersList" class="overflow-y-auto flex-1 space-y-3 min-h-[100px]">
                         <p class="text-center text-xs text-slate-400 mt-4">کوئی درخواست زیرِ التواء نہیں</p>
                     </div>
-                    
                     <button onclick="document.getElementById('adminModal').classList.add('hidden')" class="w-full mt-4 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-white py-2 rounded-xl text-sm font-bold">بند کریں</button>
                 </div>
             </div>
@@ -221,74 +294,166 @@
             <!-- Group Settings Modal -->
             <div id="groupModal" class="hidden fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-center justify-center p-5">
                 <div class="bg-white dark:bg-darkcard w-full max-w-sm p-6 rounded-3xl shadow-2xl animate-slide-down">
-                    <h3 class="text-lg font-bold mb-4 text-center dark:text-white">گروپ جوائن کریں</h3>
-                    <p class="text-xs text-slate-500 text-center mb-4">اپنے دوستوں والا گروپ کوڈ لکھیں تاکہ آپ سب ایک دوسرے کی پوسٹ دیکھ سکیں۔</p>
-                    
+                    <h3 class="text-lg font-bold mb-4 text-center dark:text-white">گروپ سیٹنگز</h3>
+                    <p class="text-xs text-slate-500 text-center mb-4">ڈیفالٹ گروپ "دکان" (DUKAAN) سیٹ ہے۔</p>
                     <label class="text-[10px] font-bold text-emerald-600">گروپ کوڈ (Group ID)</label>
-                    <input type="text" id="groupCodeInput" placeholder="مثلاً: Friends123" class="w-full p-3 bg-slate-100 dark:bg-darkinput dark:text-white rounded-xl mt-1 mb-4 outline-none font-sans text-center tracking-widest uppercase">
-                    
+                    <input type="text" id="groupCodeInput" placeholder="DUKAAN" class="w-full p-3 bg-slate-100 dark:bg-darkinput dark:text-white rounded-xl mt-1 mb-4 outline-none font-sans text-center tracking-widest uppercase">
                     <button onclick="window.saveGroupSettings()" class="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl mb-2">محفوظ کریں</button>
                     <button onclick="document.getElementById('groupModal').classList.add('hidden')" class="w-full text-slate-400 py-2 text-sm">بند کریں</button>
                 </div>
             </div>
 
+            <!-- Interactive Calendar -->
+            <div id="calendarView" class="hidden absolute top-[160px] left-0 right-0 max-w-md mx-auto bg-white dark:bg-darkcard shadow-2xl z-40 p-5 rounded-3xl border border-slate-200 dark:border-slate-700 mx-5 animate-slide-down">
+                <div class="flex justify-between items-center mb-5">
+                    <button onclick="window.changeMonth(-1)" class="p-2 bg-slate-100 dark:bg-slate-800 rounded-full hover:bg-emerald-50 dark:text-white">◀</button>
+                    <h3 id="currentMonthYear" class="text-lg font-bold text-slate-800 dark:text-emerald-400 urdu-text"></h3>
+                    <button onclick="window.changeMonth(1)" class="p-2 bg-slate-100 dark:bg-slate-800 rounded-full hover:bg-emerald-50 dark:text-white">▶</button>
+                </div>
+                <div class="grid grid-cols-7 gap-2 text-center font-sans text-[10px] text-slate-400 font-bold mb-2">
+                    <div>SUN</div><div>MON</div><div>TUE</div><div>WED</div><div>THU</div><div>FRI</div><div>SAT</div>
+                </div>
+                <div id="calendarGrid" class="grid grid-cols-7 gap-2 text-center font-sans"></div>
+                <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700 flex justify-between items-center">
+                    <span class="text-[10px] text-slate-400 font-sans italic">* تاریخ پر کلک کریں</span>
+                    <button onclick="window.toggleCalendar()" class="text-xs text-red-500 font-bold urdu-text">بند کریں</button>
+                </div>
+            </div>
+
             <!-- Content Area -->
-            <div id="mainContent" class="flex-1 overflow-hidden flex flex-col">
+            <div id="mainContent" class="flex-1 overflow-hidden flex flex-col max-w-4xl mx-auto w-full">
                 
                 <!-- DIARY VIEW -->
-                <div id="diaryView" class="flex-1 flex flex-col overflow-hidden">
-                    <div class="flex-1 overflow-y-auto p-5 no-scrollbar" id="diaryScroll">
-                        <div id="emptyState" class="hidden text-center mt-20 opacity-50">
-                            <div class="text-4xl mb-2">📝</div>
-                            <p class="text-sm">یہاں ابھی کچھ نہیں لکھا...</p>
-                        </div>
-                        <ul id="taskList" class="space-y-4 pb-48"></ul>
+                <div id="diaryView" class="flex-1 flex flex-col overflow-y-auto no-scrollbar w-full p-5">
+                    
+                    <!-- Search Bar -->
+                    <div class="mb-5 relative no-print">
+                        <input type="text" id="searchInput" placeholder="نوٹس میں تلاش کریں..." class="w-full p-3 pr-10 bg-white dark:bg-darkinput dark:text-white rounded-2xl text-sm outline-none shadow-sm urdu-text border border-slate-100 dark:border-slate-700" oninput="window.filterData()">
+                        <span class="absolute right-3 top-3 opacity-40">🔍</span>
                     </div>
 
-                    <!-- Floating Entry for Diary -->
-                    <div class="floating-input bg-white dark:bg-darkcard border border-slate-100 dark:border-slate-700 p-4 shadow-2xl">
-                        <div class="flex flex-col gap-3">
-                            <!-- Visibility Indicator -->
-                            <div class="flex justify-between items-center px-1">
-                                <span id="inputLabel" class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">🔒 ذاتی نوٹ</span>
-                                <input type="datetime-local" id="taskDate" class="bg-transparent text-[10px] text-slate-400 outline-none font-sans">
-                            </div>
-
-                            <div class="flex items-center gap-2">
-                                <input type="text" id="taskInput" placeholder="آج کیا لکھنا ہے؟" class="flex-1 p-3 bg-slate-50 dark:bg-darkinput dark:text-white rounded-2xl outline-none urdu-text shadow-inner border border-slate-100 dark:border-slate-600">
-                                <input type="hidden" id="editTaskId" value="">
-                                <button onclick="window.addTask()" id="saveBtn" class="bg-emerald-600 text-white p-3.5 rounded-2xl shadow-lg btn-press">
-                                    <svg id="saveIcon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
-                                </button>
-                            </div>
+                    <!-- Static Diary Input Form -->
+                    <div class="bg-white dark:bg-darkcard p-5 rounded-3xl shadow-md border dark:border-slate-700 mb-6 no-print">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="text-sm font-bold urdu-text" id="taskFormTitle">نیا نوٹ لکھیں</h3>
+                            <span id="inputLabel" class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">🔒 ذاتی نوٹ</span>
                         </div>
+                        
+                        <div class="flex gap-2 mb-3">
+                            <input type="datetime-local" id="taskDate" class="flex-[1.5] p-2 bg-slate-50 dark:bg-darkinput dark:text-white rounded-xl text-[10px] outline-none font-sans border border-slate-100 dark:border-slate-600">
+                            <select id="taskCategory" class="flex-1 bg-slate-50 dark:bg-darkinput dark:text-white text-[10px] rounded-xl outline-none p-2 border border-slate-100 dark:border-slate-600">
+                                <option value="عام">📌 عام</option><option value="ذاتی">👤 ذاتی</option><option value="کام">💼 کام</option><option value="ضروری">🔥 ضروری</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <textarea id="taskInput" placeholder="آج کیا لکھنا ہے؟..." class="w-full p-3 h-24 bg-slate-50 dark:bg-darkinput dark:text-white rounded-xl outline-none urdu-text border border-slate-100 dark:border-slate-600 resize-none"></textarea>
+                        </div>
+
+                        <input type="hidden" id="editTaskId" value="">
+                        
+                        <div class="flex gap-2">
+                             <button onclick="window.cancelTaskEdit()" id="cancelTaskBtn" class="hidden flex-1 bg-gray-400 text-white font-bold py-3 rounded-2xl shadow-lg btn-press">منسوخ</button>
+                             <button onclick="window.addTask()" id="saveBtn" class="flex-[2] bg-emerald-600 text-white font-bold py-3 rounded-2xl shadow-lg btn-press flex justify-center items-center gap-2">
+                                <span>محفوظ کریں</span>
+                                <svg id="saveIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                             </button>
+                        </div>
+                    </div>
+
+                    <!-- Diary List -->
+                    <div id="diaryScroll" class="flex-1">
+                        <div id="filterHeader" class="hidden bg-emerald-100 dark:bg-emerald-900/40 p-2 rounded-xl mb-4 text-center">
+                            <span id="filterText" class="text-xs font-bold text-emerald-700 dark:text-emerald-300 urdu-text">تاریخ فلٹر</span>
+                            <button onclick="window.clearFilter()" class="mr-2 text-red-500 text-xs font-bold">صاف کریں ✖</button>
+                        </div>
+                        <ul id="taskList" class="space-y-4 pb-10"></ul>
                     </div>
                 </div>
 
                 <!-- FINANCE VIEW -->
-                <div id="financeView" class="hidden flex-1 flex flex-col overflow-y-auto no-scrollbar pb-32">
-                    <div class="p-5">
-                        <div class="bg-gradient-to-br from-emerald-600 to-teal-700 rounded-3xl p-6 text-white shadow-xl mb-5">
-                            <p class="text-emerald-100 text-xs font-sans mb-1" id="finTitle">کل بیلنس</p>
-                            <h2 class="text-4xl font-bold font-sans" id="finBalance">0</h2>
-                            <div class="flex gap-4 mt-4">
-                                <div class="bg-white/10 p-2 px-4 rounded-xl text-center"><span class="text-[10px] block opacity-70">آمدن</span><span id="finTotalIn" class="font-bold">0</span></div>
-                                <div class="bg-black/10 p-2 px-4 rounded-xl text-center"><span class="text-[10px] block opacity-70">خرچ</span><span id="finTotalOut" class="font-bold">0</span></div>
+                <div id="financeView" class="hidden flex-1 flex flex-col overflow-y-auto no-scrollbar pb-32 w-full">
+                    
+                    <!-- Search for Finance -->
+                    <div class="px-5 py-3 bg-emerald-50 dark:bg-slate-900 shadow-inner no-print">
+                        <div class="relative">
+                            <input type="text" id="transSearchInput" placeholder="لین دین تلاش کریں..." class="w-full p-3 pr-10 bg-white dark:bg-darkinput dark:text-white rounded-2xl text-sm outline-none shadow-sm urdu-text" oninput="window.filterData()">
+                            <span class="absolute right-3 top-3 opacity-40">🔎</span>
+                        </div>
+                    </div>
+
+                    <div class="p-5 md:grid md:grid-cols-2 md:gap-6">
+                        
+                        <!-- Left Col: Summary & Tools -->
+                        <div>
+                            <!-- Balance Card -->
+                            <div class="bg-gradient-to-br from-emerald-600 to-teal-700 rounded-3xl p-6 text-white shadow-xl mb-5">
+                                <div class="flex justify-between items-center mb-6">
+                                    <div>
+                                        <p class="text-emerald-100 text-xs font-sans" id="balLabel">کل بیلنس</p>
+                                        <h2 class="text-4xl font-bold font-sans mt-1" id="finBalance">0</h2>
+                                        <p class="text-[10px] text-emerald-200 mt-1" id="finTitle">میرا بیلنس</p>
+                                    </div>
+                                    <div class="bg-white/20 p-3 rounded-2xl text-2xl">💰</div>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="bg-white/10 p-3 rounded-2xl backdrop-blur-sm">
+                                        <p class="text-[10px] opacity-80 mb-1">آمدن (In)</p>
+                                        <h3 class="text-xl font-bold font-sans" id="finTotalIn">0</h3>
+                                    </div>
+                                    <div class="bg-black/10 p-3 rounded-2xl backdrop-blur-sm">
+                                        <p class="text-[10px] opacity-80 mb-1">خرچ (Out)</p>
+                                        <h3 class="text-xl font-bold font-sans" id="finTotalOut">0</h3>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tools & Export -->
+                            <div class="bg-white dark:bg-darkcard p-3 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 mb-5 flex justify-around gap-2">
+                                <button onclick="window.exportData()" class="flex flex-col items-center gap-1 p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 flex-1 text-slate-700 dark:text-slate-200">
+                                    <span class="text-lg">📥</span>
+                                    <span class="text-[10px] font-bold urdu-text">ایکسپورٹ</span>
+                                </button>
+                                <label for="importFile" class="flex flex-col items-center gap-1 p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 flex-1 cursor-pointer text-slate-700 dark:text-slate-200">
+                                    <span class="text-lg">📤</span>
+                                    <span class="text-[10px] font-bold urdu-text">امپورٹ</span>
+                                    <input type="file" id="importFile" class="hidden" accept=".json" onchange="window.importData(this)">
+                                </label>
+                                <button onclick="window.printPDF()" class="flex flex-col items-center gap-1 p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 flex-1 text-slate-700 dark:text-slate-200">
+                                    <span class="text-lg">🖨️</span>
+                                    <span class="text-[10px] font-bold urdu-text">PDF</span>
+                                </button>
+                            </div>
+
+                            <!-- Input Form -->
+                            <div class="bg-white dark:bg-darkcard p-5 rounded-3xl shadow-md border dark:border-slate-700 mb-6">
+                                <h3 class="text-sm font-bold text-center mb-3 urdu-text" id="transFormTitle">نیا اندراج</h3>
+                                <div class="flex gap-2 p-1 bg-slate-100 dark:bg-darkinput rounded-2xl mb-4">
+                                    <button onclick="window.setTransType('in')" id="btnTypeIn" class="flex-1 py-3 text-sm font-bold rounded-xl transition bg-white text-emerald-600 shadow-sm">آمدن (In)</button>
+                                    <button onclick="window.setTransType('out')" id="btnTypeOut" class="flex-1 py-3 text-sm font-bold rounded-xl transition text-slate-500">خرچ (Out)</button>
+                                </div>
+                                <div class="flex flex-col gap-3 mb-4">
+                                    <input type="number" id="transAmount" placeholder="رقم درج کریں" class="w-full p-4 bg-slate-50 dark:bg-darkinput dark:text-white rounded-xl outline-none font-sans font-bold text-center text-xl border-2 border-transparent focus:border-emerald-400 transition-colors">
+                                    <input type="text" id="transDesc" placeholder="تفصیل..." class="w-full p-3 bg-slate-50 dark:bg-darkinput dark:text-white rounded-xl outline-none urdu-text text-right border border-slate-100 dark:border-slate-600">
+                                    <input type="date" id="transDateOverride" class="w-full p-2 bg-slate-50 dark:bg-darkinput dark:text-white rounded-xl text-xs font-sans text-center border border-slate-100 dark:border-slate-600">
+                                </div>
+                                <input type="hidden" id="editTransId" value="">
+                                <div class="flex gap-2">
+                                    <button onclick="window.cancelTransEdit()" id="cancelTransBtn" class="hidden flex-1 bg-gray-400 text-white font-bold py-3 rounded-2xl shadow-lg btn-press">منسوخ</button>
+                                    <button onclick="window.addTransaction()" id="saveTransBtn" class="flex-[2] bg-slate-800 dark:bg-emerald-700 text-white font-bold py-3 rounded-2xl shadow-lg btn-press">محفوظ کریں</button>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="bg-white dark:bg-darkcard p-5 rounded-3xl shadow-md border dark:border-slate-700 mb-6">
-                            <div class="flex gap-2 p-1 bg-slate-100 dark:bg-darkinput rounded-2xl mb-4">
-                                <button onclick="window.setTransType('in')" id="btnTypeIn" class="flex-1 py-2 text-xs font-bold rounded-xl transition bg-white text-emerald-600 shadow-sm">آمدن (In)</button>
-                                <button onclick="window.setTransType('out')" id="btnTypeOut" class="flex-1 py-2 text-xs font-bold rounded-xl transition text-slate-500">خرچ (Out)</button>
+                        <!-- Right Col: List -->
+                        <div id="printableArea">
+                            <div id="financeFilterHeader" class="hidden bg-emerald-100 dark:bg-emerald-900/40 p-2 rounded-xl mb-4 text-center no-print">
+                                <span id="finFilterText" class="text-xs font-bold text-emerald-700 dark:text-emerald-300 urdu-text">تاریخ فلٹر</span>
+                                <button onclick="window.clearFilter()" class="mr-2 text-red-500 text-xs font-bold">صاف کریں ✖</button>
                             </div>
-                            <div class="flex gap-3 mb-4">
-                                <input type="number" id="transAmount" placeholder="رقم" class="w-1/3 p-3 bg-slate-50 dark:bg-darkinput dark:text-white rounded-xl outline-none font-sans font-bold text-center">
-                                <input type="text" id="transDesc" placeholder="تفصیل..." class="flex-1 p-3 bg-slate-50 dark:bg-darkinput dark:text-white rounded-xl outline-none urdu-text text-right">
-                            </div>
-                            <button onclick="window.addTransaction()" class="w-full bg-slate-800 dark:bg-emerald-700 text-white font-bold py-3 rounded-2xl shadow-lg btn-press">محفوظ کریں</button>
+                            <h3 class="text-xs font-bold text-slate-400 mb-4 px-2 no-print">حالیہ لین دین</h3>
+                            <ul id="transList" class="space-y-4"></ul>
                         </div>
-                        <ul id="transList" class="space-y-3"></ul>
                     </div>
                 </div>
             </div>
@@ -315,20 +480,21 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // ============================================
-        // IMPORTANT: ADMIN EMAIL FOR APPROVAL
-        // ============================================
+        // --- ADMIN EMAIL ---
         const ADMIN_EMAIL = "nawazlive1@gmail.com"; 
-        // ============================================
 
         let currentUser = null;
         let currentMode = 'personal'; 
-        let myGroupId = localStorage.getItem('myGroupId') || null;
-        let userDocUnsub = null; // Unsubscribe from user doc listener
-        let tempSignupName = ""; // NEW: Temp storage for name
-
+        // DEFAULT GROUP SET TO DUKAAN
+        let myGroupId = localStorage.getItem('myGroupId') || 'DUKAAN';
+        let userDocUnsub = null;
+        let tempSignupName = "";
+        
+        // Filter & Date Logic
         let allTasks = [];
         let allTrans = [];
+        let filterDate = null;
+        let currentMonth = new Date();
         let currentTransType = 'in';
 
         // Helper to show/hide loading
@@ -345,26 +511,17 @@
             if(ol) ol.classList.add('hidden');
         };
 
-        // --- AUTH & SETUP ---
+        // --- AUTH & SETUP (From Base Code) ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                // Ensure auth section is hidden if we have a user
                 document.getElementById('authSection').classList.add('hidden');
-                
-                // Show loading initially
                 showLoading();
-
                 try {
                     const isAdmin = user.email && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
-
-                    // If Admin, bypass everything immediately
                     if (isAdmin) {
-                        // Ensure doc exists, then init
                         const userRef = doc(db, "users", user.uid);
-                        // We don't block for getDoc here for speed, just start listening
                         setupUserListener(user, true); 
                     } else {
-                        // Regular user: Listen to their doc to decide screen
                         setupUserListener(user, false);
                     }
                 } catch (e) {
@@ -372,7 +529,6 @@
                     showToast("System Error: " + e.message);
                 }
             } else {
-                // No user
                 currentUser = null;
                 if(userDocUnsub) userDocUnsub();
                 hideLoading();
@@ -382,23 +538,17 @@
             }
         });
 
-        // --- NEW REAL-TIME USER DOC LISTENER ---
         function setupUserListener(user, forceAdmin) {
             if(userDocUnsub) userDocUnsub();
-
             const userRef = doc(db, "users", user.uid);
             
-            // This listener fires automatically whenever the doc is created/updated
             userDocUnsub = onSnapshot(userRef, async (docSnap) => {
                 if (docSnap.exists()) {
                     const userData = docSnap.data();
-                    
-                    // Admin Override fix
                     if (forceAdmin && userData.status !== 'active') {
                         await updateDoc(userRef, { status: 'active' });
-                        return; // The update will trigger this listener again
+                        return;
                     }
-
                     if (userData.status === 'active' || forceAdmin) {
                         initializeUser(user);
                     } else {
@@ -406,20 +556,15 @@
                         showPendingScreen();
                     }
                 } else {
-                    // Doc doesn't exist yet.
-                    // IMPORTANT: We create it HERE immediately.
-                    // This handles cases where signupUser function crashed or didn't finish.
                     console.log("Creating missing user doc...");
                     const nameToUse = tempSignupName || user.displayName || "User";
-                    
                     try {
-                         await setDoc(userRef, {
+                          await setDoc(userRef, {
                             email: user.email,
                             displayName: nameToUse,
                             status: forceAdmin ? 'active' : 'pending',
                             createdAt: serverTimestamp()
                         }, { merge: true });
-                        // Don't need to do anything else, the snapshot will fire again automatically
                     } catch(e) {
                         console.error("Auto-create failed", e);
                         hideLoading();
@@ -436,7 +581,6 @@
             currentUser = user;
             hideLoading();
             
-            // Force UI update
             document.getElementById('authSection').classList.add('hidden');
             document.getElementById('pendingScreen').classList.add('hidden');
             document.getElementById('appSection').classList.remove('hidden');
@@ -450,13 +594,19 @@
                 listenForPendingUsers();
             }
 
+            // Ensure DUKAAN is default if not set
+            if(!myGroupId) {
+                myGroupId = 'DUKAAN';
+                localStorage.setItem('myGroupId', 'DUKAAN');
+            }
+
             updateGroupStatusUI();
             loadDataBasedOnMode();
             setDefaultDateTime();
             loadTheme();
         }
 
-        // --- ADMIN PANEL LOGIC ---
+        // --- ADMIN PANEL LOGIC (From Base Code) ---
         function listenForPendingUsers() {
             const q = query(collection(db, "users"), where("status", "==", "pending"));
             onSnapshot(q, (snap) => {
@@ -481,7 +631,7 @@
                         el.innerHTML = `
                             <div>
                                 <p class="text-sm font-bold dark:text-white urdu-text">${u.displayName || 'نامعلوم'}</p>
-                                <p class="text-[10px] text-slate-500 font-sans">${u.email}</p>
+                                <p class="text[10px] text-slate-500 font-sans">${u.email}</p>
                             </div>
                             <button onclick="window.approveUser('${docSnap.id}')" class="bg-emerald-600 text-white px-3 py-1 rounded-lg text-xs font-bold">Approve</button>
                         `;
@@ -492,22 +642,19 @@
         }
 
         window.openAdminPanel = () => document.getElementById('adminModal').classList.remove('hidden');
-        
         window.approveUser = async (uid) => {
             if(confirm("اس صارف کو ڈائری استعمال کرنے کی اجازت دیں؟")) {
                 await updateDoc(doc(db, "users", uid), { status: "active" });
                 showToast("صارف منظور ہو گیا ✅");
             }
         }
-
-        // --- VERIFICATION SCREENS ---
         function showPendingScreen() {
             document.getElementById('authSection').classList.add('hidden');
             document.getElementById('appSection').classList.add('hidden');
             document.getElementById('pendingScreen').classList.remove('hidden');
         }
 
-        // --- CORE LOGIC: MODE SWITCHING ---
+        // --- MODE SWITCHING & GROUPS (From Base Code) ---
         window.setMode = (mode) => {
             currentMode = mode;
             document.getElementById('btnModePersonal').classList.toggle('active', mode === 'personal');
@@ -523,12 +670,34 @@
                 label.innerText = "👥 گروپ نوٹ";
                 label.className = "text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-md";
                 document.getElementById('headerTitle').innerText = myGroupId ? `گروپ: ${myGroupId}` : "گروپ (کوڈ نہیں ہے)";
-                document.getElementById('finTitle').innerText = "گروپ بیلنس";
+                document.getElementById('finTitle').innerText = "دکان کا بیلنس";
             }
             loadDataBasedOnMode();
         };
 
-        // --- DATA LOADING ---
+        window.openGroupSettings = () => {
+            document.getElementById('groupModal').classList.remove('hidden');
+            document.getElementById('groupCodeInput').value = myGroupId || "DUKAAN";
+        }
+        window.saveGroupSettings = () => {
+            let code = document.getElementById('groupCodeInput').value.trim().toUpperCase();
+            if(!code) code = 'DUKAAN'; // Default to Dukaan if empty
+
+            myGroupId = code;
+            localStorage.setItem('myGroupId', code);
+            showToast(`گروپ ${code} جوائن کر لیا`);
+            updateGroupStatusUI();
+            if(currentMode === 'group') loadDataBasedOnMode();
+            
+            document.getElementById('groupModal').classList.add('hidden');
+        }
+        function updateGroupStatusUI() {
+            const dot = document.getElementById('groupStatusDot');
+            if(myGroupId) dot.className = "absolute top-1 right-1 w-2 h-2 bg-green-500 rounded-full";
+            else dot.className = "absolute top-1 right-1 w-2 h-2 bg-red-400 rounded-full animate-pulse";
+        }
+
+        // --- DATA LOADING & FILTERING (Merged Logic) ---
         let unsubscribeTasks = null;
         let unsubscribeTrans = null;
 
@@ -542,125 +711,240 @@
                 qTasks = query(collection(db, "tasks"), where("uid", "==", currentUser.uid), where("visibility", "==", "private"));
                 qTrans = query(collection(db, "transactions"), where("uid", "==", currentUser.uid), where("visibility", "==", "private"));
             } else {
-                if(!myGroupId) {
-                    allTasks = []; allTrans = []; renderTasks([]); renderTransactions([]);
-                    return;
-                }
+                // FORCE DUKAAN IF NOT SET
+                if(!myGroupId) myGroupId = 'DUKAAN';
+                
                 qTasks = query(collection(db, "tasks"), where("groupId", "==", myGroupId), where("visibility", "==", "public"));
                 qTrans = query(collection(db, "transactions"), where("groupId", "==", myGroupId), where("visibility", "==", "public"));
             }
 
             unsubscribeTasks = onSnapshot(qTasks, (snap) => {
                 allTasks = []; snap.forEach(d => allTasks.push({id: d.id, ...d.data()}));
-                allTasks.sort((a,b) => new Date(b.dateDue || 0) - new Date(a.dateDue || 0));
-                renderTasks(allTasks);
+                applyDisplay();
+                renderCalendar();
             });
 
             unsubscribeTrans = onSnapshot(qTrans, (snap) => {
                 allTrans = []; snap.forEach(d => allTrans.push({id: d.id, ...d.data()}));
-                allTrans.sort((a,b) => new Date(b.date || 0) - new Date(a.date || 0));
-                renderTransactions(allTrans);
+                applyDisplay();
+                renderCalendar();
             });
         }
 
-        // --- RENDERING ---
+        window.filterData = () => applyDisplay();
+        window.clearFilter = () => {
+            filterDate = null;
+            document.getElementById('searchInput').value = "";
+            document.getElementById('transSearchInput').value = "";
+            applyDisplay();
+            document.getElementById('filterHeader').classList.add('hidden');
+            document.getElementById('financeFilterHeader').classList.add('hidden');
+            showToast("فلٹر ختم کر دیا گیا");
+        };
+
+        function applyDisplay() {
+            // Diary Search & Filter
+            const searchInput = document.getElementById('searchInput');
+            const search = searchInput ? searchInput.value.toLowerCase() : '';
+            
+            let filteredTasks = [...allTasks];
+            if (filterDate) filteredTasks = filteredTasks.filter(t => t.dateDue && t.dateDue.startsWith(filterDate));
+            if (search) filteredTasks = filteredTasks.filter(t => t.text.toLowerCase().includes(search));
+            filteredTasks.sort((a,b) => new Date(b.dateDue || 0) - new Date(a.dateDue || 0));
+            renderTasks(filteredTasks);
+
+            // Finance Search & Filter
+            const transSearchInput = document.getElementById('transSearchInput');
+            const transSearch = transSearchInput ? transSearchInput.value.toLowerCase() : '';
+
+            let filteredTrans = [...allTrans];
+            if (filterDate) filteredTrans = filteredTrans.filter(t => t.date && t.date.startsWith(filterDate));
+            if (transSearch) {
+                filteredTrans = filteredTrans.filter(t => 
+                    t.description.toLowerCase().includes(transSearch) || 
+                    t.amount.toString().includes(transSearch)
+                );
+            }
+            
+            // Sort
+            filteredTrans.sort((a,b) => {
+                const dateA = new Date(a.date + 'T00:00:00');
+                const dateB = new Date(b.date + 'T00:00:00');
+                if (dateA - dateB !== 0) return dateA - dateB;
+                const createdA = a.createdAt ? a.createdAt.seconds : 0;
+                const createdB = b.createdAt ? b.createdAt.seconds : 0;
+                return createdA - createdB;
+            });
+
+            // Calc Balance (Filtered)
+            let runBal = 0, sumIn = 0, sumOut = 0;
+            filteredTrans.forEach(t => {
+                const amt = parseFloat(t.amount);
+                if(t.type === 'in') { runBal += amt; sumIn += amt; } 
+                else { runBal -= amt; sumOut += amt; }
+                t.currentBalance = runBal;
+            });
+
+            document.getElementById('finTotalIn').innerText = sumIn.toLocaleString();
+            document.getElementById('finTotalOut').innerText = sumOut.toLocaleString();
+            
+            if(transSearch || filterDate) {
+                 document.getElementById('finBalance').innerText = (sumIn - sumOut).toLocaleString();
+                 document.getElementById('balLabel').innerText = "موجودہ ٹوٹل (فلٹر)";
+                 document.getElementById('balLabel').classList.add('text-yellow-200');
+            } else {
+                 document.getElementById('finBalance').innerText = (sumIn - sumOut).toLocaleString();
+                 document.getElementById('balLabel').innerText = "کل بیلنس";
+                 document.getElementById('balLabel').classList.remove('text-yellow-200');
+            }
+
+            filteredTrans.reverse();
+            renderTransactions(filteredTrans);
+
+            if(filterDate) {
+                document.getElementById('filterHeader').classList.remove('hidden');
+                document.getElementById('financeFilterHeader').classList.remove('hidden');
+                document.getElementById('filterText').innerText = `فلٹر: ${filterDate}`;
+                document.getElementById('finFilterText').innerText = `فلٹر: ${filterDate}`;
+            }
+        }
+
         function renderTasks(tasks) {
             const ul = document.getElementById('taskList');
-            const empty = document.getElementById('emptyState');
             ul.innerHTML = "";
-            
             if(tasks.length === 0) {
-                empty.classList.remove('hidden');
-            } else {
-                empty.classList.add('hidden');
-                tasks.forEach(task => {
-                    const li = document.createElement('li');
-                    li.className = "bg-white dark:bg-darkcard p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700";
-                    const isMine = task.uid === currentUser.uid;
-                    const dateStr = task.dateDue ? task.dateDue.replace('T', ' ') : '';
-                    
-                    let repliesHtml = '';
-                    if(task.replies && task.replies.length > 0) {
-                        task.replies.forEach(rep => {
-                            repliesHtml += `
-                                <div class="reply-box mt-2">
-                                    <div class="flex justify-between items-center">
-                                        <span class="text-[10px] font-bold text-emerald-600">${rep.author}</span>
-                                        <span class="text-[9px] text-slate-400 font-sans">${rep.time}</span>
-                                    </div>
-                                    <p class="text-xs mt-1 urdu-text dark:text-slate-300">${rep.text}</p>
-                                </div>`;
-                        });
-                    }
-
-                    li.innerHTML = `
-                        <div class="flex justify-between items-start mb-2">
-                            <div class="flex flex-col">
-                                <span class="text-[11px] font-bold ${currentMode==='group'?'text-blue-600':'text-emerald-700'} urdu-text">
-                                    ${currentMode==='group' ? '👤 '+task.authorName : '🔒 ذاتی'}
-                                </span>
-                                <span class="date-badge font-sans mt-1 inline-block w-fit">${dateStr}</span>
-                            </div>
-                            ${isMine ? `
-                            <div class="flex gap-2">
-                                <button onclick="window.editTask('${task.id}')" class="text-slate-400 hover:text-emerald-500">✏️</button>
-                                <button onclick="window.deleteDocById('tasks', '${task.id}')" class="text-slate-400 hover:text-red-500">🗑️</button>
-                            </div>` : ''}
-                        </div>
-                        <p class="urdu-text text-lg dark:text-slate-200 text-right leading-relaxed mb-3">${task.text}</p>
-                        <div class="mb-3">${repliesHtml}</div>
-                        ${currentMode === 'group' ? `
-                        <div class="flex gap-2 w-full items-center mt-2 pt-2 border-t border-slate-100 dark:border-slate-700">
-                             <input type="text" id="replyInput_${task.id}" placeholder="جواب لکھیں..." class="flex-1 text-[11px] p-2 bg-slate-50 dark:bg-darkinput dark:text-white rounded-lg outline-none urdu-text">
-                             <button onclick="window.addReply('${task.id}')" class="bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-white px-3 py-1 rounded-lg text-[10px] font-bold">بھیجیں</button>
-                        </div>` : ''}
-                    `;
-                    ul.appendChild(li);
-                });
+                 ul.innerHTML = '<p class="text-center text-xs opacity-50 mt-10">کوئی نوٹس نہیں</p>';
+                 return;
             }
+            
+            tasks.forEach(task => {
+                const li = document.createElement('li');
+                li.className = "bg-white dark:bg-darkcard p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 transition-all active:scale-[0.98]";
+                
+                const formattedDate = task.dateDue ? task.dateDue.replace('T', ' ') : 'بغیر تاریخ';
+                const isMine = task.uid === currentUser.uid;
+                
+                let repliesHtml = '';
+                if(task.replies && task.replies.length > 0) {
+                    task.replies.forEach(rep => {
+                        repliesHtml += `
+                            <div class="reply-box mt-2">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-[10px] font-bold text-emerald-600">${rep.author}</span>
+                                    <span class="text-[9px] text-slate-400 font-sans">${rep.time}</span>
+                                </div>
+                                <p class="text-xs mt-1 urdu-text dark:text-slate-300">${rep.text}</p>
+                            </div>`;
+                    });
+                }
+
+                li.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                             <span class="date-badge font-sans">${formattedDate}</span>
+                             <span class="text-[9px] font-bold ml-2 ${currentMode==='group'?'text-blue-600':'text-emerald-700'} urdu-text">
+                                ${currentMode==='group' ? '👤 '+task.authorName : ''}
+                                ${task.category ? '• '+task.category : ''}
+                             </span>
+                        </div>
+                         ${isMine ? `
+                        <div class="flex gap-2">
+                            <button onclick="window.editTask('${task.id}')" class="text-[11px] text-emerald-500 font-bold urdu-text">تبدیل</button>
+                            <button onclick="window.deleteDocById('tasks', '${task.id}')" class="text-[11px] text-red-400 font-bold urdu-text">حذف</button>
+                        </div>` : ''}
+                    </div>
+                    <p class="urdu-text text-lg dark:text-slate-200 text-right leading-relaxed mb-3">${task.text}</p>
+                    <div class="mb-3">${repliesHtml}</div>
+                    ${currentMode === 'group' ? `
+                    <div class="flex gap-2 w-full items-center mt-2 pt-2 border-t border-slate-100 dark:border-slate-700">
+                         <input type="text" id="replyInput_${task.id}" placeholder="جواب لکھیں..." class="flex-1 text-[11px] p-2 bg-slate-50 dark:bg-darkinput dark:text-white rounded-lg outline-none urdu-text">
+                         <button onclick="window.addReply('${task.id}')" class="bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-white px-3 py-1 rounded-lg text-[10px] font-bold">بھیجیں</button>
+                    </div>` : ''}
+                `;
+                ul.appendChild(li);
+            });
         }
 
         function renderTransactions(trans) {
             const ul = document.getElementById('transList');
-            let tin = 0, tout = 0;
             ul.innerHTML = "";
-            trans.forEach(t => { if(t.type === 'in') tin += t.amount; else tout += t.amount; });
-            document.getElementById('finTotalIn').innerText = tin.toLocaleString();
-            document.getElementById('finTotalOut').innerText = tout.toLocaleString();
-            document.getElementById('finBalance').innerText = (tin - tout).toLocaleString();
+            let lastDate = null;
 
             trans.forEach(t => {
+                if (t.date !== lastDate) {
+                    const dateHeader = document.createElement('li');
+                    dateHeader.className = "text-center my-4 relative";
+                    dateHeader.innerHTML = `
+                        <span class="bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[10px] font-bold px-3 py-1 rounded-full font-sans shadow-sm border dark:border-slate-700">
+                            📅 ${t.date}
+                        </span>
+                    `;
+                    ul.appendChild(dateHeader);
+                    lastDate = t.date;
+                }
+
                 const isIn = t.type === 'in';
                 const isMine = t.uid === currentUser.uid;
+                const balClass = t.currentBalance >= 0 ? 'text-slate-500 dark:text-slate-400' : 'text-red-500';
+
+                const iconArrow = isIn 
+                    ? `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>` 
+                    : `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>`;
+
                 const li = document.createElement('li');
-                li.className = "flex justify-between items-center p-3 bg-white dark:bg-darkcard rounded-2xl border dark:border-slate-700";
+                li.className = "flex flex-col gap-2 p-4 bg-white dark:bg-darkcard rounded-2xl border dark:border-slate-700 shadow-sm relative overflow-hidden group hover:border-emerald-200 dark:hover:border-emerald-800 transition-colors";
+                
                 li.innerHTML = `
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-full ${isIn?'bg-emerald-100 text-emerald-600':'bg-red-100 text-red-600'} flex items-center justify-center font-bold text-sm">${isIn?'↓':'↑'}</div>
-                        <div class="text-right">
-                            <p class="urdu-text text-sm dark:text-white font-bold">${t.description}</p>
-                            <p class="text-[9px] text-slate-400">${currentMode==='group'?t.authorName:t.date}</p>
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center gap-3 flex-1">
+                            <div class="w-10 h-10 rounded-full ${isIn?'bg-emerald-100 text-emerald-600':'bg-red-100 text-red-600'} flex-shrink-0 flex items-center justify-center shadow-sm">
+                                ${iconArrow}
+                            </div>
+                            <div class="text-right min-w-0">
+                                <p class="text-[10px] text-slate-400 font-sans mt-0.5">${currentMode==='group' ? t.authorName : t.date}</p>
+                            </div>
+                        </div>
+                        <div class="text-left">
+                            <p class="${isIn?'text-emerald-600':'text-red-500'} font-bold font-sans text-lg whitespace-nowrap">${t.amount.toLocaleString()}</p>
                         </div>
                     </div>
-                    <div class="text-left">
-                        <p class="${isIn?'text-emerald-600':'text-red-500'} font-bold font-sans">${t.amount.toLocaleString()}</p>
-                        ${isMine ? `<button onclick="window.deleteDocById('transactions', '${t.id}')" class="text-[9px] text-slate-300 hover:text-red-400">x</button>` : ''}
+                    
+                    <div class="w-full">
+                        <p class="urdu-text text-sm dark:text-white font-bold break-words text-right leading-relaxed">${t.description}</p>
+                    </div>
+
+                    <div class="flex justify-between items-center mt-3 pt-2 border-t border-dashed border-slate-100 dark:border-slate-700/50">
+                        <div class="bg-slate-50 dark:bg-slate-800/50 px-3 py-1.5 rounded-lg border border-slate-100 dark:border-slate-700">
+                            <p class="font-sans font-bold whitespace-nowrap flex items-baseline gap-2">
+                                <span class="text-slate-400 text-[10px] uppercase tracking-wider">Balance:</span> 
+                                <span class="${balClass} text-base">${t.currentBalance.toLocaleString()}</span>
+                            </p>
+                        </div>
+
+                         ${isMine ? `
+                        <div class="flex gap-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onclick="window.editTransaction('${t.id}')" class="text-xs text-blue-500 font-bold no-print bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded hover:bg-blue-100 transition">✏️</button>
+                            <button onclick="window.deleteDocById('transactions', '${t.id}')" class="text-xs text-red-400 font-bold no-print bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded hover:bg-red-100 transition">🗑️</button>
+                        </div>` : ''}
                     </div>
                 `;
                 ul.appendChild(li);
             });
         }
 
-        // --- ACTIONS ---
+        // --- CRUD ACTIONS (Merged Logic) ---
         window.addTask = async () => {
             const text = document.getElementById('taskInput').value.trim();
             const editId = document.getElementById('editTaskId').value;
+            const category = document.getElementById('taskCategory').value;
+            const dateDue = document.getElementById('taskDate').value;
+            
             if(!text) return showToast("کچھ لکھیں!");
-            if(currentMode === 'group' && !myGroupId) return showToast("پہلے گروپ جوائن کریں");
+            // Auto-Dukaan safeguard
+            if(currentMode === 'group' && !myGroupId) myGroupId = 'DUKAAN';
 
             const payload = {
-                text,
-                dateDue: document.getElementById('taskDate').value,
+                text, dateDue, category,
                 uid: currentUser.uid,
                 authorName: currentUser.displayName,
                 visibility: currentMode === 'personal' ? 'private' : 'public',
@@ -670,40 +954,52 @@
 
             try {
                 if(editId) {
-                    await updateDoc(doc(db, "tasks", editId), { text, dateDue: payload.dateDue });
-                    document.getElementById('editTaskId').value = "";
-                    document.getElementById('saveIcon').innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>';
-                    showToast("تبدیلی محفوظ! ✨");
+                    await updateDoc(doc(db, "tasks", editId), { text, dateDue, category });
+                    showToast("تبدیلی محفوظ ہو گئی ✨");
+                    window.cancelTaskEdit();
                 } else {
                     payload.replies = [];
                     await addDoc(collection(db, "tasks"), payload);
                     showToast(currentMode === 'personal' ? "محفوظ (ذاتی) 🔒" : "شیئر کر دیا (گروپ) 👥");
+                    document.getElementById('taskInput').value = "";
+                    setDefaultDateTime();
                 }
-                document.getElementById('taskInput').value = "";
-                setDefaultDateTime();
             } catch(e) { showToast("ایرر: " + e.message); }
         };
 
         window.addTransaction = async () => {
             const amount = parseFloat(document.getElementById('transAmount').value);
             const desc = document.getElementById('transDesc').value.trim();
+            const dateVal = document.getElementById('transDateOverride').value || new Date().toISOString().split('T')[0];
+            const editId = document.getElementById('editTransId').value;
+            
             if(!amount || !desc) return showToast("ڈیٹا نامکمل ہے");
-            if(currentMode === 'group' && !myGroupId) return showToast("پہلے گروپ جوائن کریں");
+            // Auto-Dukaan safeguard
+            if(currentMode === 'group' && !myGroupId) myGroupId = 'DUKAAN';
+
+            const payload = {
+                amount, description: desc,
+                type: currentTransType, date: dateVal,
+                uid: currentUser.uid,
+                authorName: currentUser.displayName,
+                visibility: currentMode === 'personal' ? 'private' : 'public',
+                groupId: currentMode === 'group' ? myGroupId : null,
+                createdAt: serverTimestamp()
+            };
 
             try {
-                await addDoc(collection(db, "transactions"), {
-                    amount, description: desc, 
-                    uid: currentUser.uid,
-                    authorName: currentUser.displayName,
-                    visibility: currentMode === 'personal' ? 'private' : 'public',
-                    groupId: currentMode === 'group' ? myGroupId : null,
-                    type: currentTransType, 
-                    date: new Date().toISOString().split('T')[0],
-                    createdAt: serverTimestamp()
-                });
-                document.getElementById('transAmount').value = "";
-                document.getElementById('transDesc').value = "";
-                showToast("حساب محفوظ 💰");
+                if(editId) {
+                    await updateDoc(doc(db, "transactions", editId), {
+                        amount, description: desc, type: currentTransType, date: dateVal
+                    });
+                    showToast("اپ ڈیٹ ہو گیا ✅");
+                    window.cancelTransEdit();
+                } else {
+                    await addDoc(collection(db, "transactions"), payload);
+                    showToast("حساب محفوظ ہو گیا 💰");
+                    document.getElementById('transAmount').value = "";
+                    document.getElementById('transDesc').value = "";
+                }
             } catch(e) { showToast("ایرر پیش آیا"); }
         };
 
@@ -723,14 +1019,64 @@
             } catch(e) { console.log(e); }
         };
 
-        // --- AUTH FUNCTIONS (Modified) ---
+        // --- EDITING & HELPERS (From Current Code) ---
+        window.editTask = (id) => {
+            const task = allTasks.find(t => t.id === id);
+            if(task && task.uid === currentUser.uid) {
+                 document.getElementById('diaryView').scrollTop = 0;
+                 document.getElementById('taskInput').value = task.text;
+                 document.getElementById('taskDate').value = task.dateDue || "";
+                 document.getElementById('taskCategory').value = task.category || "عام";
+                 document.getElementById('editTaskId').value = id;
+                 document.getElementById('saveBtn').innerHTML = '<span>اپ ڈیٹ کریں</span><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>';
+                 document.getElementById('taskFormTitle').innerText = "نوٹ تبدیل کریں";
+                 document.getElementById('cancelTaskBtn').classList.remove('hidden');
+                 document.getElementById('taskInput').focus();
+                 showToast("ایڈٹ موڈ آن ہے");
+            } else { showToast("آپ صرف اپنی پوسٹ ایڈٹ کر سکتے ہیں"); }
+        };
+        window.cancelTaskEdit = () => {
+            document.getElementById('editTaskId').value = "";
+            document.getElementById('taskInput').value = "";
+            document.getElementById('taskFormTitle').innerText = "نیا نوٹ لکھیں";
+            document.getElementById('cancelTaskBtn').classList.add('hidden');
+            document.getElementById('saveBtn').innerHTML = '<span>محفوظ کریں</span><svg id="saveIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>';
+            setDefaultDateTime();
+        };
+
+        window.editTransaction = (id) => {
+            const t = allTrans.find(tr => tr.id === id);
+            if(t && t.uid === currentUser.uid) {
+                document.getElementById('financeView').scrollTop = 0;
+                document.getElementById('transAmount').value = t.amount;
+                document.getElementById('transDesc').value = t.description;
+                document.getElementById('transDateOverride').value = t.date;
+                window.setTransType(t.type);
+                document.getElementById('editTransId').value = id;
+                document.getElementById('saveTransBtn').innerText = "اپ ڈیٹ کریں";
+                document.getElementById('transFormTitle').innerText = "اندراج تبدیل کریں";
+                document.getElementById('cancelTransBtn').classList.remove('hidden');
+                document.getElementById('transAmount').focus();
+                showToast("ایڈٹ موڈ: کیش");
+            } else { showToast("آپ صرف اپنی انٹری ایڈٹ کر سکتے ہیں"); }
+        };
+        window.cancelTransEdit = () => {
+            document.getElementById('editTransId').value = "";
+            document.getElementById('transAmount').value = "";
+            document.getElementById('transDesc').value = "";
+            document.getElementById('transDateOverride').value = new Date().toISOString().split('T')[0];
+            document.getElementById('saveTransBtn').innerText = "محفوظ کریں";
+            document.getElementById('transFormTitle').innerText = "نیا اندراج";
+            document.getElementById('cancelTransBtn').classList.add('hidden');
+        }
+
+        // --- AUTH & COMMON FUNCTIONS ---
         window.loginUser = async () => {
             const email = document.getElementById('loginEmail').value;
             const pass = document.getElementById('loginPass').value;
             try { await signInWithEmailAndPassword(auth, email, pass); }
             catch(e) { showToast("لاگ ان ناکام"); }
         };
-
         window.signupUser = async () => {
             const name = document.getElementById('signupName').value.trim();
             const email = document.getElementById('signupEmail').value;
@@ -738,38 +1084,18 @@
             const btn = document.getElementById('signupBtn');
             
             if(!name) return showToast("برائے مہربانی اپنا نام لکھیں");
-
-            // UI Feedback: Loading
-            const originalText = btn.innerText;
-            btn.innerText = "کام جاری ہے...";
-            btn.disabled = true;
-            btn.classList.add('opacity-50');
-
-            // Store name globally for fallback usage in onAuthStateChanged
+            const originalText = btn.innerText; btn.innerText = "کام جاری ہے..."; btn.disabled = true; btn.classList.add('opacity-50');
             tempSignupName = name;
-
             try { 
-                // 1. Just Create Auth User. 
-                // The onAuthStateChanged listener will handle the Firestore creation immediately.
                 await createUserWithEmailAndPassword(auth, email, pass);
-                
-                // Update profile async (optional, doesn't block flow)
-                if (auth.currentUser) {
-                    updateProfile(auth.currentUser, { displayName: name }).catch(err => console.log(err));
-                }
-
+                if (auth.currentUser) updateProfile(auth.currentUser, { displayName: name }).catch(e=>console.log(e));
                 showToast("درخواست بھیج دی گئی!");
             }
             catch(e) { 
                 showToast("مسئلہ: " + e.message); 
-                btn.innerText = originalText;
-                btn.disabled = false;
-                btn.classList.remove('opacity-50');
-                // Hide loading if it was triggered by auth state change flicker
-                hideLoading();
+                btn.innerText = originalText; btn.disabled = false; btn.classList.remove('opacity-50'); hideLoading();
             }
         };
-
         window.logoutUser = () => signOut(auth);
         window.showScreen = (id) => {
             document.getElementById('loginForm').classList.add('hidden');
@@ -777,59 +1103,100 @@
             document.getElementById(id).classList.remove('hidden');
         };
 
-        // --- GROUP SETTINGS ---
-        window.openGroupSettings = () => {
-            document.getElementById('groupModal').classList.remove('hidden');
-            document.getElementById('groupCodeInput').value = myGroupId || "";
-        }
-        window.saveGroupSettings = () => {
-            const code = document.getElementById('groupCodeInput').value.trim().toUpperCase();
-            if(code) {
-                myGroupId = code;
-                localStorage.setItem('myGroupId', code);
-                showToast(`گروپ ${code} جوائن کر لیا`);
-                updateGroupStatusUI();
-                if(currentMode === 'group') loadDataBasedOnMode();
-            } else {
-                myGroupId = null;
-                localStorage.removeItem('myGroupId');
-                showToast("گروپ ختم کر دیا");
+        // --- CALENDAR & UTILS ---
+        window.toggleCalendar = () => document.getElementById('calendarView').classList.toggle('hidden');
+        window.changeMonth = (val) => { currentMonth.setMonth(currentMonth.getMonth() + val); renderCalendar(); };
+        function renderCalendar() {
+            const grid = document.getElementById('calendarGrid');
+            const monthHeader = document.getElementById('currentMonthYear');
+            if(!grid || !monthHeader) return;
+            grid.innerHTML = "";
+            const year = currentMonth.getFullYear(); const month = currentMonth.getMonth();
+            monthHeader.innerText = currentMonth.toLocaleString('default', { month: 'long', year: 'numeric' });
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            for(let i=0; i<firstDay; i++) grid.innerHTML += '<div></div>';
+            for(let d=1; d<=daysInMonth; d++) {
+                const dStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+                const hasTask = allTasks.some(t => t.dateDue && t.dateDue.startsWith(dStr));
+                const hasTrans = allTrans.some(t => t.date === dStr);
+                const isToday = new Date().toISOString().split('T')[0] === dStr;
+                const dayBtn = document.createElement('button');
+                dayBtn.className = `h-10 w-10 flex flex-col items-center justify-center rounded-xl relative transition-all duration-200 border border-transparent 
+                                    ${isToday?'bg-emerald-600 text-white shadow-lg z-10 scale-110':'text-slate-700 dark:text-slate-100 hover:bg-emerald-50 dark:hover:bg-slate-700 hover:border-emerald-200'}`;
+                dayBtn.innerHTML = `<span class="${(hasTask||hasTrans)?'font-bold':''}">${d}</span>`;
+                if(hasTask || hasTrans) dayBtn.innerHTML += `<div class="calendar-dot ${isToday?'bg-white':'bg-emerald-500'}"></div>`;
+                dayBtn.onclick = () => {
+                    filterDate = dStr; applyDisplay(); toggleCalendar();
+                    showToast("فلٹر: " + dStr);
+                };
+                grid.appendChild(dayBtn);
             }
-            document.getElementById('groupModal').classList.add('hidden');
         }
 
-        function updateGroupStatusUI() {
-            const dot = document.getElementById('groupStatusDot');
-            if(myGroupId) dot.className = "absolute top-1 right-1 w-2 h-2 bg-green-500 rounded-full";
-            else dot.className = "absolute top-1 right-1 w-2 h-2 bg-red-400 rounded-full animate-pulse";
-        }
+        // --- EXPORT/IMPORT ---
+        window.exportData = () => {
+            if(!allTrans.length) return showToast("کوئی ڈیٹا نہیں");
+            const dataStr = JSON.stringify(allTrans);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', 'smart_diary_data.json');
+            linkElement.click();
+            showToast("ڈاؤن لوڈ شروع ہو گیا");
+        };
+        window.importData = (input) => {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if(Array.isArray(data) && confirm(`کیا آپ ${data.length} انٹریز امپورٹ کرنا چاہتے ہیں؟`)) {
+                        let count = 0;
+                        for (const item of data) {
+                             // SPECIAL FEATURE: IF IMPORTING IN GROUP MODE, ASSIGN TO GROUP
+                             // If Importing in Personal Mode, Assign to Personal
+                             const groupIdForImport = currentMode === 'group' ? myGroupId : null;
+                             const visibilityForImport = currentMode === 'group' ? 'public' : 'private';
 
-        // --- HELPERS ---
-        window.editTask = (id) => {
-            const task = allTasks.find(t => t.id === id);
-            if(task && task.uid === currentUser.uid) {
-                document.getElementById('taskInput').value = task.text;
-                document.getElementById('taskDate').value = task.dateDue || "";
-                document.getElementById('editTaskId').value = id;
-                document.getElementById('saveIcon').innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />';
-                document.getElementById('taskInput').focus();
-            }
+                             // Check existence to prevent duplicates
+                             const exists = allTrans.some(t => t.description === item.description && t.amount === item.amount && t.date === item.date);
+                             
+                             if(!exists) {
+                                await addDoc(collection(db, "transactions"), {
+                                    amount: item.amount, description: item.description, date: item.date,
+                                    type: item.type, uid: currentUser.uid, authorName: currentUser.displayName,
+                                    visibility: visibilityForImport,
+                                    groupId: groupIdForImport,
+                                    createdAt: serverTimestamp()
+                                });
+                                count++;
+                             }
+                        }
+                        showToast(`${count} انٹریز ${currentMode==='group'?'دکان':'ذاتی'} میں شامل ہو گئیں`);
+                    }
+                } catch(err) { showToast("غلط فائل فارمیٹ"); }
+            };
+            reader.readAsText(file);
+            input.value = '';
         };
-        window.deleteDocById = async (coll, id) => {
-            if(confirm("حذف کر دیں؟")) await deleteDoc(doc(db, coll, id));
-        };
+        window.printPDF = () => window.print();
+
+        // --- SHARED ---
+        window.deleteDocById = async (coll, id) => { if(confirm("حذف کر دیں؟")) await deleteDoc(doc(db, coll, id)); };
         window.switchTab = (tab) => {
             const isDiary = tab === 'diary';
             document.getElementById('diaryView').classList.toggle('hidden', !isDiary);
             document.getElementById('financeView').classList.toggle('hidden', isDiary);
-            document.getElementById('tabIndicator').style.left = isDiary ? '1%' : '51%';
+            document.getElementById('tabIndicator').style.left = isDiary ? '50%' : '1%';
             const btnD = document.getElementById('btnDiary'); const btnF = document.getElementById('btnFinance');
             if(isDiary) {
-                btnD.classList.add('text-emerald-900', 'dark:text-emerald-100'); btnD.classList.remove('opacity-70', 'text-white');
-                btnF.classList.add('opacity-70', 'text-white'); btnF.classList.remove('text-emerald-900', 'dark:text-emerald-100');
+                btnD.classList.add('text-emerald-950', 'dark:text-white'); btnD.classList.remove('text-emerald-100/70', 'dark:text-slate-400');
+                btnF.classList.add('text-emerald-100/70', 'dark:text-slate-400'); btnF.classList.remove('text-emerald-950', 'dark:text-white');
             } else {
-                btnF.classList.add('text-emerald-900', 'dark:text-emerald-100'); btnF.classList.remove('opacity-70', 'text-white');
-                btnD.classList.add('opacity-70', 'text-white'); btnD.classList.remove('text-emerald-900', 'dark:text-emerald-100');
+                btnF.classList.add('text-emerald-950', 'dark:text-white'); btnF.classList.remove('text-emerald-100/70', 'dark:text-slate-400');
+                btnD.classList.add('text-emerald-100/70', 'dark:text-slate-400'); btnD.classList.remove('text-emerald-950', 'dark:text-white');
             }
         };
         window.setTransType = (type) => {
@@ -844,10 +1211,12 @@
             const isDark = document.documentElement.classList.contains('dark');
             document.getElementById('darkModeIcon').innerText = isDark ? '☀️' : '🌙';
             localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            renderCalendar(); 
         };
         function setDefaultDateTime() {
             const now = new Date(); now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
             const dateInput = document.getElementById('taskDate'); if(dateInput) dateInput.value = now.toISOString().slice(0, 16);
+            const transDate = document.getElementById('transDateOverride'); if(transDate) transDate.value = now.toISOString().slice(0, 10);
         }
         function loadTheme() {
             if(localStorage.getItem('theme') === 'dark') { document.documentElement.classList.add('dark'); document.getElementById('darkModeIcon').innerText = '☀️'; }
