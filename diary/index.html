@@ -100,8 +100,38 @@
         /* Print Styles */
         @media print {
             body * { visibility: hidden; }
-            #printableArea, #printableArea * { visibility: visible; }
-            #printableArea { position: absolute; left: 0; top: 0; width: 100%; background: white; color: black; }
+            html, body, .app-container, #appSection, #mainContent, #financeView {
+                height: auto !important;
+                min-height: auto !important;
+                overflow: visible !important;
+                position: static !important;
+                display: block !important;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                background: white !important;
+            }
+            #printableArea {
+                visibility: visible !important;
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                margin: 0;
+                padding: 20px;
+                background: white;
+                color: black;
+            }
+            #printableArea * {
+                visibility: visible !important;
+                color: black !important;
+                box-shadow: none !important;
+            }
+            #transList {
+                display: block !important;
+                overflow: visible !important;
+                height: auto !important;
+            }
             .no-print { display: none !important; }
         }
     </style>
@@ -161,11 +191,11 @@
                     </div>
                 </div>
 
-                <!-- Tabs (Fixed Color) -->
+                <!-- Tabs (Fixed Indicator) -->
                 <div class="px-5 mt-4 max-w-4xl mx-auto w-full">
                     <div class="flex p-1 bg-emerald-900 dark:bg-slate-800 rounded-2xl relative shadow-inner border border-emerald-800 dark:border-slate-700">
-                        <!-- Indicator color changed from white to emerald-200 for better visibility -->
-                        <div id="tabIndicator" class="absolute top-1 bottom-1 w-[48%] bg-emerald-200 dark:bg-emerald-600 shadow-md rounded-xl transition-all duration-300 left-1"></div>
+                        <!-- Default positioned at left (Diary) -->
+                        <div id="tabIndicator" class="absolute top-1 bottom-1 w-[49%] bg-emerald-200 dark:bg-emerald-600 shadow-md rounded-xl transition-all duration-300 left-[1%]"></div>
                         
                         <button onclick="window.switchTab('diary')" id="btnDiary" class="flex-1 py-2 text-sm font-bold relative z-10 text-emerald-950 dark:text-white transition-colors">ڈائری 📖</button>
                         <button onclick="window.switchTab('finance')" id="btnFinance" class="flex-1 py-2 text-sm font-bold relative z-10 text-emerald-100/70 dark:text-slate-400 transition-colors">کیش بک 💰</button>
@@ -232,6 +262,15 @@
 
                 <!-- FINANCE VIEW -->
                 <div id="financeView" class="hidden flex-1 flex flex-col overflow-y-auto no-scrollbar pb-32 w-full">
+                    
+                    <!-- NEW: Search for Finance -->
+                    <div class="px-5 py-3 bg-emerald-50 dark:bg-slate-900 shadow-inner no-print">
+                        <div class="relative">
+                            <input type="text" id="transSearchInput" placeholder="لین دین تلاش کریں..." class="w-full p-3 pr-10 bg-white dark:bg-darkinput dark:text-white rounded-2xl text-sm outline-none shadow-sm urdu-text" oninput="window.filterData()">
+                            <span class="absolute right-3 top-3 opacity-40">🔎</span>
+                        </div>
+                    </div>
+
                     <div class="p-5 md:grid md:grid-cols-2 md:gap-6">
                         
                         <!-- Left Col (Desktop): Summary & Tools -->
@@ -240,7 +279,8 @@
                             <div class="bg-gradient-to-br from-emerald-600 to-teal-700 rounded-3xl p-6 text-white shadow-xl mb-5">
                                 <div class="flex justify-between items-center mb-6">
                                     <div>
-                                        <p class="text-emerald-100 text-xs font-sans">کل بیلنس</p>
+                                        <!-- Changed label to reflect dynamic sum -->
+                                        <p class="text-emerald-100 text-xs font-sans" id="balLabel">کل بیلنس</p>
                                         <h2 class="text-4xl font-bold font-sans mt-1" id="finBalance">0</h2>
                                     </div>
                                     <div class="bg-white/20 p-3 rounded-2xl text-2xl">💰</div>
@@ -370,6 +410,7 @@
         }
 
         function applyDisplay() {
+            // Diary Search
             const searchInput = document.getElementById('searchInput');
             const search = searchInput ? searchInput.value.toLowerCase() : '';
             
@@ -379,10 +420,20 @@
             filteredTasks.sort((a,b) => new Date(b.dateDue || 0) - new Date(a.dateDue || 0));
             renderTasks(filteredTasks);
 
+            // Finance Search & Filter
+            const transSearchInput = document.getElementById('transSearchInput');
+            const transSearch = transSearchInput ? transSearchInput.value.toLowerCase() : '';
+
             let filteredTrans = [...allTrans];
             if (filterDate) filteredTrans = filteredTrans.filter(t => t.date && t.date.startsWith(filterDate));
+            if (transSearch) {
+                filteredTrans = filteredTrans.filter(t => 
+                    t.description.toLowerCase().includes(transSearch) || 
+                    t.amount.toString().includes(transSearch)
+                );
+            }
             
-            // Running Balance Logic & Sort for display
+            // Sort by Date then CreatedAt for accurate running balance
             filteredTrans.sort((a,b) => {
                 const dateA = new Date(a.date + 'T00:00:00');
                 const dateB = new Date(b.date + 'T00:00:00');
@@ -392,14 +443,41 @@
                 return createdA - createdB;
             });
 
+            // Calculate Running Balance and Summary for THE FILTERED VIEW
             let runBal = 0;
+            let sumIn = 0;
+            let sumOut = 0;
+
             filteredTrans.forEach(t => {
-                if(t.type === 'in') runBal += parseFloat(t.amount);
-                else runBal -= parseFloat(t.amount);
+                const amt = parseFloat(t.amount);
+                if(t.type === 'in') {
+                    runBal += amt;
+                    sumIn += amt;
+                } else {
+                    runBal -= amt;
+                    sumOut += amt;
+                }
                 t.currentBalance = runBal;
             });
 
-            filteredTrans.reverse();
+            // Update Summary Cards based on FILTERED data
+            document.getElementById('finTotalIn').innerText = sumIn.toLocaleString();
+            document.getElementById('finTotalOut').innerText = sumOut.toLocaleString();
+            
+            // If filtering, show Net Total of filtered items, else show total wallet balance
+            if(transSearch || filterDate) {
+                 document.getElementById('finBalance').innerText = (sumIn - sumOut).toLocaleString();
+                 document.getElementById('balLabel').innerText = "موجودہ ٹوٹل (فلٹر)";
+                 document.getElementById('balLabel').classList.add('text-yellow-200');
+            } else {
+                 // For global balance, we usually want the TOTAL of everything, not just what's sorted
+                 // But since filteredTrans IS everything when no filter, this works.
+                 document.getElementById('finBalance').innerText = (sumIn - sumOut).toLocaleString();
+                 document.getElementById('balLabel').innerText = "کل بیلنس";
+                 document.getElementById('balLabel').classList.remove('text-yellow-200');
+            }
+
+            filteredTrans.reverse(); // Show newest first
             renderTransactions(filteredTrans);
 
             const sub = document.getElementById('headerSub');
@@ -434,13 +512,6 @@
         function renderTransactions(trans) {
             const ul = document.getElementById('transList');
             if(!ul) return;
-            
-            let tin = 0, tout = 0;
-            allTrans.forEach(t => { if(t.type === 'in') tin += t.amount; else tout += t.amount; });
-            document.getElementById('finTotalIn').innerText = tin.toLocaleString();
-            document.getElementById('finTotalOut').innerText = tout.toLocaleString();
-            document.getElementById('finBalance').innerText = (tin - tout).toLocaleString();
-
             ul.innerHTML = "";
             let lastDate = null;
 
@@ -460,14 +531,20 @@
                 const isIn = t.type === 'in';
                 const balClass = t.currentBalance >= 0 ? 'text-slate-500 dark:text-slate-400' : 'text-red-500';
 
+                // New SVG Arrows
+                const iconArrow = isIn 
+                    ? `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>` // Down Arrow
+                    : `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" /></svg>`; // Up Arrow
+
                 const li = document.createElement('li');
-                // Fixed Long Text and Balance Overlap issue
                 li.className = "flex flex-col gap-2 p-4 bg-white dark:bg-darkcard rounded-2xl border dark:border-slate-700 shadow-sm relative overflow-hidden group hover:border-emerald-200 dark:hover:border-emerald-800 transition-colors";
                 
                 li.innerHTML = `
                     <div class="flex justify-between items-center">
                         <div class="flex items-center gap-3 flex-1">
-                            <div class="w-10 h-10 rounded-full ${isIn?'bg-emerald-100 text-emerald-600':'bg-red-100 text-red-600'} flex-shrink-0 flex items-center justify-center font-bold shadow-sm">${isIn?'↓':'↑'}</div>
+                            <div class="w-10 h-10 rounded-full ${isIn?'bg-emerald-100 text-emerald-600':'bg-red-100 text-red-600'} flex-shrink-0 flex items-center justify-center shadow-sm">
+                                ${iconArrow}
+                            </div>
                             <div class="text-right min-w-0">
                                 <p class="text-[10px] text-slate-400 font-sans mt-0.5">${t.date}</p>
                             </div>
@@ -482,7 +559,6 @@
                     </div>
 
                     <div class="flex justify-between items-center mt-3 pt-2 border-t border-dashed border-slate-100 dark:border-slate-700/50">
-                         <!-- Running Balance (Larger & Clearer) -->
                         <div class="bg-slate-50 dark:bg-slate-800/50 px-3 py-1.5 rounded-lg border border-slate-100 dark:border-slate-700">
                             <p class="font-sans font-bold whitespace-nowrap flex items-baseline gap-2">
                                 <span class="text-slate-400 text-[10px] uppercase tracking-wider">Balance:</span> 
@@ -683,26 +759,26 @@
             const isDiary = tab === 'diary';
             document.getElementById('diaryView').classList.toggle('hidden', !isDiary);
             document.getElementById('financeView').classList.toggle('hidden', isDiary);
-            document.getElementById('tabIndicator').style.left = isDiary ? '1%' : '51%';
+            document.getElementById('tabIndicator').style.left = isDiary ? '1%' : '50%';
             
             const btnD = document.getElementById('btnDiary');
             const btnF = document.getElementById('btnFinance');
             
             // Updated text colors for better contrast on the new indicator color
             if(isDiary) {
-                // Active Diary: Dark text on Light Green indicator
+                // Active Diary
                 btnD.classList.add('text-emerald-950', 'dark:text-white'); 
                 btnD.classList.remove('text-emerald-100/70', 'dark:text-slate-400');
                 
-                // Inactive Finance: Light text on Dark background
+                // Inactive Finance
                 btnF.classList.add('text-emerald-100/70', 'dark:text-slate-400'); 
                 btnF.classList.remove('text-emerald-950', 'dark:text-white');
             } else {
-                // Active Finance: Dark text on Light Green indicator
+                // Active Finance
                 btnF.classList.add('text-emerald-950', 'dark:text-white'); 
                 btnF.classList.remove('text-emerald-100/70', 'dark:text-slate-400');
                 
-                // Inactive Diary: Light text on Dark background
+                // Inactive Diary
                 btnD.classList.add('text-emerald-100/70', 'dark:text-slate-400'); 
                 btnD.classList.remove('text-emerald-950', 'dark:text-white');
             }
@@ -725,6 +801,12 @@
 
         window.clearFilter = () => {
             filterDate = null;
+            // Clear both search inputs
+            const s1 = document.getElementById('searchInput');
+            if(s1) s1.value = "";
+            const s2 = document.getElementById('transSearchInput');
+            if(s2) s2.value = "";
+            
             applyDisplay();
             document.getElementById('filterHeader').classList.add('hidden');
             document.getElementById('financeFilterHeader').classList.add('hidden');
