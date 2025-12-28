@@ -233,7 +233,7 @@
             
             <!-- Dynamic Header -->
             <header class="bg-emerald-600 dark:bg-emerald-900 pt-4 pb-2 text-white shadow-lg z-30 sticky top-0 transition-all duration-500">
-                <div class="px-5 flex items-center justify-between h-12 max-w-4xl mx-auto w-full relative">
+                <div class="px-5 flex items-center justify-between h-14 max-w-4xl mx-auto w-full relative">
                     
                     <!-- Right Side: Welcome Text -->
                     <div class="flex-shrink-0 z-20 flex flex-col items-end">
@@ -242,7 +242,7 @@
 
                     <!-- Center: Title -->
                     <div class="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-                        <h2 class="text-xl font-bold leading-tight text-white drop-shadow-md" id="headerTitle">میری ڈائری</h2>
+                        <h2 class="text-lg font-bold leading-tight text-white drop-shadow-md text-center" id="headerTitle">میری ڈائری</h2>
                     </div>
                     
                     <!-- Left Side: Buttons -->
@@ -271,7 +271,7 @@
                 </div>
 
                 <!-- Tabs -->
-                <div class="px-5 mt-4 max-w-4xl mx-auto w-full">
+                <div class="px-5 mt-2 max-w-4xl mx-auto w-full">
                     <div class="flex p-1 bg-emerald-900 dark:bg-slate-800 rounded-2xl relative shadow-inner border border-emerald-800 dark:border-slate-700">
                         <div id="tabIndicator" class="absolute top-1 bottom-1 w-[49%] bg-emerald-200 dark:bg-emerald-600 shadow-md rounded-xl transition-all duration-300 left-[50%]"></div>
                         
@@ -292,10 +292,20 @@
             <!-- Admin Panel Modal -->
             <div id="adminModal" class="hidden fixed inset-0 z-[70] bg-black/50 backdrop-blur-sm flex items-center justify-center p-5">
                 <div class="bg-white dark:bg-darkcard w-full max-w-sm p-6 rounded-3xl shadow-2xl animate-slide-down max-h-[80vh] overflow-hidden flex flex-col">
-                    <h3 class="text-lg font-bold mb-4 text-center dark:text-white border-b pb-2 border-slate-100 dark:border-slate-700">نئے ممبرز کی درخواستیں</h3>
-                    <div id="pendingUsersList" class="overflow-y-auto flex-1 space-y-3 min-h-[100px]">
+                    <h3 class="text-lg font-bold mb-4 text-center dark:text-white border-b pb-2 border-slate-100 dark:border-slate-700">ایڈمن کنٹرولز</h3>
+                    
+                    <h4 class="text-xs font-bold text-slate-500 mb-2">نئے ممبرز:</h4>
+                    <div id="pendingUsersList" class="overflow-y-auto flex-1 space-y-3 min-h-[100px] mb-4">
                         <p class="text-center text-xs text-slate-400 mt-4">کوئی درخواست زیرِ التواء نہیں</p>
                     </div>
+
+                    <h4 class="text-xs font-bold text-red-500 mb-2 border-t pt-2 border-slate-100 dark:border-slate-700">خطرناک زون (Dangerous):</h4>
+                    <div class="bg-red-50 dark:bg-red-900/10 p-3 rounded-xl">
+                        <p class="text-[10px] text-red-700 dark:text-red-400 mb-2 urdu-text">اگر کوئی گروپ فضول ہے تو اس کا نام لکھ کر ڈیلیٹ کر دیں۔ اس سے گروپ کا سارا ڈیٹا ہمیشہ کے لیے ختم ہو جائے گا۔</p>
+                        <input type="text" id="deleteGroupInput" placeholder="گروپ کا نام (ID) لکھیں" class="w-full p-2 text-xs border border-red-200 rounded-lg outline-none mb-2 uppercase text-center">
+                        <button onclick="window.deleteGroupData()" class="w-full bg-red-600 hover:bg-red-700 text-white text-xs font-bold py-2 rounded-lg">گروپ ڈیٹا حذف کریں 🗑️</button>
+                    </div>
+
                     <button onclick="document.getElementById('adminModal').classList.add('hidden')" class="w-full mt-4 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-white py-2 rounded-xl text-sm font-bold">بند کریں</button>
                 </div>
             </div>
@@ -520,7 +530,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, updateDoc, query, where, onSnapshot, deleteDoc, doc, setDoc, getDoc, serverTimestamp, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, updateDoc, query, where, onSnapshot, deleteDoc, doc, setDoc, getDoc, serverTimestamp, arrayUnion, arrayRemove, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCwrfDXG8pRpkqDYht0EpRZ8h_ElRu0N_w",
@@ -566,7 +576,7 @@
             if(ol) ol.classList.add('hidden');
         };
 
-        // --- AUTH & SETUP (From Base Code) ---
+        // --- AUTH & SETUP ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 document.getElementById('authSection').classList.add('hidden');
@@ -649,19 +659,24 @@
                 listenForPendingUsers();
             }
 
-            // Ensure DUKAAN is default if not set
             if(!myGroupId) {
                 myGroupId = 'DUKAAN';
                 localStorage.setItem('myGroupId', 'DUKAAN');
             }
 
             updateGroupStatusUI();
-            loadDataBasedOnMode();
             setDefaultDateTime();
             loadTheme();
+
+            // --- RESTORE PREVIOUS STATE (Reload Fix) ---
+            const lastMode = localStorage.getItem('lastMode') || 'personal';
+            const lastTab = localStorage.getItem('lastTab') || 'diary';
+            
+            window.setMode(lastMode);
+            window.switchTab(lastTab);
         }
 
-        // --- ADMIN PANEL LOGIC (From Base Code) ---
+        // --- ADMIN PANEL LOGIC ---
         function listenForPendingUsers() {
             const q = query(collection(db, "users"), where("status", "==", "pending"));
             onSnapshot(q, (snap) => {
@@ -703,28 +718,76 @@
                 showToast("صارف منظور ہو گیا ✅");
             }
         }
+        
+        // --- NEW ADMIN FEATURE: DELETE GROUP DATA ---
+        window.deleteGroupData = async () => {
+             const groupIdToDelete = document.getElementById('deleteGroupInput').value.trim().toUpperCase();
+             if(!groupIdToDelete) return showToast("برائے مہربانی گروپ ID لکھیں");
+             
+             if(!confirm(`کیا آپ واقعی گروپ "${groupIdToDelete}" کا تمام ڈیٹا (نوٹس اور کیش) حذف کرنا چاہتے ہیں؟ یہ عمل واپس نہیں ہو سکتا!`)) return;
+
+             showLoading("ڈیٹا ڈیلیٹ ہو رہا ہے...");
+             
+             try {
+                 const batch = writeBatch(db);
+                 let count = 0;
+
+                 // 1. Delete Tasks of this Group
+                 const qTasks = query(collection(db, "tasks"), where("groupId", "==", groupIdToDelete));
+                 const tasksSnap = await getDocs(qTasks);
+                 tasksSnap.forEach(d => { batch.delete(d.ref); count++; });
+
+                 // 2. Delete Transactions of this Group
+                 const qTrans = query(collection(db, "transactions"), where("groupId", "==", groupIdToDelete));
+                 const transSnap = await getDocs(qTrans);
+                 transSnap.forEach(d => { batch.delete(d.ref); count++; });
+
+                 if(count > 0) {
+                     await batch.commit();
+                     showToast(`${count} آئٹمز حذف کر دیے گئے`);
+                 } else {
+                     showToast("اس گروپ کا کوئی ڈیٹا نہیں ملا");
+                 }
+                 document.getElementById('deleteGroupInput').value = "";
+                 document.getElementById('adminModal').classList.add('hidden');
+             } catch(e) {
+                 showToast("ایرر: " + e.message);
+             } finally {
+                 hideLoading();
+             }
+        }
+
         function showPendingScreen() {
             document.getElementById('authSection').classList.add('hidden');
             document.getElementById('appSection').classList.add('hidden');
             document.getElementById('pendingScreen').classList.remove('hidden');
         }
 
-        // --- MODE SWITCHING & GROUPS (From Base Code) ---
+        // --- MODE SWITCHING & GROUPS ---
         window.setMode = (mode) => {
             currentMode = mode;
+            // Save state
+            localStorage.setItem('lastMode', mode);
+
             document.getElementById('btnModePersonal').classList.toggle('active', mode === 'personal');
             document.getElementById('btnModeGroup').classList.toggle('active', mode === 'group');
             
             const label = document.getElementById('inputLabel');
+            const headerTitle = document.getElementById('headerTitle');
+
             if(mode === 'personal') {
                 label.innerText = "🔒 ذاتی نوٹ";
                 label.className = "text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md";
-                document.getElementById('headerTitle').innerText = "میری ڈائری";
+                headerTitle.innerText = "میری ڈائری";
                 document.getElementById('finTitle').innerText = "میرا بیلنس";
             } else {
                 label.innerText = "👥 گروپ نوٹ";
                 label.className = "text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-md";
-                document.getElementById('headerTitle').innerText = myGroupId ? `گروپ: ${myGroupId}` : "گروپ (کوڈ نہیں ہے)";
+                
+                // --- HEADER LAYOUT CHANGE (Two Lines) ---
+                const gName = myGroupId ? myGroupId : "کوڈ نہیں ہے";
+                headerTitle.innerHTML = `<span class="text-[10px] block opacity-80 font-normal mb-0 leading-none">گروپ ڈائری</span>${gName}`;
+                
                 document.getElementById('finTitle').innerText = `${myGroupId} کا بیلنس`;
             }
             loadDataBasedOnMode();
@@ -742,7 +805,9 @@
             localStorage.setItem('myGroupId', code);
             showToast(`گروپ ${code} جوائن کر لیا`);
             updateGroupStatusUI();
-            if(currentMode === 'group') loadDataBasedOnMode();
+            if(currentMode === 'group') {
+                window.setMode('group'); // Reload UI/Data
+            }
             
             document.getElementById('groupModal').classList.add('hidden');
         }
@@ -752,7 +817,7 @@
             else dot.className = "absolute top-1 right-1 w-2 h-2 bg-red-400 rounded-full animate-pulse";
         }
 
-        // --- DATA LOADING & FILTERING (Merged Logic) ---
+        // --- DATA LOADING & FILTERING ---
         let unsubscribeTasks = null;
         let unsubscribeTrans = null;
 
@@ -766,9 +831,7 @@
                 qTasks = query(collection(db, "tasks"), where("uid", "==", currentUser.uid), where("visibility", "==", "private"));
                 qTrans = query(collection(db, "transactions"), where("uid", "==", currentUser.uid), where("visibility", "==", "private"));
             } else {
-                // FORCE DUKAAN IF NOT SET
                 if(!myGroupId) myGroupId = 'DUKAAN';
-                
                 qTasks = query(collection(db, "tasks"), where("groupId", "==", myGroupId), where("visibility", "==", "public"));
                 qTrans = query(collection(db, "transactions"), where("groupId", "==", myGroupId), where("visibility", "==", "public"));
             }
@@ -823,23 +886,19 @@
             
             // --- LOGIC FOR BALANCE CALCULATION (Oldest First) ---
             filteredTrans.sort((a,b) => {
-                // 1. Date Ascending (Oldest First)
                 const dateA = new Date(a.date);
                 const dateB = new Date(b.date);
                 if (dateA - dateB !== 0) return dateA - dateB;
 
-                // 2. Priority: Income ('in') comes BEFORE Expense ('out') on same day
                 if (a.type !== b.type) {
                     return a.type === 'in' ? -1 : 1;
                 }
 
-                // 3. Time (createdAt) Ascending
                 const createdA = a.createdAt ? a.createdAt.seconds : 0;
                 const createdB = b.createdAt ? b.createdAt.seconds : 0;
                 return createdA - createdB;
             });
 
-            // Calc Balance (Filtered)
             let runBal = 0, sumIn = 0, sumOut = 0;
             filteredTrans.forEach(t => {
                 const amt = parseFloat(t.amount);
@@ -861,7 +920,6 @@
                  document.getElementById('balLabel').classList.remove('text-yellow-200');
             }
 
-            // Reverse for display (Newest First visually)
             filteredTrans.reverse();
             renderTransactions(filteredTrans);
 
@@ -952,8 +1010,8 @@
                     <div class="mb-3">${repliesHtml}</div>
                     ${currentMode === 'group' ? `
                     <div class="flex gap-2 w-full items-center mt-2 pt-2 border-t border-slate-100 dark:border-slate-700">
-                         <input type="text" id="replyInput_${task.id}" placeholder="جواب لکھیں..." class="flex-1 text-[11px] p-2 bg-slate-50 dark:bg-darkinput dark:text-white rounded-lg outline-none urdu-text">
-                         <button onclick="window.addReply('${task.id}')" class="bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-white px-3 py-1 rounded-lg text-[10px] font-bold">بھیجیں</button>
+                          <input type="text" id="replyInput_${task.id}" placeholder="جواب لکھیں..." class="flex-1 text-[11px] p-2 bg-slate-50 dark:bg-darkinput dark:text-white rounded-lg outline-none urdu-text">
+                          <button onclick="window.addReply('${task.id}')" class="bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-white px-3 py-1 rounded-lg text-[10px] font-bold">بھیجیں</button>
                     </div>` : ''}
                 `;
                 ul.appendChild(li);
@@ -965,9 +1023,6 @@
             ul.innerHTML = "";
             let lastDate = null;
             
-            // Permission Logic
-            // Admin only can delete in group mode
-            // Everyone can edit in group mode
             const isAdmin = currentUser && currentUser.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
             const canDelete = (currentMode === 'personal' && true) || (currentMode === 'group' && isAdmin);
 
@@ -987,22 +1042,17 @@
                 const isIn = t.type === 'in';
                 const isMine = t.uid === currentUser.uid;
                 
-                // Permission Check: Personal Mode (Owner only) OR Group Mode (Anyone can edit)
                 const canEdit = (currentMode === 'personal' && isMine) || (currentMode === 'group');
-                // Deletion Check: Personal (Owner) OR Group (Admin only)
                 const canDel = (currentMode === 'personal' && isMine) || (currentMode === 'group' && isAdmin);
 
                 const balClass = t.currentBalance >= 0 ? 'text-slate-500 dark:text-slate-400' : 'text-red-500';
                 
-                // Likes logic
                 const likes = t.likes || [];
                 const isLiked = likes.includes(currentUser.uid);
                 const likeCount = likes.length > 0 ? likes.length : '';
                 
-                // History Check
                 const hasHistory = t.history && t.history.length > 0;
 
-                // Time Display Logic
                 let timeDisplay = "--:--";
                 if(t.createdAt && t.createdAt.seconds) {
                     timeDisplay = new Date(t.createdAt.seconds * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
@@ -1090,15 +1140,15 @@
                     <div class="mb-3">${repliesHtml}</div>
                     ${currentMode === 'group' ? `
                     <div class="flex gap-2 w-full items-center mt-2 pt-2 border-t border-slate-100 dark:border-slate-700">
-                         <input type="text" id="transReplyInput_${t.id}" placeholder="تبصرہ کریں..." class="flex-1 text-[11px] p-2 bg-slate-50 dark:bg-darkinput dark:text-white rounded-lg outline-none urdu-text">
-                         <button onclick="window.addTransReply('${t.id}')" class="bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-white px-3 py-1 rounded-lg text-[10px] font-bold">بھیجیں</button>
+                          <input type="text" id="transReplyInput_${t.id}" placeholder="تبصرہ کریں..." class="flex-1 text-[11px] p-2 bg-slate-50 dark:bg-darkinput dark:text-white rounded-lg outline-none urdu-text">
+                          <button onclick="window.addTransReply('${t.id}')" class="bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-white px-3 py-1 rounded-lg text-[10px] font-bold">بھیجیں</button>
                     </div>` : ''}
                 `;
                 ul.appendChild(li);
             });
         }
 
-        // --- STATS & CHARTS (New Feature) ---
+        // --- STATS & CHARTS ---
         let expenseChart = null;
         let barChart = null;
 
@@ -1172,7 +1222,7 @@
             });
         }
 
-        // --- HISTORY (New Feature) ---
+        // --- HISTORY ---
         window.viewHistory = (id) => {
             const t = allTrans.find(x => x.id === id);
             if(!t || !t.history) return;
@@ -1202,7 +1252,7 @@
             document.getElementById('historyModal').classList.remove('hidden');
         };
 
-        // --- CRUD ACTIONS (Merged Logic) ---
+        // --- CRUD ACTIONS ---
         window.addTask = async () => {
             const text = document.getElementById('taskInput').value.trim();
             const editId = document.getElementById('editTaskId').value;
@@ -1341,7 +1391,7 @@
             }
         };
 
-        // --- EDITING & HELPERS (From Current Code) ---
+        // --- EDITING & HELPERS ---
         window.editTask = (id) => {
             const task = allTasks.find(t => t.id === id);
             if(task && task.uid === currentUser.uid) {
@@ -1368,8 +1418,6 @@
 
         window.editTransaction = (id) => {
             const t = allTrans.find(tr => tr.id === id);
-            // Permissions Logic handled in UI, but double check here if needed
-            // But since edit is open to group, we proceed
             if(t) {
                 document.getElementById('financeView').scrollTop = 0;
                 document.getElementById('transAmount').value = t.amount;
@@ -1481,12 +1529,9 @@
                     if(Array.isArray(data) && confirm(`کیا آپ ${data.length} انٹریز امپورٹ کرنا چاہتے ہیں؟`)) {
                         let count = 0;
                         for (const item of data) {
-                             // SPECIAL FEATURE: IF IMPORTING IN GROUP MODE, ASSIGN TO GROUP
-                             // If Importing in Personal Mode, Assign to Personal
                              const groupIdForImport = currentMode === 'group' ? myGroupId : null;
                              const visibilityForImport = currentMode === 'group' ? 'public' : 'private';
 
-                             // Check existence to prevent duplicates
                              const exists = allTrans.some(t => t.description === item.description && t.amount === item.amount && t.date === item.date);
                              
                              if(!exists) {
@@ -1495,7 +1540,7 @@
                                     type: item.type, uid: currentUser.uid, authorName: currentUser.displayName,
                                     visibility: visibilityForImport,
                                     groupId: groupIdForImport,
-                                    category: item.category || "General", // Default cat for imported items
+                                    category: item.category || "General", 
                                     createdAt: serverTimestamp()
                                 });
                                 count++;
@@ -1512,7 +1557,11 @@
 
         // --- SHARED ---
         window.deleteDocById = async (coll, id) => { if(confirm("حذف کر دیں؟")) await deleteDoc(doc(db, coll, id)); };
+        
         window.switchTab = (tab) => {
+            // Save state
+            localStorage.setItem('lastTab', tab);
+
             const isDiary = tab === 'diary';
             document.getElementById('diaryView').classList.toggle('hidden', !isDiary);
             document.getElementById('financeView').classList.toggle('hidden', isDiary);
@@ -1526,6 +1575,7 @@
                 btnD.classList.add('text-emerald-100/70', 'dark:text-slate-400'); btnD.classList.remove('text-emerald-950', 'dark:text-white');
             }
         };
+
         window.setTransType = (type) => {
             currentTransType = type;
             document.getElementById('btnTypeIn').classList.toggle('bg-white', type === 'in');
