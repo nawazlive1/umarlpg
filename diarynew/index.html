@@ -294,10 +294,10 @@
             <!-- Group Settings Modal -->
             <div id="groupModal" class="hidden fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-center justify-center p-5">
                 <div class="bg-white dark:bg-darkcard w-full max-w-sm p-6 rounded-3xl shadow-2xl animate-slide-down">
-                    <h3 class="text-lg font-bold mb-4 text-center dark:text-white">گروپ سیٹنگز</h3>
-                    <p class="text-xs text-slate-500 text-center mb-4">ڈیفالٹ گروپ "دکان" (DUKAAN) سیٹ ہے۔</p>
+                    <h3 class="text-lg font-bold mb-4 text-center dark:text-white">گروپ جوائن کریں / نیا بنائیں</h3>
+                    <p class="text-xs text-slate-500 text-center mb-4">نیا گروپ بنانے یا جوائن کرنے کے لیے کوئی بھی نام لکھیں۔<br>(ڈیفالٹ: DUKAAN)</p>
                     <label class="text-[10px] font-bold text-emerald-600">گروپ کوڈ (Group ID)</label>
-                    <input type="text" id="groupCodeInput" placeholder="DUKAAN" class="w-full p-3 bg-slate-100 dark:bg-darkinput dark:text-white rounded-xl mt-1 mb-4 outline-none font-sans text-center tracking-widest uppercase">
+                    <input type="text" id="groupCodeInput" placeholder="مثلاً: OFFICE, HOME, DUKAAN" class="w-full p-3 bg-slate-100 dark:bg-darkinput dark:text-white rounded-xl mt-1 mb-4 outline-none font-sans text-center tracking-widest uppercase">
                     <button onclick="window.saveGroupSettings()" class="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl mb-2">محفوظ کریں</button>
                     <button onclick="document.getElementById('groupModal').classList.add('hidden')" class="w-full text-slate-400 py-2 text-sm">بند کریں</button>
                 </div>
@@ -670,7 +670,7 @@
                 label.innerText = "👥 گروپ نوٹ";
                 label.className = "text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-md";
                 document.getElementById('headerTitle').innerText = myGroupId ? `گروپ: ${myGroupId}` : "گروپ (کوڈ نہیں ہے)";
-                document.getElementById('finTitle').innerText = "دکان کا بیلنس";
+                document.getElementById('finTitle').innerText = `${myGroupId} کا بیلنس`;
             }
             loadDataBasedOnMode();
         };
@@ -887,6 +887,21 @@
                 const isMine = t.uid === currentUser.uid;
                 const balClass = t.currentBalance >= 0 ? 'text-slate-500 dark:text-slate-400' : 'text-red-500';
 
+                // --- NEW: Handle Replies in Transactions ---
+                let repliesHtml = '';
+                if(t.replies && t.replies.length > 0) {
+                    t.replies.forEach(rep => {
+                        repliesHtml += `
+                            <div class="reply-box mt-2">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-[10px] font-bold text-emerald-600">${rep.author}</span>
+                                    <span class="text-[9px] text-slate-400 font-sans">${rep.time}</span>
+                                </div>
+                                <p class="text-xs mt-1 urdu-text dark:text-slate-300">${rep.text}</p>
+                            </div>`;
+                    });
+                }
+
                 const iconArrow = isIn 
                     ? `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>` 
                     : `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>`;
@@ -927,6 +942,14 @@
                             <button onclick="window.deleteDocById('transactions', '${t.id}')" class="text-xs text-red-400 font-bold no-print bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded hover:bg-red-100 transition">🗑️</button>
                         </div>` : ''}
                     </div>
+
+                    <!-- NEW: Replies Section for Transactions -->
+                    <div class="mb-3">${repliesHtml}</div>
+                    ${currentMode === 'group' ? `
+                    <div class="flex gap-2 w-full items-center mt-2 pt-2 border-t border-slate-100 dark:border-slate-700">
+                         <input type="text" id="transReplyInput_${t.id}" placeholder="تبصرہ کریں..." class="flex-1 text-[11px] p-2 bg-slate-50 dark:bg-darkinput dark:text-white rounded-lg outline-none urdu-text">
+                         <button onclick="window.addTransReply('${t.id}')" class="bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-white px-3 py-1 rounded-lg text-[10px] font-bold">بھیجیں</button>
+                    </div>` : ''}
                 `;
                 ul.appendChild(li);
             });
@@ -995,6 +1018,7 @@
                     showToast("اپ ڈیٹ ہو گیا ✅");
                     window.cancelTransEdit();
                 } else {
+                    payload.replies = []; // Ensure replies array exists
                     await addDoc(collection(db, "transactions"), payload);
                     showToast("حساب محفوظ ہو گیا 💰");
                     document.getElementById('transAmount').value = "";
@@ -1017,6 +1041,36 @@
                 });
                 showToast("جواب بھیج دیا");
             } catch(e) { console.log(e); }
+        };
+
+        // --- NEW: Add Reply for Transactions ---
+        window.addTransReply = async (transId) => {
+            const input = document.getElementById(`transReplyInput_${transId}`);
+            const text = input.value.trim();
+            if(!text) return;
+            try {
+                await updateDoc(doc(db, "transactions", transId), {
+                    replies: arrayUnion({
+                        text, author: currentUser.displayName,
+                        time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+                        uid: currentUser.uid
+                    })
+                });
+                showToast("تبصرہ بھیج دیا");
+            } catch(e) { 
+                console.log(e); 
+                // Fallback: If document was old and didn't have replies array
+                try {
+                    await setDoc(doc(db, "transactions", transId), {
+                        replies: [{
+                            text, author: currentUser.displayName,
+                            time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+                            uid: currentUser.uid
+                        }]
+                    }, { merge: true });
+                    showToast("تبصرہ بھیج دیا");
+                } catch(err) { showToast("Error adding reply"); }
+            }
         };
 
         // --- EDITING & HELPERS (From Current Code) ---
