@@ -53,7 +53,8 @@
             ChevronLeft: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><polyline points="15 18 9 12 15 6"></polyline></svg>,
             ChevronRight: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><polyline points="9 18 15 12 9 6"></polyline></svg>,
             BookOpen: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>,
-            Search: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            Search: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>,
+            Refresh: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
         };
 
         const QuranApp = () => {
@@ -69,8 +70,9 @@
             const [searchQuery, setSearchQuery] = useState("");
             
             // Page View States
-            const [currentPage, setCurrentPage] = useState(2); // Start from Page 2
+            const [currentPage, setCurrentPage] = useState(2);
             const [loadingPage, setLoadingPage] = useState(true);
+            const [imageError, setImageError] = useState(false);
 
             // Audio Logic State
             const [isPlaying, setIsPlaying] = useState(false);
@@ -104,15 +106,15 @@
             // --- Reset Loading on Page Change ---
             useEffect(() => {
                 setLoadingPage(true);
+                setImageError(false);
             }, [currentPage]);
 
             // --- 15 Lines Pakistani Print Image Source ---
-            // Primary Source: Unpadded numbers (e.g., 2.jpg)
-            const getPageImageUrl = (pageNum) => {
-                return `https://raw.githubusercontent.com/itsHafiz/Quran-Images-15-Lines/master/images/${pageNum}.jpg`;
-            };
-
-            const pageImageUrl = getPageImageUrl(currentPage);
+            const paddedPage = String(currentPage).padStart(3, '0');
+            // Primary: Using padded numbers (002.jpg) which is standard
+            const primarySource = `https://raw.githubusercontent.com/Hafiz-Quran/Quran-Images-15-Lines/main/images/${paddedPage}.jpg`;
+            // Fallback: Archive.org (Very reliable)
+            const backupSource = `https://archive.org/download/15-Line-Quran-Jpg/${paddedPage}.jpg`;
 
             // --- Helper: Get Audio URL ---
             const getAudioUrl = (surahId, verseNum) => {
@@ -265,6 +267,18 @@
                 setCurrentPage(prev => Math.max(prev - 1, 1));
             };
 
+            const handleImageError = (e) => {
+                // If primary failed, try backup
+                if (e.target.src !== backupSource) {
+                    console.log("Primary image failed, switching to backup...");
+                    e.target.src = backupSource;
+                } else {
+                    // Both failed
+                    setLoadingPage(false);
+                    setImageError(true);
+                }
+            };
+
             const filteredSurahs = surahs.filter(s => 
                 s.name_simple.toLowerCase().includes(searchQuery.toLowerCase()) || 
                 s.name_arabic.includes(searchQuery) ||
@@ -365,25 +379,34 @@
                             
                             {/* The Quran Page Image */}
                             <div className="w-full max-w-md md:max-w-xl lg:max-w-3xl px-0 sm:px-4 transition-opacity duration-300 min-h-[60vh] flex items-center justify-center mt-4">
-                                {loadingPage && (
+                                {loadingPage && !imageError && (
                                     <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 text-slate-400 z-10 bg-[#fdfdfd]/80 h-[60vh]">
                                         <div className="w-10 h-10 border-4 border-slate-200 border-t-emerald-600 rounded-full animate-spin"></div>
                                         <p>صفحہ لوڈ ہو رہا ہے...</p>
                                     </div>
                                 )}
-                                
-                                <img 
-                                    src={pageImageUrl} 
-                                    alt={`Quran Page ${currentPage}`} 
-                                    onLoad={() => setLoadingPage(false)}
-                                    onError={(e) => {
-                                        // Fallback to padded number URL if simple one fails
-                                        e.target.onerror = null; 
-                                        e.target.src = `https://raw.githubusercontent.com/Hafiz-Quran/Quran-Images-15-Lines/main/images/${String(currentPage).padStart(3, '0')}.jpg`;
-                                    }}
-                                    className={`w-full h-auto shadow-lg rounded-sm object-contain bg-white transition-opacity duration-300 ${loadingPage ? 'opacity-0' : 'opacity-100'}`}
-                                    style={{ minHeight: '300px' }}
-                                />
+
+                                {imageError ? (
+                                    <div className="flex flex-col items-center justify-center gap-4 py-20 text-slate-500">
+                                        <p>تصویر لوڈ نہیں ہو سکی۔ انٹرنیٹ چیک کریں۔</p>
+                                        <button 
+                                            onClick={() => { setImageError(false); setLoadingPage(true); }}
+                                            className="flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition"
+                                        >
+                                            <Icons.Refresh size={20} /> دوبارہ کوشش کریں
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <img 
+                                        key={currentPage} /* Force re-render on page change */
+                                        src={primarySource} 
+                                        alt={`Quran Page ${currentPage}`} 
+                                        onLoad={() => setLoadingPage(false)}
+                                        onError={handleImageError}
+                                        className={`w-full h-auto shadow-lg rounded-sm object-contain bg-white transition-opacity duration-300 ${loadingPage ? 'opacity-0' : 'opacity-100'}`}
+                                        style={{ minHeight: '300px' }}
+                                    />
+                                )}
                             </div>
 
                             {/* Manual Navigation Helper */}
