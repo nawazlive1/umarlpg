@@ -66,7 +66,8 @@
             ChevronRight: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><polyline points="9 18 15 12 9 6"></polyline></svg>,
             BookOpen: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>,
             Search: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>,
-            Refresh: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+            Refresh: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>,
+            Upload: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
         };
 
         const QuranApp = () => {
@@ -82,13 +83,14 @@
             const [searchQuery, setSearchQuery] = useState("");
             
             // Page View States
-            const [currentPage, setCurrentPage] = useState(2); // Start from Al-Fatiha (usually page 2 in PDFs)
+            const [currentPage, setCurrentPage] = useState(2); // Start from Al-Fatiha
             const [pdfDoc, setPdfDoc] = useState(null);
             const [loadingPdf, setLoadingPdf] = useState(true);
             const [loadingPage, setLoadingPage] = useState(false);
             const [pdfError, setPdfError] = useState(false);
             const canvasRef = useRef(null);
             const renderTaskRef = useRef(null);
+            const fileInputRef = useRef(null);
 
             // Audio Logic State
             const [isPlaying, setIsPlaying] = useState(false);
@@ -100,13 +102,13 @@
             const activePlayerRef = useRef('A'); 
             const isAutoTransition = useRef(false);
 
-            // --- Load PDF Document ---
+            // --- Load PDF Document (Initial Attempt) ---
             useEffect(() => {
                 const loadPdf = async () => {
                     setLoadingPdf(true);
                     setPdfError(false);
                     try {
-                        // Using the Archive.org generic download link which handles redirects properly and allows CORS
+                        // Attempt to load from Archive.org
                         const pdfUrl = 'https://archive.org/download/QuranMajeed-15Lines-PakistaniPrint/QuranMajeed-15Lines-PakistaniPrint.pdf';
                         const loadingTask = pdfjsLib.getDocument(pdfUrl);
                         const doc = await loadingTask.promise;
@@ -121,12 +123,39 @@
                 loadPdf();
             }, []);
 
+            // --- Handle Manual File Upload ---
+            const handleFileUpload = async (event) => {
+                const file = event.target.files[0];
+                if (file && file.type === 'application/pdf') {
+                    setLoadingPdf(true);
+                    setPdfError(false);
+                    try {
+                        const fileReader = new FileReader();
+                        fileReader.onload = async function() {
+                            const typedarray = new Uint8Array(this.result);
+                            const loadingTask = pdfjsLib.getDocument(typedarray);
+                            const doc = await loadingTask.promise;
+                            setPdfDoc(doc);
+                            setLoadingPdf(false);
+                        };
+                        fileReader.readAsArrayBuffer(file);
+                    } catch (error) {
+                        console.error("Error reading file:", error);
+                        setPdfError(true);
+                        setLoadingPdf(false);
+                    }
+                }
+            };
+
+            const triggerFileInput = () => {
+                fileInputRef.current.click();
+            };
+
             // --- Render PDF Page to Canvas ---
             useEffect(() => {
                 const renderPage = async () => {
                     if (!pdfDoc || !canvasRef.current) return;
 
-                    // Cancel previous render if any
                     if (renderTaskRef.current) {
                         renderTaskRef.current.cancel();
                     }
@@ -137,12 +166,9 @@
                         const canvas = canvasRef.current;
                         const context = canvas.getContext('2d');
                         
-                        // Calculate scale to fit width (Mobile friendly)
-                        const containerWidth = canvas.parentElement.clientWidth;
-                        // Use a higher base scale for sharpness, then downscale via CSS if needed, 
-                        // but getting viewport at calculated scale is better for memory.
+                        const containerWidth = canvas.parentElement.clientWidth || window.innerWidth;
                         const viewport = page.getViewport({ scale: 1 });
-                        const scale = (containerWidth / viewport.width) * 1.5; // 1.5x for crispness on high DPI
+                        const scale = (containerWidth / viewport.width) * 1.5; 
                         const scaledViewport = page.getViewport({ scale });
 
                         canvas.height = scaledViewport.height;
@@ -170,7 +196,6 @@
                     renderPage();
                 }
 
-                // Handle Resize
                 const handleResize = () => {
                     if (pdfDoc) renderPage();
                 };
@@ -187,7 +212,7 @@
                         const data = await response.json();
                         setSurahs(data.chapters);
                         if (data.chapters.length > 0) {
-                            handleSelectSurah(data.chapters[0]); // Al-Fatihah
+                            handleSelectSurah(data.chapters[0]); 
                         }
                         setLoading(false);
                     } catch (error) {
@@ -238,19 +263,12 @@
 
                 const currentVerse = verses[currentVerseIndex];
                 
-                // 1. PAGE SYNC
                 if (currentVerse && currentVerse.page_number) {
-                    // Logic: The API returns page numbers based on Madani (604 pages).
-                    // The IndoPak PDF has slightly different pagination. 
-                    // However, for automation, we track the API page number. 
-                    // If the user feels desync, they can manually turn pages.
-                    // We sync only if page changes significantly to avoid jumping.
                     if (currentVerse.page_number !== currentPage) {
                          setCurrentPage(currentVerse.page_number);
                     }
                 }
 
-                // 2. Audio Loading
                 const currentVerseNum = currentVerse.verse_key.split(':')[1];
                 const currentUrl = getAudioUrl(currentSurah.id, currentVerseNum);
                 
@@ -446,7 +464,23 @@
                                 )}
                             </div>
 
-                            <div className="w-10"></div>
+                            {/* File Upload Trigger */}
+                            <div>
+                                <input 
+                                    type="file" 
+                                    accept="application/pdf" 
+                                    ref={fileInputRef}
+                                    onChange={handleFileUpload}
+                                    className="hidden" 
+                                />
+                                <button 
+                                    onClick={triggerFileInput}
+                                    className="text-slate-600 p-2 hover:bg-slate-100 rounded-full"
+                                    title="پی ڈی ایف فائل اپلوڈ کریں"
+                                >
+                                    <Icons.Upload size={24} />
+                                </button>
+                            </div>
                         </header>
 
                         {/* Page Viewer (Canvas/PDF) */}
@@ -458,18 +492,20 @@
                                 {loadingPdf ? (
                                     <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 text-slate-400 z-10 bg-[#fdfdfd]/90 h-[60vh]">
                                         <div className="w-12 h-12 border-4 border-slate-200 border-t-emerald-600 rounded-full animate-spin"></div>
-                                        <p className="text-center px-4">پی ڈی ایف فائل ڈاؤنلوڈ ہو رہی ہے، برائے مہربانی انتظار کریں...<br/><span className="text-xs text-slate-400">(یہ صرف پہلی بار ہوگا)</span></p>
+                                        <p className="text-center px-4">پی ڈی ایف فائل لوڈ ہو رہی ہے...<br/></p>
                                     </div>
                                 ) : pdfError ? (
                                     <div className="flex flex-col items-center justify-center gap-4 py-20 text-red-500 text-center px-4">
-                                        <p>پی ڈی ایف لوڈ کرنے میں مسئلہ پیش آیا۔</p>
-                                        <p className="text-sm text-slate-500">شاید آپ کا انٹرنیٹ کنکشن کمزور ہے۔</p>
+                                        <p className="font-bold">پی ڈی ایف لوڈ نہیں ہو سکی۔</p>
+                                        <p className="text-sm text-slate-600">براہ کرم اپنی پی ڈی ایف فائل خود منتخب کریں۔</p>
+                                        
                                         <button 
-                                            onClick={() => window.location.reload()}
-                                            className="flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition"
+                                            onClick={triggerFileInput}
+                                            className="flex items-center gap-2 bg-emerald-600 text-white px-6 py-3 rounded-lg hover:bg-emerald-700 transition shadow-lg animate-bounce"
                                         >
-                                            <Icons.Refresh size={20} /> صفحہ ریفریش کریں
+                                            <Icons.Upload size={20} /> پی ڈی ایف فائل منتخب کریں
                                         </button>
+                                        <p className="text-xs text-slate-400 mt-2">وہی فائل منتخب کریں جو آپ نے پہلے بھیجی تھی</p>
                                     </div>
                                 ) : (
                                     <div className="relative w-full flex justify-center">
