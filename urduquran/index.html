@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>قرآن مجید - 15 لائنز (پی ڈی ایف ویو)</title>
+    <title>قرآن مجید - انڈو پاک (بمعہ ترجمہ)</title>
     
     <!-- React and ReactDOM -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -15,21 +15,26 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- PDF.js for rendering PDF pages -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-    
     <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Noto+Nastaliq+Urdu:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Scheherazade+New:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
-        .font-amiri { font-family: 'Amiri', serif; }
-        .font-urdu { font-family: 'Noto Nastaliq Urdu', serif; }
+        /* IndoPak specific styling */
+        .font-quran { 
+            font-family: 'Scheherazade New', 'Amiri', serif; 
+            line-height: 2.3; 
+        }
+        .font-urdu { 
+            font-family: 'Noto Nastaliq Urdu', serif; 
+            line-height: 2.0;
+        }
         
         /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #f1f5f9; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        ::-webkit-scrollbar-thumb { background: #059669; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #047857; }
         
         body {
             background-color: #fdfdfd; 
@@ -39,11 +44,30 @@
         .safe-area-bottom {
             padding-bottom: env(safe-area-inset-bottom);
         }
+
+        /* Verse Highlighting */
+        .verse-active {
+            background-color: #ecfdf5; /* emerald-50 */
+            border-radius: 0.75rem;
+            transition: background-color 0.3s ease;
+        }
         
-        canvas {
-            max-width: 100%;
-            height: auto !important;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        /* End of Ayah Circle styling */
+        .ayah-end {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-family: sans-serif;
+            font-size: 0.55em;
+            width: 1.6em;
+            height: 1.6em;
+            border: 2px solid currentColor;
+            border-radius: 50%;
+            margin: 0 6px;
+            vertical-align: middle;
+            line-height: 1;
+            position: relative;
+            top: -2px;
         }
     </style>
 </head>
@@ -51,9 +75,6 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        // Initialize PDF.js worker
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-
         const { useState, useEffect, useRef, useMemo } = React;
 
         // Icons Components
@@ -66,8 +87,8 @@
             ChevronRight: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><polyline points="9 18 15 12 9 6"></polyline></svg>,
             BookOpen: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>,
             Search: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>,
-            Refresh: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>,
-            Upload: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+            Eye: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>,
+            EyeOff: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
         };
 
         const QuranApp = () => {
@@ -81,128 +102,18 @@
             const [loadingVerses, setLoadingVerses] = useState(false);
             const [isSidebarOpen, setIsSidebarOpen] = useState(false);
             const [searchQuery, setSearchQuery] = useState("");
+            const [showTranslation, setShowTranslation] = useState(true);
             
-            // Page View States
-            const [currentPage, setCurrentPage] = useState(2); // Start from Al-Fatiha
-            const [pdfDoc, setPdfDoc] = useState(null);
-            const [loadingPdf, setLoadingPdf] = useState(true);
-            const [loadingPage, setLoadingPage] = useState(false);
-            const [pdfError, setPdfError] = useState(false);
-            const canvasRef = useRef(null);
-            const renderTaskRef = useRef(null);
-            const fileInputRef = useRef(null);
-
             // Audio Logic State
             const [isPlaying, setIsPlaying] = useState(false);
             const [currentVerseIndex, setCurrentVerseIndex] = useState(-1);
             
-            // Audio Refs
+            // Audio Refs (Gapless)
             const playerA = useRef(new Audio());
             const playerB = useRef(new Audio());
             const activePlayerRef = useRef('A'); 
             const isAutoTransition = useRef(false);
-
-            // --- Load PDF Document (Initial Attempt) ---
-            useEffect(() => {
-                const loadPdf = async () => {
-                    setLoadingPdf(true);
-                    setPdfError(false);
-                    try {
-                        // Attempt to load from Archive.org
-                        const pdfUrl = 'https://archive.org/download/QuranMajeed-15Lines-PakistaniPrint/QuranMajeed-15Lines-PakistaniPrint.pdf';
-                        const loadingTask = pdfjsLib.getDocument(pdfUrl);
-                        const doc = await loadingTask.promise;
-                        setPdfDoc(doc);
-                        setLoadingPdf(false);
-                    } catch (error) {
-                        console.error("Error loading PDF:", error);
-                        setPdfError(true);
-                        setLoadingPdf(false);
-                    }
-                };
-                loadPdf();
-            }, []);
-
-            // --- Handle Manual File Upload ---
-            const handleFileUpload = async (event) => {
-                const file = event.target.files[0];
-                if (file && file.type === 'application/pdf') {
-                    setLoadingPdf(true);
-                    setPdfError(false);
-                    try {
-                        const fileReader = new FileReader();
-                        fileReader.onload = async function() {
-                            const typedarray = new Uint8Array(this.result);
-                            const loadingTask = pdfjsLib.getDocument(typedarray);
-                            const doc = await loadingTask.promise;
-                            setPdfDoc(doc);
-                            setLoadingPdf(false);
-                        };
-                        fileReader.readAsArrayBuffer(file);
-                    } catch (error) {
-                        console.error("Error reading file:", error);
-                        setPdfError(true);
-                        setLoadingPdf(false);
-                    }
-                }
-            };
-
-            const triggerFileInput = () => {
-                fileInputRef.current.click();
-            };
-
-            // --- Render PDF Page to Canvas ---
-            useEffect(() => {
-                const renderPage = async () => {
-                    if (!pdfDoc || !canvasRef.current) return;
-
-                    if (renderTaskRef.current) {
-                        renderTaskRef.current.cancel();
-                    }
-
-                    setLoadingPage(true);
-                    try {
-                        const page = await pdfDoc.getPage(currentPage);
-                        const canvas = canvasRef.current;
-                        const context = canvas.getContext('2d');
-                        
-                        const containerWidth = canvas.parentElement.clientWidth || window.innerWidth;
-                        const viewport = page.getViewport({ scale: 1 });
-                        const scale = (containerWidth / viewport.width) * 1.5; 
-                        const scaledViewport = page.getViewport({ scale });
-
-                        canvas.height = scaledViewport.height;
-                        canvas.width = scaledViewport.width;
-
-                        const renderContext = {
-                            canvasContext: context,
-                            viewport: scaledViewport
-                        };
-
-                        const renderTask = page.render(renderContext);
-                        renderTaskRef.current = renderTask;
-
-                        await renderTask.promise;
-                        setLoadingPage(false);
-                    } catch (error) {
-                        if (error.name !== 'RenderingCancelledException') {
-                            console.error("Error rendering page:", error);
-                            setLoadingPage(false);
-                        }
-                    }
-                };
-
-                if (pdfDoc) {
-                    renderPage();
-                }
-
-                const handleResize = () => {
-                    if (pdfDoc) renderPage();
-                };
-                window.addEventListener('resize', handleResize);
-                return () => window.removeEventListener('resize', handleResize);
-
-            }, [pdfDoc, currentPage]);
+            const verseRefs = useRef({});
 
             // --- Fetch Surahs ---
             useEffect(() => {
@@ -212,7 +123,7 @@
                         const data = await response.json();
                         setSurahs(data.chapters);
                         if (data.chapters.length > 0) {
-                            handleSelectSurah(data.chapters[0]); 
+                            handleSelectSurah(data.chapters[0]); // Al-Fatihah
                         }
                         setLoading(false);
                     } catch (error) {
@@ -230,6 +141,12 @@
                 return `https://everyayah.com/data/Abdurrahmaan_As-Sudais_192kbps/${s}${v}.mp3`;
             };
 
+            // --- Helper: Convert English Numbers to Urdu/Arabic ---
+            const toArabicNumerals = (num) => {
+                const arabic = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+                return String(num).split('').map(c => arabic[c] || c).join('');
+            };
+
             // --- Audio Event Listeners ---
             useEffect(() => {
                 const handleEnded = () => {
@@ -243,7 +160,7 @@
                             return nextIndex;
                         } else {
                             setIsPlaying(false);
-                            return 0; 
+                            return 0; // Reset
                         }
                     });
                 };
@@ -262,13 +179,6 @@
                 if (currentVerseIndex === -1 || !currentSurah || verses.length === 0) return;
 
                 const currentVerse = verses[currentVerseIndex];
-                
-                if (currentVerse && currentVerse.page_number) {
-                    if (currentVerse.page_number !== currentPage) {
-                         setCurrentPage(currentVerse.page_number);
-                    }
-                }
-
                 const currentVerseNum = currentVerse.verse_key.split(':')[1];
                 const currentUrl = getAudioUrl(currentSurah.id, currentVerseNum);
                 
@@ -302,6 +212,14 @@
                     }
                 }
 
+                // Auto Scroll
+                if (verseRefs.current[currentVerseIndex]) {
+                    verseRefs.current[currentVerseIndex].scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'center',
+                    });
+                }
+
             }, [currentVerseIndex, currentSurah, verses, isPlaying]);
 
 
@@ -317,15 +235,13 @@
                 activePlayerRef.current = 'A';
 
                 try {
+                    // Fetching 'text_indopak' for Arabic
+                    // Fetching translation ID 234 (Fateh Muhammad Jalandhry) - High quality Urdu
                     const versesResponse = await fetch(
-                        `https://api.quran.com/api/v4/verses/by_chapter/${surah.id}?fields=page_number&per_page=300`
+                        `https://api.quran.com/api/v4/verses/by_chapter/${surah.id}?fields=text_indopak&translations=234&per_page=all`
                     );
                     const versesData = await versesResponse.json();
                     setVerses(versesData.verses);
-                    
-                    if (versesData.verses.length > 0) {
-                        setCurrentPage(versesData.verses[0].page_number);
-                    }
                 } catch (error) {
                     console.error("Error fetching verses:", error);
                 } finally {
@@ -364,12 +280,10 @@
                 }
             };
 
-            const handleNextPage = () => {
-                setCurrentPage(prev => Math.min(prev + 1, pdfDoc ? pdfDoc.numPages : 611));
-            };
-
-            const handlePrevPage = () => {
-                setCurrentPage(prev => Math.max(prev - 1, 1));
+            const handleVerseClick = (index) => {
+                isAutoTransition.current = false;
+                setCurrentVerseIndex(index);
+                setIsPlaying(true);
             };
 
             const filteredSurahs = surahs.filter(s => 
@@ -445,7 +359,7 @@
                     </aside>
 
                     {/* Main Content Area */}
-                    <main className="flex-1 flex flex-col h-full w-full relative bg-[#fdfdfd]">
+                    <main className="flex-1 flex flex-col h-full w-full relative bg-[#f9fafb]">
                         
                         {/* Header */}
                         <header className="bg-white p-3 sm:p-4 shadow-sm flex items-center justify-between border-b border-slate-200 z-30">
@@ -453,88 +367,87 @@
                                 <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden text-slate-600 p-2 hover:bg-slate-100 rounded-full">
                                     <Icons.Menu size={24} />
                                 </button>
-                                <span className="text-sm font-medium text-slate-500">صفحہ: {currentPage}</span>
+                                {/* Translation Toggle */}
+                                <button 
+                                    onClick={() => setShowTranslation(!showTranslation)}
+                                    className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors border ${
+                                        showTranslation ? 'bg-emerald-100 border-emerald-200 text-emerald-800' : 'bg-white border-slate-200 text-slate-600'
+                                    }`}
+                                >
+                                    {showTranslation ? <Icons.Eye size={16} /> : <Icons.EyeOff size={16} />}
+                                    <span className="hidden sm:inline font-urdu">ترجمہ</span>
+                                </button>
                             </div>
                             
                             <div className="flex-1 text-center px-2">
                                 {currentSurah && (
-                                    <span className="font-bold text-emerald-800 text-lg sm:text-xl font-amiri block truncate">
+                                    <span className="font-bold text-emerald-800 text-xl sm:text-2xl font-quran block truncate leading-tight">
                                         سورة {currentSurah.name_arabic}
                                     </span>
                                 )}
                             </div>
 
-                            {/* File Upload Trigger */}
-                            <div>
-                                <input 
-                                    type="file" 
-                                    accept="application/pdf" 
-                                    ref={fileInputRef}
-                                    onChange={handleFileUpload}
-                                    className="hidden" 
-                                />
-                                <button 
-                                    onClick={triggerFileInput}
-                                    className="text-slate-600 p-2 hover:bg-slate-100 rounded-full"
-                                    title="پی ڈی ایف فائل اپلوڈ کریں"
-                                >
-                                    <Icons.Upload size={24} />
-                                </button>
-                            </div>
+                            <div className="w-10"></div>
                         </header>
 
-                        {/* Page Viewer (Canvas/PDF) */}
+                        {/* Content Area - Quran Text */}
                         <div className="flex-1 overflow-y-auto overflow-x-hidden relative flex flex-col items-center pb-40">
                             
-                            {/* The Quran Page Canvas */}
-                            <div className="w-full max-w-md md:max-w-xl lg:max-w-3xl px-0 sm:px-4 transition-opacity duration-300 min-h-[60vh] flex items-center justify-center mt-4">
-                                
-                                {loadingPdf ? (
-                                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 text-slate-400 z-10 bg-[#fdfdfd]/90 h-[60vh]">
-                                        <div className="w-12 h-12 border-4 border-slate-200 border-t-emerald-600 rounded-full animate-spin"></div>
-                                        <p className="text-center px-4">پی ڈی ایف فائل لوڈ ہو رہی ہے...<br/></p>
-                                    </div>
-                                ) : pdfError ? (
-                                    <div className="flex flex-col items-center justify-center gap-4 py-20 text-red-500 text-center px-4">
-                                        <p className="font-bold">پی ڈی ایف لوڈ نہیں ہو سکی۔</p>
-                                        <p className="text-sm text-slate-600">براہ کرم اپنی پی ڈی ایف فائل خود منتخب کریں۔</p>
-                                        
-                                        <button 
-                                            onClick={triggerFileInput}
-                                            className="flex items-center gap-2 bg-emerald-600 text-white px-6 py-3 rounded-lg hover:bg-emerald-700 transition shadow-lg animate-bounce"
-                                        >
-                                            <Icons.Upload size={20} /> پی ڈی ایف فائل منتخب کریں
-                                        </button>
-                                        <p className="text-xs text-slate-400 mt-2">وہی فائل منتخب کریں جو آپ نے پہلے بھیجی تھی</p>
-                                    </div>
-                                ) : (
-                                    <div className="relative w-full flex justify-center">
-                                        {loadingPage && (
-                                            <div className="absolute inset-0 flex items-center justify-center bg-white/50 z-20">
-                                                <div className="w-8 h-8 border-4 border-slate-200 border-t-emerald-600 rounded-full animate-spin"></div>
+                            {loadingVerses ? (
+                                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 text-slate-400">
+                                    <div className="w-12 h-12 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin"></div>
+                                    <p className="font-urdu">لوڈ ہو رہا ہے...</p>
+                                </div>
+                            ) : (
+                                <div className="w-full max-w-3xl px-4 sm:px-6 py-6 space-y-4">
+                                    {/* Bismillah */}
+                                    {currentSurah && currentSurah.id !== 1 && currentSurah.id !== 9 && (
+                                        <div className="text-center mb-8 mt-2">
+                                            <p className="font-quran text-3xl text-emerald-800 font-bold">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</p>
+                                        </div>
+                                    )}
+
+                                    {/* Verses */}
+                                    {verses.map((verse, index) => {
+                                        const isActive = index === currentVerseIndex;
+                                        // Remove HTML tags from translation if any
+                                        const translationText = verse.translations && verse.translations[0] 
+                                            ? verse.translations[0].text.replace(/<[^>]+>/g, '') 
+                                            : '';
+
+                                        return (
+                                            <div 
+                                                key={verse.id}
+                                                ref={el => verseRefs.current[index] = el}
+                                                onClick={() => handleVerseClick(index)}
+                                                className={`p-5 sm:p-8 rounded-2xl transition-all duration-300 cursor-pointer border border-transparent hover:bg-slate-50 ${isActive ? 'verse-active shadow-sm border-emerald-100' : 'border-b-slate-100'}`}
+                                            >
+                                                {/* Arabic Text */}
+                                                <p className={`font-quran text-right leading-loose mb-3 ${isActive ? 'text-emerald-900 font-black' : 'text-slate-800 font-bold'}`} 
+                                                   style={{ 
+                                                       fontSize: '32px', 
+                                                       lineHeight: '2.4' 
+                                                   }}
+                                                >
+                                                    {verse.text_indopak}
+                                                    <span className="ayah-end text-emerald-600 mr-2 text-2xl">
+                                                        {toArabicNumerals(verse.verse_key.split(':')[1])}
+                                                    </span>
+                                                </p>
+
+                                                {/* Urdu Translation */}
+                                                {showTranslation && (
+                                                    <div className="mt-4 pt-4 border-t border-dashed border-slate-200/60">
+                                                        <p className={`font-urdu text-right text-lg sm:text-xl leading-loose ${isActive ? 'text-emerald-700' : 'text-slate-600'}`}>
+                                                            {translationText}
+                                                        </p>
+                                                    </div>
+                                                )}
                                             </div>
-                                        )}
-                                        <canvas ref={canvasRef} className="bg-white rounded-sm shadow-lg"></canvas>
-                                    </div>
-                                )}
-
-                            </div>
-
-                            {/* Manual Navigation Helper */}
-                            <div className="w-full max-w-2xl flex justify-between gap-8 py-8 px-4 text-slate-400">
-                                <button 
-                                    onClick={handlePrevPage}
-                                    className="flex items-center gap-2 px-4 py-2 rounded-full border border-slate-200 hover:bg-white hover:text-emerald-600 transition-colors"
-                                >
-                                    <Icons.ChevronRight size={16} /> پچھلا صفحہ
-                                </button>
-                                <button 
-                                    onClick={handleNextPage}
-                                    className="flex items-center gap-2 px-4 py-2 rounded-full border border-slate-200 hover:bg-white hover:text-emerald-600 transition-colors"
-                                >
-                                    اگلا صفحہ <Icons.ChevronLeft size={16} />
-                                </button>
-                            </div>
+                                        )
+                                    })}
+                                </div>
+                            )}
                         </div>
 
                         {/* Audio Player Footer */}
@@ -551,7 +464,7 @@
                                                 <p className="text-xs font-bold text-slate-800 truncate">
                                                     آیت نمبر: {currentVerseIndex !== -1 ? verses[currentVerseIndex].verse_key.split(':')[1] : 'Start'}
                                                 </p>
-                                                <p className="text-[10px] text-slate-500 truncate">سدیس (15 Lines)</p>
+                                                <p className="text-[10px] text-slate-500 truncate">سدیس (مسلسل)</p>
                                             </div>
                                         </div>
 
@@ -575,9 +488,7 @@
 
                                         {/* Verse Info (Right) */}
                                         <div className="flex justify-end w-1/3 text-right">
-                                            <span className="text-xs text-slate-400 bg-slate-50 px-2 py-1 rounded">
-                                                Page {currentPage}
-                                            </span>
+                                            {/* Empty spacer or more controls */}
                                         </div>
                                     </div>
                                     
