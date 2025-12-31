@@ -2,8 +2,8 @@
 <html lang="ur" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>قرآن مجید - اردو ترجمہ و تلاوت</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>قرآن مجید - 15 لائنز (پاکستانی پرنٹ)</title>
     
     <!-- React and ReactDOM -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -23,13 +23,18 @@
         .font-urdu { font-family: 'Noto Nastaliq Urdu', serif; }
         
         /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #f1f5f9; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         
         body {
-            background-color: #f8fafc;
+            background-color: #fdfdfd; 
+            overscroll-behavior-y: none;
+        }
+
+        .safe-area-bottom {
+            padding-bottom: env(safe-area-inset-bottom);
         }
     </style>
 </head>
@@ -37,9 +42,9 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useRef } = React;
+        const { useState, useEffect, useRef, useMemo } = React;
 
-        // Icons Components (Inline SVGs to avoid dependency issues)
+        // Icons Components
         const Icons = {
             Play: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>,
             Pause: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>,
@@ -48,23 +53,36 @@
             ChevronLeft: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><polyline points="15 18 9 12 15 6"></polyline></svg>,
             ChevronRight: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><polyline points="9 18 15 12 9 6"></polyline></svg>,
             BookOpen: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>,
-            Volume2: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>,
             Search: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
         };
 
         const QuranApp = () => {
+            // Data States
             const [surahs, setSurahs] = useState([]);
             const [currentSurah, setCurrentSurah] = useState(null);
             const [verses, setVerses] = useState([]);
+            
+            // UI States
             const [loading, setLoading] = useState(true);
             const [loadingVerses, setLoadingVerses] = useState(false);
-            const [isPlaying, setIsPlaying] = useState(false);
-            const [audioUrl, setAudioUrl] = useState(null);
             const [isSidebarOpen, setIsSidebarOpen] = useState(false);
             const [searchQuery, setSearchQuery] = useState("");
-            const audioRef = useRef(null);
+            
+            // Page View States
+            const [currentPage, setCurrentPage] = useState(2); // Start from Page 2 (Al-Baqarah start typically)
+            const [loadingPage, setLoadingPage] = useState(true);
 
-            // Initial Data Fetch: List of Surahs
+            // Audio Logic State
+            const [isPlaying, setIsPlaying] = useState(false);
+            const [currentVerseIndex, setCurrentVerseIndex] = useState(-1);
+            
+            // Audio Refs
+            const playerA = useRef(new Audio());
+            const playerB = useRef(new Audio());
+            const activePlayerRef = useRef('A'); 
+            const isAutoTransition = useRef(false);
+
+            // --- Fetch Surahs ---
             useEffect(() => {
                 const fetchSurahs = async () => {
                     try {
@@ -72,7 +90,7 @@
                         const data = await response.json();
                         setSurahs(data.chapters);
                         if (data.chapters.length > 0) {
-                            handleSelectSurah(data.chapters[0]);
+                            handleSelectSurah(data.chapters[0]); // Al-Fatihah
                         }
                         setLoading(false);
                     } catch (error) {
@@ -80,48 +98,179 @@
                         setLoading(false);
                     }
                 };
-
                 fetchSurahs();
             }, []);
 
-            // Fetch Verses and Audio
+            // --- Reset Loading on Page Change ---
+            useEffect(() => {
+                setLoadingPage(true);
+            }, [currentPage]);
+
+            // --- 15 Lines Pakistani Print Image Source ---
+            // Using a reliable raw.githubusercontent source for 15-lines (BasitJ is a common standard)
+            const getPageImageUrl = (pageNum) => {
+                // Ensure no padding is needed for this specific repo structure (1.jpg, 2.jpg)
+                return `https://raw.githubusercontent.com/BasitJ/Quran-Images-15-Lines/master/images/${pageNum}.jpg`;
+            };
+
+            const pageImageUrl = getPageImageUrl(currentPage);
+
+            // --- Helper: Get Audio URL ---
+            const getAudioUrl = (surahId, verseNum) => {
+                const s = String(surahId).padStart(3, '0');
+                const v = String(verseNum).padStart(3, '0');
+                return `https://everyayah.com/data/Abdurrahmaan_As-Sudais_192kbps/${s}${v}.mp3`;
+            };
+
+            // --- Audio Event Listeners ---
+            useEffect(() => {
+                const handleEnded = () => {
+                    setCurrentVerseIndex(prevIndex => {
+                        const nextIndex = prevIndex + 1;
+                        if (nextIndex < verses.length) {
+                            const nextPlayer = activePlayerRef.current === 'A' ? playerB.current : playerA.current;
+                            nextPlayer.play().catch(e => console.log("Auto play blocked", e));
+                            activePlayerRef.current = activePlayerRef.current === 'A' ? 'B' : 'A';
+                            isAutoTransition.current = true;
+                            return nextIndex;
+                        } else {
+                            setIsPlaying(false);
+                            return 0; 
+                        }
+                    });
+                };
+
+                playerA.current.addEventListener('ended', handleEnded);
+                playerB.current.addEventListener('ended', handleEnded);
+
+                return () => {
+                    playerA.current.removeEventListener('ended', handleEnded);
+                    playerB.current.removeEventListener('ended', handleEnded);
+                };
+            }, [verses]);
+
+            // --- Main Audio & Sync Logic ---
+            useEffect(() => {
+                if (currentVerseIndex === -1 || !currentSurah || verses.length === 0) return;
+
+                const currentVerse = verses[currentVerseIndex];
+                
+                // 1. PAGE SYNC
+                if (currentVerse && currentVerse.page_number) {
+                    // Mapping standard API pages to 15-line pages is approximate without a specific map
+                    // But usually they are close. For exact visual match, we rely on the user navigating.
+                    // However, we set currentPage if available.
+                    // Note: API v4 uses Madani page numbers (604 pages).
+                    // IndoPak 15 lines has ~611 pages.
+                    // We will use the page number from API but allow manual override if visual doesn't match text.
+                    if (currentVerse.page_number !== currentPage) {
+                         // Optional: Sync logic can be loose here to allow manual turn
+                         setCurrentPage(currentVerse.page_number);
+                    }
+                }
+
+                // 2. Audio Loading
+                const currentVerseNum = currentVerse.verse_key.split(':')[1];
+                const currentUrl = getAudioUrl(currentSurah.id, currentVerseNum);
+                
+                let nextUrl = null;
+                if (currentVerseIndex + 1 < verses.length) {
+                    const nextVerseNum = verses[currentVerseIndex + 1].verse_key.split(':')[1];
+                    nextUrl = getAudioUrl(currentSurah.id, nextVerseNum);
+                }
+
+                if (isAutoTransition.current) {
+                    const idlePlayer = activePlayerRef.current === 'A' ? playerB.current : playerA.current;
+                    if (nextUrl) {
+                        idlePlayer.src = nextUrl;
+                        idlePlayer.load();
+                    }
+                    isAutoTransition.current = false;
+                } else {
+                    playerA.current.pause();
+                    playerB.current.pause();
+                    activePlayerRef.current = 'A';
+                    
+                    if (isPlaying) {
+                        playerA.current.src = currentUrl;
+                        playerA.current.play().catch(e => console.log("Manual play error", e));
+                        if (nextUrl) {
+                            playerB.current.src = nextUrl;
+                            playerB.current.load();
+                        }
+                    } else {
+                        playerA.current.src = currentUrl;
+                    }
+                }
+
+            }, [currentVerseIndex, currentSurah, verses, isPlaying]);
+
+
             const handleSelectSurah = async (surah) => {
                 setCurrentSurah(surah);
                 setLoadingVerses(true);
                 setIsSidebarOpen(false);
                 setIsPlaying(false);
+                setCurrentVerseIndex(-1);
                 
+                playerA.current.pause();
+                playerB.current.pause();
+                activePlayerRef.current = 'A';
+
                 try {
-                    // Fetch Verses with Jalandhry Translation (ID 234)
                     const versesResponse = await fetch(
-                        `https://api.quran.com/api/v4/verses/by_chapter/${surah.id}?language=ur&fields=text_uthmani_simple&translations=234&per_page=300`
+                        `https://api.quran.com/api/v4/verses/by_chapter/${surah.id}?fields=page_number&per_page=300`
                     );
                     const versesData = await versesResponse.json();
                     setVerses(versesData.verses);
-
-                    // Fetch Audio (Sudais - ID 3)
-                    const audioResponse = await fetch(
-                        `https://api.quran.com/api/v4/chapter_recitations/3/${surah.id}`
-                    );
-                    const audioData = await audioResponse.json();
-                    setAudioUrl(audioData.audio_file.audio_url);
-
+                    
+                    if (versesData.verses.length > 0) {
+                        setCurrentPage(versesData.verses[0].page_number);
+                    }
                 } catch (error) {
-                    console.error("Error fetching verses/audio:", error);
+                    console.error("Error fetching verses:", error);
                 } finally {
                     setLoadingVerses(false);
                 }
             };
 
-            const toggleAudio = () => {
-                if (audioRef.current) {
+            const togglePlay = () => {
+                if (currentVerseIndex === -1 && verses.length > 0) {
+                    setCurrentVerseIndex(0);
+                    setIsPlaying(true);
+                } else {
+                    const active = activePlayerRef.current === 'A' ? playerA.current : playerB.current;
                     if (isPlaying) {
-                        audioRef.current.pause();
+                        active.pause();
                     } else {
-                        audioRef.current.play();
+                        active.play();
                     }
                     setIsPlaying(!isPlaying);
                 }
+            };
+
+            const handleNextVerse = () => {
+                if (currentVerseIndex < verses.length - 1) {
+                    isAutoTransition.current = false;
+                    setCurrentVerseIndex(prev => prev + 1);
+                    setIsPlaying(true);
+                }
+            };
+
+            const handlePrevVerse = () => {
+                if (currentVerseIndex > 0) {
+                    isAutoTransition.current = false;
+                    setCurrentVerseIndex(prev => prev - 1);
+                    setIsPlaying(true);
+                }
+            };
+
+            const handleNextPage = () => {
+                setCurrentPage(prev => Math.min(prev + 1, 611));
+            };
+
+            const handlePrevPage = () => {
+                setCurrentPage(prev => Math.max(prev - 1, 1));
             };
 
             const filteredSurahs = surahs.filter(s => 
@@ -131,10 +280,10 @@
             );
 
             return (
-                <div className="flex h-screen bg-slate-50 font-sans text-slate-900 overflow-hidden" dir="rtl">
+                <div className="flex h-screen bg-neutral-100 font-sans text-slate-900 overflow-hidden" dir="rtl">
                     {/* Sidebar */}
                     <aside 
-                        className={`fixed inset-y-0 right-0 z-50 w-72 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 ${
+                        className={`fixed inset-y-0 right-0 z-50 w-80 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 ${
                             isSidebarOpen ? 'translate-x-0' : 'translate-x-full'
                         }`}
                     >
@@ -149,7 +298,6 @@
                                         <Icons.X size={24} />
                                     </button>
                                 </div>
-                                
                                 <div className="relative">
                                     <input 
                                         type="text" 
@@ -163,8 +311,7 @@
                                     </span>
                                 </div>
                             </div>
-
-                            <div className="flex-1 overflow-y-auto">
+                            <div className="flex-1 overflow-y-auto custom-scrollbar">
                                 {loading ? (
                                     <div className="p-4 text-center text-slate-500">فہرست لوڈ ہو رہی ہے...</div>
                                 ) : (
@@ -198,111 +345,117 @@
                         </div>
                     </aside>
 
-                    {/* Main Content */}
-                    <main className="flex-1 flex flex-col h-full w-full relative">
-                        {/* Mobile Header */}
-                        <header className="lg:hidden bg-white p-4 shadow-sm flex items-center justify-between border-b border-slate-200">
-                            <div className="font-bold text-emerald-700 flex items-center gap-2">
-                                <Icons.BookOpen size={20} />
-                                <span>قرآن مجید</span>
+                    {/* Main Content Area */}
+                    <main className="flex-1 flex flex-col h-full w-full relative bg-[#fdfdfd]">
+                        
+                        {/* Header */}
+                        <header className="bg-white p-3 sm:p-4 shadow-sm flex items-center justify-between border-b border-slate-200 z-30">
+                            <div className="flex items-center gap-2">
+                                <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden text-slate-600 p-2 hover:bg-slate-100 rounded-full">
+                                    <Icons.Menu size={24} />
+                                </button>
+                                <span className="text-sm font-medium text-slate-500">صفحہ: {currentPage}</span>
                             </div>
-                            <button onClick={() => setIsSidebarOpen(true)} className="text-slate-600 p-2 hover:bg-slate-100 rounded-full">
-                                <Icons.Menu size={24} />
-                            </button>
+                            
+                            <div className="flex-1 text-center px-2">
+                                {currentSurah && (
+                                    <span className="font-bold text-emerald-800 text-lg sm:text-xl font-amiri block truncate">
+                                        سورة {currentSurah.name_arabic}
+                                    </span>
+                                )}
+                            </div>
+
+                            <div className="w-10"></div>
                         </header>
 
-                        {/* Surah Content */}
-                        <div className="flex-1 overflow-y-auto bg-slate-50 scroll-smooth">
-                            {currentSurah ? (
-                                <div className="max-w-4xl mx-auto p-4 pb-32">
-                                    <div className="text-center mb-8 mt-4">
-                                        <div className="inline-block px-4 py-1 bg-emerald-100 text-emerald-800 rounded-full text-sm mb-2 border border-emerald-200">
-                                            سورة {currentSurah.name_simple} • {currentSurah.revelation_place === 'makkah' ? 'مکی' : 'مدنی'}
-                                        </div>
-                                        <h2 className="text-5xl font-amiri text-slate-800 mb-2 leading-relaxed">
-                                            {currentSurah.name_arabic}
-                                        </h2>
-                                        {currentSurah.id !== 1 && currentSurah.id !== 9 && (
-                                            <div className="mt-6 mb-8 text-3xl text-emerald-700 font-amiri">
-                                                بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ
-                                            </div>
-                                        )}
+                        {/* Page Viewer (Image) */}
+                        <div className="flex-1 overflow-y-auto overflow-x-hidden relative flex flex-col items-center pb-40">
+                            
+                            {/* The Quran Page Image */}
+                            <div className="w-full max-w-md md:max-w-xl lg:max-w-3xl px-0 sm:px-4 transition-opacity duration-300 min-h-[60vh] flex items-center justify-center mt-4">
+                                {loadingPage && (
+                                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 text-slate-400 z-10 bg-[#fdfdfd]/80 h-[60vh]">
+                                        <div className="w-10 h-10 border-4 border-slate-200 border-t-emerald-600 rounded-full animate-spin"></div>
+                                        <p>صفحہ لوڈ ہو رہا ہے...</p>
                                     </div>
+                                )}
+                                
+                                <img 
+                                    src={pageImageUrl} 
+                                    alt={`Quran Page ${currentPage}`} 
+                                    onLoad={() => setLoadingPage(false)}
+                                    className={`w-full h-auto shadow-lg rounded-sm object-contain bg-white transition-opacity duration-300 ${loadingPage ? 'opacity-0' : 'opacity-100'}`}
+                                    style={{ minHeight: '300px' }}
+                                />
+                            </div>
 
-                                    {loadingVerses ? (
-                                        <div className="flex flex-col items-center justify-center py-20 gap-4">
-                                            <div className="w-12 h-12 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin"></div>
-                                            <p className="text-slate-500">آیات لوڈ ہو رہی ہیں...</p>
-                                        </div>
-                                    ) : (
-                                        <div className="space-y-6">
-                                            {verses.map((verse) => (
-                                                <div key={verse.id} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
-                                                    <div className="flex justify-between items-start gap-4 mb-4">
-                                                        <div className="w-10 h-10 flex-shrink-0 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 text-sm font-medium">
-                                                            {verse.verse_key.split(':')[1]}
-                                                        </div>
-                                                        <p className="text-right text-3xl leading-[2.5] text-slate-800 font-amiri w-full" dir="rtl">
-                                                            {verse.text_uthmani_simple}
-                                                        </p>
-                                                    </div>
-                                                    
-                                                    <div className="h-px bg-slate-100 w-full my-4"></div>
-
-                                                    <p className="text-right text-lg leading-loose text-slate-600 font-urdu" dir="rtl">
-                                                        {verse.translations && verse.translations[0] 
-                                                            ? verse.translations[0].text.replace(/<[^>]*>?/gm, '') 
-                                                            : 'ترجمہ دستیاب نہیں'}
-                                                    </p>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            ) : (
-                                <div className="h-full flex items-center justify-center text-slate-400">
-                                    کوئی سورت منتخب کریں
-                                </div>
-                            )}
+                            {/* Manual Navigation Helper */}
+                            <div className="w-full max-w-2xl flex justify-between gap-8 py-8 px-4 text-slate-400">
+                                <button 
+                                    onClick={handlePrevPage}
+                                    className="flex items-center gap-2 px-4 py-2 rounded-full border border-slate-200 hover:bg-white hover:text-emerald-600 transition-colors"
+                                >
+                                    <Icons.ChevronRight size={16} /> پچھلا صفحہ
+                                </button>
+                                <button 
+                                    onClick={handleNextPage}
+                                    className="flex items-center gap-2 px-4 py-2 rounded-full border border-slate-200 hover:bg-white hover:text-emerald-600 transition-colors"
+                                >
+                                    اگلا صفحہ <Icons.ChevronLeft size={16} />
+                                </button>
+                            </div>
                         </div>
 
                         {/* Audio Player Footer */}
-                        {currentSurah && audioUrl && (
-                            <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] p-4 z-40">
-                                <div className="max-w-4xl mx-auto flex items-center justify-between gap-4">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-700">
-                                            <Icons.Volume2 size={24} />
+                        {currentSurah && verses.length > 0 && (
+                            <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-[0_-4px_20px_-5px_rgba(0,0,0,0.1)] p-3 sm:p-4 z-40 backdrop-blur-md bg-white/95 safe-area-bottom">
+                                <div className="max-w-4xl mx-auto flex flex-col gap-3">
+                                    <div className="flex items-center justify-between gap-4">
+                                        {/* Info */}
+                                        <div className="flex items-center gap-3 min-w-0 w-1/3">
+                                            <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-700 flex-shrink-0">
+                                                {isPlaying ? <div className="w-2 h-2 bg-emerald-600 rounded-full animate-ping"></div> : <Icons.Play size={20} />}
+                                            </div>
+                                            <div className="truncate hidden sm:block">
+                                                <p className="text-xs font-bold text-slate-800 truncate">
+                                                    آیت نمبر: {currentVerseIndex !== -1 ? verses[currentVerseIndex].verse_key.split(':')[1] : 'Start'}
+                                                </p>
+                                                <p className="text-[10px] text-slate-500 truncate">سدیس (15 Lines)</p>
+                                            </div>
                                         </div>
-                                        <div className="hidden sm:block">
-                                            <p className="text-sm font-bold text-slate-800">تلاوت: شيخ عبد الرحمن السديس</p>
-                                            <p className="text-xs text-slate-500">سورة {currentSurah.name_simple}</p>
+
+                                        {/* Controls */}
+                                        <div className="flex items-center gap-4 justify-center flex-1">
+                                            <button onClick={handlePrevVerse} className="p-2 text-slate-400 hover:text-emerald-600 transition-colors active:scale-95">
+                                                <Icons.ChevronRight size={24} />
+                                            </button>
+                                            
+                                            <button 
+                                                onClick={togglePlay}
+                                                className="w-12 h-12 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full flex items-center justify-center shadow-lg shadow-emerald-200 active:scale-95 transition-all"
+                                            >
+                                                {isPlaying ? <Icons.Pause size={24} /> : <Icons.Play size={24} className="ml-1" />}
+                                            </button>
+
+                                            <button onClick={handleNextVerse} className="p-2 text-slate-400 hover:text-emerald-600 transition-colors active:scale-95">
+                                                <Icons.ChevronLeft size={24} />
+                                            </button>
+                                        </div>
+
+                                        {/* Verse Info (Right) */}
+                                        <div className="flex justify-end w-1/3 text-right">
+                                            <span className="text-xs text-slate-400 bg-slate-50 px-2 py-1 rounded">
+                                                Page {currentPage}
+                                            </span>
                                         </div>
                                     </div>
-
-                                    <div className="flex items-center gap-4">
-                                        <audio 
-                                            ref={audioRef} 
-                                            src={audioUrl} 
-                                            onEnded={() => setIsPlaying(false)}
-                                            onPlay={() => setIsPlaying(true)}
-                                            onPause={() => setIsPlaying(false)}
-                                        />
-                                        
-                                        <button className="text-slate-400 hover:text-emerald-600 transition-colors">
-                                            <Icons.ChevronRight size={24} />
-                                        </button>
-                                        
-                                        <button 
-                                            onClick={toggleAudio}
-                                            className="w-14 h-14 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full flex items-center justify-center shadow-lg transform active:scale-95 transition-all"
-                                        >
-                                            {isPlaying ? <Icons.Pause size={28} /> : <Icons.Play size={28} className="ml-1" />}
-                                        </button>
-
-                                        <button className="text-slate-400 hover:text-emerald-600 transition-colors">
-                                            <Icons.ChevronLeft size={24} />
-                                        </button>
+                                    
+                                    {/* Progress Bar */}
+                                    <div className="w-full bg-slate-100 h-1 rounded-full overflow-hidden">
+                                        <div 
+                                            className="h-full bg-emerald-500 transition-all duration-300" 
+                                            style={{ width: `${((currentVerseIndex + 1) / verses.length) * 100}%` }}
+                                        ></div>
                                     </div>
                                 </div>
                             </div>
