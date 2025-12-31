@@ -69,7 +69,7 @@
             const [searchQuery, setSearchQuery] = useState("");
             
             // Page View States
-            const [currentPage, setCurrentPage] = useState(2); // Start from Page 2 (Al-Baqarah start typically)
+            const [currentPage, setCurrentPage] = useState(2); // Start from Page 2
             const [loadingPage, setLoadingPage] = useState(true);
 
             // Audio Logic State
@@ -107,10 +107,9 @@
             }, [currentPage]);
 
             // --- 15 Lines Pakistani Print Image Source ---
-            // Using a reliable raw.githubusercontent source for 15-lines (BasitJ is a common standard)
+            // Primary Source: Unpadded numbers (e.g., 2.jpg)
             const getPageImageUrl = (pageNum) => {
-                // Ensure no padding is needed for this specific repo structure (1.jpg, 2.jpg)
-                return `https://raw.githubusercontent.com/BasitJ/Quran-Images-15-Lines/master/images/${pageNum}.jpg`;
+                return `https://raw.githubusercontent.com/itsHafiz/Quran-Images-15-Lines/master/images/${pageNum}.jpg`;
             };
 
             const pageImageUrl = getPageImageUrl(currentPage);
@@ -157,14 +156,7 @@
                 
                 // 1. PAGE SYNC
                 if (currentVerse && currentVerse.page_number) {
-                    // Mapping standard API pages to 15-line pages is approximate without a specific map
-                    // But usually they are close. For exact visual match, we rely on the user navigating.
-                    // However, we set currentPage if available.
-                    // Note: API v4 uses Madani page numbers (604 pages).
-                    // IndoPak 15 lines has ~611 pages.
-                    // We will use the page number from API but allow manual override if visual doesn't match text.
                     if (currentVerse.page_number !== currentPage) {
-                         // Optional: Sync logic can be loose here to allow manual turn
                          setCurrentPage(currentVerse.page_number);
                     }
                 }
@@ -384,6 +376,11 @@
                                     src={pageImageUrl} 
                                     alt={`Quran Page ${currentPage}`} 
                                     onLoad={() => setLoadingPage(false)}
+                                    onError={(e) => {
+                                        // Fallback to padded number URL if simple one fails
+                                        e.target.onerror = null; 
+                                        e.target.src = `https://raw.githubusercontent.com/Hafiz-Quran/Quran-Images-15-Lines/main/images/${String(currentPage).padStart(3, '0')}.jpg`;
+                                    }}
                                     className={`w-full h-auto shadow-lg rounded-sm object-contain bg-white transition-opacity duration-300 ${loadingPage ? 'opacity-0' : 'opacity-100'}`}
                                     style={{ minHeight: '300px' }}
                                 />
