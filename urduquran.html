@@ -1,0 +1,298 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { Play, Pause, Menu, X, ChevronLeft, ChevronRight, BookOpen, Volume2, Search } from 'lucide-react';
+
+const QuranApp = () => {
+  const [surahs, setSurahs] = useState([]);
+  const [currentSurah, setCurrentSurah] = useState(null);
+  const [verses, setVerses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadingVerses, setLoadingVerses] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [audioUrl, setAudioUrl] = useState(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const audioRef = useRef(null);
+
+  // Initial Data Fetch: List of Surahs
+  useEffect(() => {
+    const fetchSurahs = async () => {
+      try {
+        const response = await fetch('https://api.quran.com/api/v4/chapters?language=ur');
+        const data = await response.json();
+        setSurahs(data.chapters);
+        // Load Al-Fatihah by default
+        if (data.chapters.length > 0) {
+          handleSelectSurah(data.chapters[0]);
+        }
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching surahs:", error);
+        setLoading(false);
+      }
+    };
+
+    fetchSurahs();
+  }, []);
+
+  // Fetch Verses and Audio when a Surah is selected
+  const handleSelectSurah = async (surah) => {
+    setCurrentSurah(surah);
+    setLoadingVerses(true);
+    setIsSidebarOpen(false); // Close sidebar on mobile
+    setIsPlaying(false); // Stop previous audio
+    
+    try {
+      // 1. Fetch Verses (Arabic + Urdu Translation)
+      // Translation ID 234 is often used for standard Urdu (Jalandhry/Junagarhi) on Quran.com API 
+      // as specific Taqi Usmani IDs change or require keys.
+      const versesResponse = await fetch(
+        `https://api.quran.com/api/v4/verses/by_chapter/${surah.id}?language=ur&fields=text_uthmani&translations=234&per_page=300`
+      );
+      const versesData = await versesResponse.json();
+      setVerses(versesData.verses);
+
+      // 2. Fetch Audio (Sudais - Reciter ID 2)
+      const audioResponse = await fetch(
+        `https://api.quran.com/api/v4/chapter_recitations/2/${surah.id}`
+      );
+      const audioData = await audioResponse.json();
+      setAudioUrl(audioData.audio_file.audio_url);
+
+    } catch (error) {
+      console.error("Error fetching verses/audio:", error);
+    } finally {
+      setLoadingVerses(false);
+    }
+  };
+
+  const toggleAudio = () => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
+
+  const filteredSurahs = surahs.filter(s => 
+    s.name_simple.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    s.name_arabic.includes(searchQuery) ||
+    String(s.id).includes(searchQuery)
+  );
+
+  return (
+    <div className="flex h-screen bg-slate-50 font-sans text-slate-900 overflow-hidden" dir="rtl">
+      {/* Sidebar (Surah List) */}
+      <aside 
+        className={`fixed inset-y-0 right-0 z-50 w-72 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 ${
+          isSidebarOpen ? 'translate-x-0' : 'translate-x-full'
+        }`}
+      >
+        <div className="flex flex-col h-full border-l border-slate-200">
+          <div className="p-4 bg-emerald-600 text-white shadow-md">
+            <div className="flex items-center justify-between mb-4">
+              <h1 className="text-xl font-bold flex items-center gap-2">
+                <BookOpen size={24} />
+                قرآن مجید
+              </h1>
+              <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden text-white/80 hover:text-white">
+                <X size={24} />
+              </button>
+            </div>
+            
+            <div className="relative">
+              <input 
+                type="text" 
+                placeholder="سورت تلاش کریں..." 
+                className="w-full bg-white/10 border border-white/20 rounded-lg py-2 px-8 text-white placeholder-white/60 focus:outline-none focus:bg-white/20"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              <Search className="absolute right-2 top-2.5 text-white/60" size={16} />
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-y-auto">
+            {loading ? (
+              <div className="p-4 text-center text-slate-500">فہرست لوڈ ہو رہی ہے...</div>
+            ) : (
+              <ul className="divide-y divide-slate-100">
+                {filteredSurahs.map((surah) => (
+                  <li key={surah.id}>
+                    <button
+                      onClick={() => handleSelectSurah(surah)}
+                      className={`w-full text-right p-4 transition-colors hover:bg-slate-50 flex items-center justify-between group ${
+                        currentSurah?.id === surah.id ? 'bg-emerald-50 border-r-4 border-emerald-600' : ''
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium ${
+                           currentSurah?.id === surah.id ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-500 group-hover:bg-emerald-100 group-hover:text-emerald-700'
+                        }`}>
+                          {surah.id}
+                        </span>
+                        <div>
+                          <span className="block font-semibold text-lg font-amiri">{surah.name_arabic}</span>
+                          <span className="text-xs text-slate-500">آیات: {surah.verses_count}</span>
+                        </div>
+                      </div>
+                      <span className="text-sm text-slate-400">{surah.name_simple}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <main className="flex-1 flex flex-col h-full w-full relative">
+        {/* Mobile Header */}
+        <header className="lg:hidden bg-white p-4 shadow-sm flex items-center justify-between border-b border-slate-200">
+           <div className="font-bold text-emerald-700 flex items-center gap-2">
+             <BookOpen size={20} />
+             <span>قرآن مجید</span>
+           </div>
+           <button onClick={() => setIsSidebarOpen(true)} className="text-slate-600 p-2 hover:bg-slate-100 rounded-full">
+             <Menu size={24} />
+           </button>
+        </header>
+
+        {/* Surah Content */}
+        <div className="flex-1 overflow-y-auto bg-slate-50 scroll-smooth">
+          {currentSurah ? (
+            <div className="max-w-4xl mx-auto p-4 pb-32">
+              {/* Surah Header */}
+              <div className="text-center mb-8 mt-4">
+                <div className="inline-block px-4 py-1 bg-emerald-100 text-emerald-800 rounded-full text-sm mb-2 border border-emerald-200">
+                  سورة {currentSurah.name_simple} • {currentSurah.revelation_place === 'makkah' ? 'مکی' : 'مدنی'}
+                </div>
+                <h2 className="text-5xl font-amiri text-slate-800 mb-2 leading-relaxed" style={{ fontFamily: '"Amiri", serif' }}>
+                  {currentSurah.name_arabic}
+                </h2>
+                {currentSurah.id !== 1 && currentSurah.id !== 9 && (
+                   <div className="mt-6 mb-8 text-3xl text-emerald-700 font-amiri" style={{ fontFamily: '"Amiri", serif' }}>
+                     بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ
+                   </div>
+                )}
+              </div>
+
+              {/* Verses List */}
+              {loadingVerses ? (
+                 <div className="flex flex-col items-center justify-center py-20 gap-4">
+                   <div className="w-12 h-12 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin"></div>
+                   <p className="text-slate-500">آیات لوڈ ہو رہی ہیں...</p>
+                 </div>
+              ) : (
+                <div className="space-y-6">
+                  {verses.map((verse) => (
+                    <div key={verse.id} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+                      {/* Arabic */}
+                      <div className="flex justify-between items-start gap-4 mb-4">
+                         <div className="w-10 h-10 flex-shrink-0 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 text-sm font-medium">
+                           {verse.verse_key.split(':')[1]}
+                         </div>
+                         <p className="text-right text-3xl leading-[2.5] text-slate-800 font-amiri w-full" dir="rtl" style={{ fontFamily: '"Amiri", serif' }}>
+                           {verse.text_uthmani}
+                         </p>
+                      </div>
+                      
+                      {/* Translation Divider */}
+                      <div className="h-px bg-slate-100 w-full my-4"></div>
+
+                      {/* Urdu Translation */}
+                      <p className="text-right text-lg leading-loose text-slate-600 font-urdu" dir="rtl" style={{ fontFamily: '"Noto Nastaliq Urdu", serif' }}>
+                        {verse.translations && verse.translations[0] 
+                          ? verse.translations[0].text.replace(/<[^>]*>?/gm, '') // Strip HTML tags if any
+                          : 'ترجمہ دستیاب نہیں'}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="h-full flex items-center justify-center text-slate-400">
+               کوئی سورت منتخب کریں
+            </div>
+          )}
+        </div>
+
+        {/* Audio Player Footer */}
+        {currentSurah && audioUrl && (
+          <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] p-4 z-40">
+            <div className="max-w-4xl mx-auto flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                 <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-700">
+                   <Volume2 size={24} />
+                 </div>
+                 <div className="hidden sm:block">
+                   <p className="text-sm font-bold text-slate-800">تلاوت: شيخ عبد الرحمن السديس</p>
+                   <p className="text-xs text-slate-500">سورة {currentSurah.name_simple}</p>
+                 </div>
+              </div>
+
+              <div className="flex items-center gap-4">
+                <audio 
+                  ref={audioRef} 
+                  src={audioUrl} 
+                  onEnded={() => setIsPlaying(false)}
+                  onPlay={() => setIsPlaying(true)}
+                  onPause={() => setIsPlaying(false)}
+                />
+                
+                {/* Custom Controls */}
+                <button className="text-slate-400 hover:text-emerald-600 transition-colors">
+                  <ChevronRight size={24} />
+                </button>
+                
+                <button 
+                  onClick={toggleAudio}
+                  className="w-14 h-14 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full flex items-center justify-center shadow-lg transform active:scale-95 transition-all"
+                >
+                  {isPlaying ? <Pause size={28} fill="currentColor" /> : <Play size={28} fill="currentColor" className="ml-1" />}
+                </button>
+
+                <button className="text-slate-400 hover:text-emerald-600 transition-colors">
+                  <ChevronLeft size={24} />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
+
+      {/* Global Styles for Fonts */}
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap');
+        
+        .font-amiri {
+          font-family: 'Amiri', serif;
+        }
+        .font-urdu {
+          font-family: 'Noto Nastaliq Urdu', serif;
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+          width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+          background: #f1f5f9; 
+        }
+        ::-webkit-scrollbar-thumb {
+          background: #cbd5e1; 
+          border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+          background: #94a3b8; 
+        }
+      `}</style>
+    </div>
+  );
+};
+
+export default QuranApp;
