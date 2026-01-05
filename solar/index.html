@@ -1,426 +1,676 @@
-<!DOCTYPE html>
-<html lang="ur" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>شاہ نواز سمارٹ انرجی پلانر</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        /* مہر نستعلیق کے لیے ترجیح */
-        @font-face {
-            font-family: 'Mehr Nastaleeq';
-            src: local('Mehr Nastaleeq'), local('MehrNastaleeq-Regular');
-        }
+import React, { useState, useEffect } from 'react';
+import { 
+  Truck, 
+  Users, 
+  Package, 
+  DollarSign, 
+  Menu, 
+  X, 
+  Plus, 
+  Minus, 
+  FileText, 
+  TrendingUp, 
+  AlertCircle, 
+  Save, 
+  RefreshCw,
+  LogOut,
+  MapPin,
+  Smartphone,
+  Monitor
+} from 'lucide-react';
+import { 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  Legend, 
+  ResponsiveContainer,
+  LineChart,
+  Line
+} from 'recharts';
 
-        body {
-            /* سب سے پہلے مہر نستعلیق، پھر جمیل نوری، پھر گوگل کا فونٹ */
-            font-family: 'Mehr Nastaleeq', 'Jameel Noori Nastaliq', 'Noto Nastaliq Urdu', serif;
-            background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
-            min-height: 100vh;
-        }
-        .item-card {
-            transition: all 0.3s ease;
-        }
-        .item-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-        }
-        .result-box {
-            background: linear-gradient(to right, #11998e, #38ef7d);
-            color: white;
-        }
-        /* Style for heavy items */
-        .heavy-item {
-            border: 2px solid #feb2b2;
-            background-color: #fff5f5;
-        }
-        .heavy-item h3 {
-            color: #c53030;
-        }
-        
-        /* Input styling for watts */
-        .watt-input {
-            width: 60px;
-            text-align: center;
-            border: 1px solid #d1d5db;
-            border-radius: 4px;
-            padding: 2px;
-            font-size: 0.85rem;
-            background-color: #ffffff;
-        }
-        .watt-input:focus {
-            outline: none;
-            border-color: #3b82f6;
-            background-color: #eff6ff;
-        }
-    </style>
-</head>
-<body class="p-4 md:p-8">
+// --- MOCK DATA ---
 
-    <div class="max-w-3xl mx-auto bg-white rounded-2xl shadow-2xl overflow-hidden">
-        
-        <!-- Header -->
-        <div class="bg-gray-800 p-6 text-center">
-            <h1 class="text-3xl font-bold text-yellow-400 mb-2">⚡ شاہ نواز سمارٹ انرجی پلانر</h1>
-            <p class="text-gray-300 text-sm">پاکستانی گھروں کے لیے (مکمل کسٹمائزڈ)</p>
-        </div>
+const INITIAL_INVENTORY = [
+  { id: 1, type: '11.8kg Domestic', full: 150, empty: 45, rate: 2500, deposit: 4000 },
+  { id: 2, type: '45.4kg Commercial', full: 30, empty: 10, rate: 9500, deposit: 12000 },
+  { id: 3, type: '6kg Camping', full: 50, empty: 5, rate: 1200, deposit: 2000 },
+];
 
-        <div class="p-6">
-            <!-- Instructions -->
-            <div class="bg-blue-50 border-r-4 border-blue-500 p-4 mb-6 rounded">
-                <p class="text-blue-800 text-sm leading-7">
-                    <strong>ہدایات:</strong><br>
-                    1. ہر چیز کے نیچے دیئے گئے خانے میں آپ اپنی مرضی کے <strong>واٹ (Watts)</strong> لکھ سکتے ہیں۔<br>
-                    2. نیچے رزلٹ میں آپ چھوٹی یا بڑی پلیٹ (مثلاً 150W یا 550W) منتخب کر سکتے ہیں۔
-                </p>
-            </div>
+const INITIAL_CUSTOMERS = [
+  { id: 101, name: 'Bismillah Hotel', type: 'Commercial', balance: 15000, limit: 50000, route: 'Route A' },
+  { id: 102, name: 'Ali General Store', type: 'Reseller', balance: 0, limit: 20000, route: 'Route B' },
+  { id: 103, name: 'Mrs. Khan (Home)', type: 'Domestic', balance: 2500, limit: 5000, route: 'Route A' },
+];
 
-            <!-- Items Grid -->
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
-                
-                <!-- Fan -->
-                <div class="item-card bg-gray-50 p-4 rounded-xl border border-gray-200 flex flex-col items-center justify-between">
-                    <div class="text-center w-full">
-                        <i class="fas fa-fan text-3xl text-gray-600 mb-2"></i>
-                        <h3 class="font-bold text-gray-700">AC/DC پنکھا</h3>
-                        <div class="flex items-center justify-center gap-1 mt-2">
-                            <input type="number" id="fan-watts" value="65" class="watt-input" oninput="calculate()">
-                            <span class="text-xs text-gray-500">واٹ</span>
-                        </div>
-                    </div>
-                    <div class="flex items-center mt-3 gap-3">
-                        <button onclick="updateCount('fan', -1)" class="w-8 h-8 rounded-full bg-red-100 text-red-600 hover:bg-red-200 font-bold">-</button>
-                        <span id="fan-count" class="font-bold text-xl w-6 text-center">0</span>
-                        <button onclick="updateCount('fan', 1)" class="w-8 h-8 rounded-full bg-green-100 text-green-600 hover:bg-green-200 font-bold">+</button>
-                    </div>
-                </div>
+const INITIAL_TRANSACTIONS = [
+  { id: 'INV-001', date: '2023-10-25', customer: 'Bismillah Hotel', type: 'Credit Sale', amount: 9500, items: '1x 45kg', dr: 9500, cr: 0 },
+  { id: 'INV-002', date: '2023-10-25', customer: 'Cash Walk-in', type: 'Cash Sale', amount: 2500, items: '1x 11.8kg', dr: 0, cr: 2500 },
+];
 
-                <!-- Bulb -->
-                <div class="item-card bg-gray-50 p-4 rounded-xl border border-gray-200 flex flex-col items-center justify-between">
-                    <div class="text-center w-full">
-                        <i class="fas fa-lightbulb text-3xl text-yellow-500 mb-2"></i>
-                        <h3 class="font-bold text-gray-700">ایل ای ڈی بلب</h3>
-                        <div class="flex items-center justify-center gap-1 mt-2">
-                            <input type="number" id="bulb-watts" value="12" class="watt-input" oninput="calculate()">
-                            <span class="text-xs text-gray-500">واٹ</span>
-                        </div>
-                    </div>
-                    <div class="flex items-center mt-3 gap-3">
-                        <button onclick="updateCount('bulb', -1)" class="w-8 h-8 rounded-full bg-red-100 text-red-600 hover:bg-red-200 font-bold">-</button>
-                        <span id="bulb-count" class="font-bold text-xl w-6 text-center">0</span>
-                        <button onclick="updateCount('bulb', 1)" class="w-8 h-8 rounded-full bg-green-100 text-green-600 hover:bg-green-200 font-bold">+</button>
-                    </div>
-                </div>
+// --- COMPONENTS ---
 
-                <!-- TV -->
-                <div class="item-card bg-gray-50 p-4 rounded-xl border border-gray-200 flex flex-col items-center justify-between">
-                    <div class="text-center w-full">
-                        <i class="fas fa-tv text-3xl text-blue-600 mb-2"></i>
-                        <h3 class="font-bold text-gray-700">ایل ای ڈی ٹی وی</h3>
-                        <div class="flex items-center justify-center gap-1 mt-2">
-                            <input type="number" id="tv-watts" value="60" class="watt-input" oninput="calculate()">
-                            <span class="text-xs text-gray-500">واٹ</span>
-                        </div>
-                    </div>
-                    <div class="flex items-center mt-3 gap-3">
-                        <button onclick="updateCount('tv', -1)" class="w-8 h-8 rounded-full bg-red-100 text-red-600 hover:bg-red-200 font-bold">-</button>
-                        <span id="tv-count" class="font-bold text-xl w-6 text-center">0</span>
-                        <button onclick="updateCount('tv', 1)" class="w-8 h-8 rounded-full bg-green-100 text-green-600 hover:bg-green-200 font-bold">+</button>
-                    </div>
-                </div>
+const Card = ({ children, className = "" }) => (
+  <div className={`bg-white rounded-xl shadow-sm border border-gray-100 ${className}`}>
+    {children}
+  </div>
+);
 
-                 <!-- Fridge -->
-                 <div class="item-card bg-gray-50 p-4 rounded-xl border border-gray-200 flex flex-col items-center justify-between">
-                    <div class="text-center w-full">
-                        <i class="fas fa-snowflake text-3xl text-cyan-400 mb-2"></i>
-                        <h3 class="font-bold text-gray-700">فریج / انورٹر</h3>
-                        <div class="flex items-center justify-center gap-1 mt-2">
-                            <input type="number" id="fridge-watts" value="250" class="watt-input" oninput="calculate()">
-                            <span class="text-xs text-gray-500">واٹ</span>
-                        </div>
-                    </div>
-                    <div class="flex items-center mt-3 gap-3">
-                        <button onclick="updateCount('fridge', -1)" class="w-8 h-8 rounded-full bg-red-100 text-red-600 hover:bg-red-200 font-bold">-</button>
-                        <span id="fridge-count" class="font-bold text-xl w-6 text-center">0</span>
-                        <button onclick="updateCount('fridge', 1)" class="w-8 h-8 rounded-full bg-green-100 text-green-600 hover:bg-green-200 font-bold">+</button>
-                    </div>
-                </div>
-
-                <!-- Wifi/Charger -->
-                <div class="item-card bg-gray-50 p-4 rounded-xl border border-gray-200 flex flex-col items-center justify-between">
-                    <div class="text-center w-full">
-                        <i class="fas fa-wifi text-3xl text-indigo-500 mb-2"></i>
-                        <h3 class="font-bold text-gray-700">وائی فائی/راؤٹر</h3>
-                        <div class="flex items-center justify-center gap-1 mt-2">
-                            <input type="number" id="wifi-watts" value="20" class="watt-input" oninput="calculate()">
-                            <span class="text-xs text-gray-500">واٹ</span>
-                        </div>
-                    </div>
-                    <div class="flex items-center mt-3 gap-3">
-                        <button onclick="updateCount('wifi', -1)" class="w-8 h-8 rounded-full bg-red-100 text-red-600 hover:bg-red-200 font-bold">-</button>
-                        <span id="wifi-count" class="font-bold text-xl w-6 text-center">0</span>
-                        <button onclick="updateCount('wifi', 1)" class="w-8 h-8 rounded-full bg-green-100 text-green-600 hover:bg-green-200 font-bold">+</button>
-                    </div>
-                </div>
-
-                 <!-- Washing Machine -->
-                 <div class="item-card heavy-item p-4 rounded-xl flex flex-col items-center justify-between">
-                    <div class="text-center w-full">
-                        <i class="fas fa-tshirt text-3xl text-red-500 mb-2"></i>
-                        <h3 class="font-bold">واشنگ مشین</h3>
-                        <div class="flex items-center justify-center gap-1 mt-2">
-                            <input type="number" id="machine-watts" value="400" class="watt-input" oninput="calculate()">
-                            <span class="text-xs text-gray-500">واٹ</span>
-                        </div>
-                    </div>
-                    <div class="flex items-center mt-3 gap-3">
-                        <button onclick="updateCount('machine', -1)" class="w-8 h-8 rounded-full bg-red-200 text-red-700 hover:bg-red-300 font-bold">-</button>
-                        <span id="machine-count" class="font-bold text-xl w-6 text-center">0</span>
-                        <button onclick="updateCount('machine', 1)" class="w-8 h-8 rounded-full bg-green-200 text-green-700 hover:bg-green-300 font-bold">+</button>
-                    </div>
-                </div>
-
-                <!-- Iron -->
-                <div class="item-card heavy-item p-4 rounded-xl flex flex-col items-center justify-between">
-                    <div class="text-center w-full">
-                        <i class="fas fa-check-double text-3xl text-red-500 mb-2"></i>
-                        <h3 class="font-bold">استری (Iron)</h3>
-                        <div class="flex items-center justify-center gap-1 mt-2">
-                            <input type="number" id="iron-watts" value="1000" class="watt-input" oninput="calculate()">
-                            <span class="text-xs text-gray-500">واٹ</span>
-                        </div>
-                    </div>
-                    <div class="flex items-center mt-3 gap-3">
-                        <button onclick="updateCount('iron', -1)" class="w-8 h-8 rounded-full bg-red-200 text-red-700 hover:bg-red-300 font-bold">-</button>
-                        <span id="iron-count" class="font-bold text-xl w-6 text-center">0</span>
-                        <button onclick="updateCount('iron', 1)" class="w-8 h-8 rounded-full bg-green-200 text-green-700 hover:bg-green-300 font-bold">+</button>
-                    </div>
-                </div>
-
-                <!-- Water Heater Rod -->
-                <div class="item-card heavy-item p-4 rounded-xl flex flex-col items-center justify-between">
-                    <div class="text-center w-full">
-                        <i class="fas fa-temperature-high text-3xl text-red-500 mb-2"></i>
-                        <h3 class="font-bold">پانی والا راڈ</h3>
-                        <div class="flex items-center justify-center gap-1 mt-2">
-                            <input type="number" id="heater-watts" value="1000" class="watt-input" oninput="calculate()">
-                            <span class="text-xs text-gray-500">واٹ</span>
-                        </div>
-                    </div>
-                    <div class="flex items-center mt-3 gap-3">
-                        <button onclick="updateCount('heater', -1)" class="w-8 h-8 rounded-full bg-red-200 text-red-700 hover:bg-red-300 font-bold">-</button>
-                        <span id="heater-count" class="font-bold text-xl w-6 text-center">0</span>
-                        <button onclick="updateCount('heater', 1)" class="w-8 h-8 rounded-full bg-green-200 text-green-700 hover:bg-green-300 font-bold">+</button>
-                    </div>
-                </div>
-
-            </div>
-
-            <!-- Backup Time Slider -->
-            <div class="mb-8 p-4 bg-gray-50 rounded-xl">
-                <label class="block text-gray-700 font-bold mb-2">
-                    <i class="fas fa-moon text-indigo-500 ml-2"></i>
-                    رات کا بیک اپ ٹائم (Night Backup)
-                </label>
-                <div class="flex items-center gap-4">
-                    <span class="text-gray-500 font-bold">1 گھنٹہ</span>
-                    <input type="range" id="backupHours" min="1" max="12" value="8" class="w-full h-2 bg-gray-300 rounded-lg appearance-none cursor-pointer accent-indigo-600" oninput="calculate()">
-                    <span class="text-gray-500 font-bold">12 گھنٹے</span>
-                </div>
-                <p class="text-center mt-2 text-indigo-800 font-bold text-lg" id="hours-display">8 گھنٹے</p>
-                <p class="text-center text-xs text-gray-500 mt-1">سولر ان گھنٹوں کے لیے دن میں ہی بیٹری چارج کرے گا۔</p>
-            </div>
-
-            <!-- Calculation Logic -->
-            <div id="result-section" class="result-box rounded-xl p-6 shadow-lg transform transition-all hidden">
-                <h2 class="text-2xl font-bold mb-4 border-b border-white/30 pb-2 flex items-center">
-                    <i class="fas fa-check-circle ml-2"></i> آپ کا سولر پلان
-                </h2>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <p class="text-white/80 text-sm">کل لوڈ (Instant Watts)</p>
-                        <p class="text-3xl font-bold" id="total-watts">0 Watts</p>
-                    </div>
-                    
-                    <div>
-                        <p class="text-white/80 text-sm">کم از کم انورٹر (Inverter)</p>
-                        <p class="text-2xl font-bold text-yellow-200" id="inverter-size">1 KVA</p>
-                    </div>
-
-                    <div class="bg-white/20 p-3 rounded-lg col-span-1 md:col-span-2">
-                        <p class="text-white/90 text-sm mb-1"><i class="fas fa-car-battery ml-1"></i> تجویز کردہ بیٹری بینک</p>
-                        <p class="text-2xl font-bold" id="battery-rec">Calculate...</p>
-                         <p class="text-xs text-white/70 mt-1">بھاری چیزیں (استری وغیرہ) بیٹری پر نہ چلائیں تو بہتر ہے۔</p>
-                    </div>
-
-                    <div class="bg-white/20 p-3 rounded-lg col-span-1 md:col-span-2">
-                         <div class="flex justify-between items-center mb-2">
-                            <p class="text-white/90 text-sm"><i class="fas fa-solar-panel ml-1"></i> تجویز کردہ سولر پلیٹس</p>
-                            
-                            <!-- Panel Selector -->
-                            <select id="panel-size" onchange="calculate()" class="text-black text-xs p-1 rounded bg-white/90 w-32 focus:outline-none">
-                                <option value="550" selected>550 واٹ (بڑی)</option>
-                                <option value="300">300 واٹ</option>
-                                <option value="250">250 واٹ</option>
-                                <option value="225">225 واٹ</option>
-                                <option value="200">200 واٹ</option>
-                                <option value="180">180 واٹ</option>
-                                <option value="150">150 واٹ</option>
-                            </select>
-                        </div>
-                        
-                        <p class="text-3xl font-bold text-yellow-100" id="solar-rec">Calculate...</p>
-                        <p class="text-xs text-white/80 mt-1" id="panel-details">550W والی پلیٹس کا حساب</p>
-                        
-                        <!-- Breakdown -->
-                        <div class="mt-3 text-sm bg-black/20 p-2 rounded">
-                            <p class="flex justify-between mb-1">
-                                <span>لوڈ کے لیے (دن کے وقت):</span>
-                                <span id="load-solar-watts" class="font-bold">0W</span>
-                            </p>
-                            <p class="flex justify-between border-t border-white/20 pt-1">
-                                <span>بیٹری چارجنگ (رات کے لیے):</span>
-                                <span id="charging-solar-watts" class="font-bold text-yellow-200">0W</span>
-                            </p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="mt-4 pt-4 border-t border-white/20 text-center text-xs opacity-80">
-                   نوٹ: استری یا راڈ چلاتے وقت کوشش کریں کہ باقی لائٹیں/پنکھے بند ہوں تاکہ انورٹر پر لوڈ نہ بڑھے۔
-                </div>
-            </div>
-
-            <div id="empty-state" class="text-center text-gray-400 py-8">
-                <i class="fas fa-arrow-up text-4xl mb-3 animate-bounce"></i>
-                <p>کوئی چیز منتخب کریں تاکہ حساب شروع ہو سکے</p>
-            </div>
-
-        </div>
+const StatCard = ({ title, value, subtext, icon: Icon, color }) => (
+  <Card className="p-4 flex items-center space-x-4">
+    <div className={`p-3 rounded-full ${color} bg-opacity-10`}>
+      <Icon className={`w-6 h-6 ${color.replace('bg-', 'text-')}`} />
     </div>
+    <div>
+      <p className="text-gray-500 text-sm font-medium">{title}</p>
+      <h3 className="text-2xl font-bold text-gray-800">{value}</h3>
+      {subtext && <p className="text-xs text-gray-400 mt-1">{subtext}</p>}
+    </div>
+  </Card>
+);
 
-<script>
-    let counts = {
-        fan: 0,
-        bulb: 0,
-        tv: 0,
-        fridge: 0,
-        wifi: 0,
-        machine: 0,
-        iron: 0,
-        heater: 0
+const Button = ({ children, onClick, variant = 'primary', className = "", disabled = false, icon: Icon }) => {
+  const baseStyle = "px-4 py-2 rounded-lg font-medium transition-all active:scale-95 flex items-center justify-center gap-2";
+  const variants = {
+    primary: "bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-200",
+    success: "bg-emerald-600 text-white hover:bg-emerald-700 shadow-md shadow-emerald-200",
+    danger: "bg-red-500 text-white hover:bg-red-600",
+    outline: "border border-gray-300 text-gray-700 hover:bg-gray-50",
+    ghost: "text-gray-600 hover:bg-gray-100"
+  };
+
+  return (
+    <button 
+      onClick={onClick} 
+      disabled={disabled}
+      className={`${baseStyle} ${variants[variant]} ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}
+    >
+      {Icon && <Icon size={18} />}
+      {children}
+    </button>
+  );
+};
+
+const Badge = ({ type }) => {
+  const styles = {
+    'Full': 'bg-emerald-100 text-emerald-800',
+    'Empty': 'bg-amber-100 text-amber-800',
+    'Credit': 'bg-red-100 text-red-800',
+    'Cash': 'bg-green-100 text-green-800',
+    'Commercial': 'bg-purple-100 text-purple-800',
+    'Domestic': 'bg-blue-100 text-blue-800'
+  };
+  return (
+    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${styles[type] || 'bg-gray-100 text-gray-800'}`}>
+      {type}
+    </span>
+  );
+};
+
+// --- MAIN APP ---
+
+export default function CylindraERP() {
+  const [activeView, setActiveView] = useState('dashboard');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isDriverMode, setIsDriverMode] = useState(false); // Toggle between Office/Driver UI
+
+  // Core State
+  const [inventory, setInventory] = useState(INITIAL_INVENTORY);
+  const [customers, setCustomers] = useState(INITIAL_CUSTOMERS);
+  const [transactions, setTransactions] = useState(INITIAL_TRANSACTIONS);
+  const [cart, setCart] = useState([]);
+  
+  // Sale Form State
+  const [selectedCustomer, setSelectedCustomer] = useState('');
+  const [selectedProduct, setSelectedProduct] = useState(inventory[0].id);
+  const [qtyFull, setQtyFull] = useState(1);
+  const [qtyEmpty, setQtyEmpty] = useState(1);
+  const [paymentMode, setPaymentMode] = useState('Cash');
+
+  // --- LOGIC HANDLERS ---
+
+  const handleTransaction = () => {
+    if (!selectedCustomer) return alert("Select a customer");
+    
+    const product = inventory.find(i => i.id === parseInt(selectedProduct));
+    const totalAmount = product.rate * qtyFull;
+    
+    // 1. Update Inventory
+    const updatedInventory = inventory.map(item => {
+      if (item.id === product.id) {
+        return {
+          ...item,
+          full: item.full - qtyFull,
+          empty: item.empty + qtyEmpty
+        };
+      }
+      return item;
+    });
+    setInventory(updatedInventory);
+
+    // 2. Update Customer Balance (If Credit)
+    if (paymentMode === 'Credit') {
+      const updatedCustomers = customers.map(cust => {
+        if (cust.id === parseInt(selectedCustomer)) {
+          return { ...cust, balance: cust.balance + totalAmount };
+        }
+        return cust;
+      });
+      setCustomers(updatedCustomers);
+    }
+
+    // 3. Log Transaction
+    const newTx = {
+      id: `INV-${Date.now().toString().slice(-4)}`,
+      date: new Date().toISOString().split('T')[0],
+      customer: customers.find(c => c.id === parseInt(selectedCustomer))?.name || 'Walk-in',
+      type: `${paymentMode} Sale`,
+      amount: totalAmount,
+      items: `${qtyFull}x ${product.type} (Ret: ${qtyEmpty})`,
+      dr: paymentMode === 'Credit' ? totalAmount : 0,
+      cr: paymentMode === 'Cash' ? totalAmount : 0
     };
+    setTransactions([newTx, ...transactions]);
 
-    function updateCount(item, change) {
-        if (counts[item] + change >= 0) {
-            counts[item] += change;
-            document.getElementById(`${item}-count`).innerText = counts[item];
-            calculate();
-        }
-    }
+    // Reset
+    setQtyFull(1);
+    setQtyEmpty(1);
+    alert("Transaction Processed Successfully!");
+    if (isDriverMode) setActiveView('dashboard');
+  };
 
-    function calculate() {
-        // Read watts dynamically from inputs
-        const getWatts = (id) => parseInt(document.getElementById(id + '-watts').value) || 0;
+  // --- VIEWS ---
 
-        let totalWatts = 0;
+  const Dashboard = () => {
+    const totalCash = transactions.reduce((acc, curr) => acc + curr.cr, 0);
+    const totalReceivables = customers.reduce((acc, curr) => acc + curr.balance, 0);
+    const totalCylinders = inventory.reduce((acc, curr) => acc + curr.full, 0);
+
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard 
+            title="Cash In Hand" 
+            value={`Rs ${totalCash.toLocaleString()}`} 
+            subtext="Today's Collection"
+            icon={DollarSign} 
+            color="bg-emerald-500" 
+          />
+          <StatCard 
+            title="Receivables" 
+            value={`Rs ${totalReceivables.toLocaleString()}`} 
+            subtext="Total Outstanding"
+            icon={TrendingUp} 
+            color="bg-red-500" 
+          />
+          <StatCard 
+            title="Full Cylinders" 
+            value={totalCylinders} 
+            subtext="Ready for sale"
+            icon={Package} 
+            color="bg-blue-500" 
+          />
+          <StatCard 
+            title="Empty Stock" 
+            value={inventory.reduce((acc, curr) => acc + curr.empty, 0)} 
+            subtext="Needs refilling"
+            icon={RefreshCw} 
+            color="bg-amber-500" 
+          />
+        </div>
+
+        {/* Charts & Quick Actions */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <Card className="lg:col-span-2 p-6">
+            <h3 className="text-lg font-bold text-gray-800 mb-4">Stock Overview</h3>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={inventory}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="type" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="full" fill="#10B981" name="Full" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="empty" fill="#F59E0B" name="Empty" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
+
+          <div className="space-y-4">
+            <Card className="p-4">
+              <h3 className="font-bold text-gray-700 mb-3">Quick Actions</h3>
+              <div className="grid grid-cols-1 gap-3">
+                <Button onClick={() => setActiveView('pos')} icon={Plus} variant="primary">New Sale</Button>
+                <Button onClick={() => setActiveView('inventory')} icon={Truck} variant="outline">Stock In/Out</Button>
+                <Button onClick={() => setActiveView('customers')} icon={Users} variant="outline">Add Customer</Button>
+              </div>
+            </Card>
+            <Card className="p-4 bg-slate-800 text-white">
+               <div className="flex justify-between items-center mb-2">
+                 <h3 className="font-bold">System Status</h3>
+                 <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+               </div>
+               <div className="space-y-2 text-sm text-slate-300">
+                 <div className="flex justify-between">
+                   <span>DB Sync</span>
+                   <span className="text-green-400">Online</span>
+                 </div>
+                 <div className="flex justify-between">
+                   <span>Last Backup</span>
+                   <span>10:00 AM</span>
+                 </div>
+                 <div className="flex justify-between">
+                   <span>Active Route</span>
+                   <span>Route A (Ali)</span>
+                 </div>
+               </div>
+            </Card>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const POS = () => (
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in">
+      {/* Invoice Form */}
+      <Card className="lg:col-span-2 p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-xl font-bold text-gray-800">New Sale / Delivery</h2>
+          <span className="text-sm bg-blue-50 text-blue-600 px-3 py-1 rounded-full font-mono">#{Date.now().toString().slice(-6)}</span>
+        </div>
+
+        <div className="space-y-6">
+          {/* Customer Selection */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Customer</label>
+            <select 
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              value={selectedCustomer}
+              onChange={(e) => setSelectedCustomer(e.target.value)}
+            >
+              <option value="">Select Customer / Shop</option>
+              {customers.map(c => (
+                <option key={c.id} value={c.id}>{c.name} (Bal: {c.balance})</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Product Selection */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+             <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Cylinder Size</label>
+              <select 
+                className="w-full p-3 border border-gray-300 rounded-lg"
+                value={selectedProduct}
+                onChange={(e) => setSelectedProduct(e.target.value)}
+              >
+                {inventory.map(i => (
+                  <option key={i.id} value={i.id}>{i.type} - Rs {i.rate}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Stock Available</label>
+              <div className="p-3 bg-gray-50 rounded-lg font-mono text-gray-600">
+                {inventory.find(i => i.id == selectedProduct)?.full} Full Units
+              </div>
+            </div>
+          </div>
+
+          {/* Quantity Logic */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="p-4 border rounded-xl bg-blue-50 border-blue-100">
+              <label className="block text-sm font-bold text-blue-800 mb-2">Issue Full</label>
+              <div className="flex items-center space-x-3">
+                <button onClick={() => setQtyFull(Math.max(1, qtyFull-1))} className="p-2 bg-white rounded shadow text-blue-600 hover:bg-blue-100"><Minus size={16}/></button>
+                <span className="text-2xl font-bold text-gray-800">{qtyFull}</span>
+                <button onClick={() => setQtyFull(qtyFull+1)} className="p-2 bg-white rounded shadow text-blue-600 hover:bg-blue-100"><Plus size={16}/></button>
+              </div>
+            </div>
+            <div className="p-4 border rounded-xl bg-amber-50 border-amber-100">
+              <label className="block text-sm font-bold text-amber-800 mb-2">Receive Empty</label>
+              <div className="flex items-center space-x-3">
+                <button onClick={() => setQtyEmpty(Math.max(0, qtyEmpty-1))} className="p-2 bg-white rounded shadow text-amber-600 hover:bg-amber-100"><Minus size={16}/></button>
+                <span className="text-2xl font-bold text-gray-800">{qtyEmpty}</span>
+                <button onClick={() => setQtyEmpty(qtyEmpty+1)} className="p-2 bg-white rounded shadow text-amber-600 hover:bg-amber-100"><Plus size={16}/></button>
+              </div>
+            </div>
+          </div>
+
+          {/* Payment */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Payment Mode</label>
+            <div className="flex space-x-4">
+              <button 
+                onClick={() => setPaymentMode('Cash')}
+                className={`flex-1 p-3 rounded-lg border flex items-center justify-center gap-2 ${paymentMode === 'Cash' ? 'bg-green-600 text-white border-green-600 shadow-lg' : 'bg-white text-gray-600'}`}
+              >
+                <DollarSign size={18} /> Cash
+              </button>
+              <button 
+                onClick={() => setPaymentMode('Credit')}
+                className={`flex-1 p-3 rounded-lg border flex items-center justify-center gap-2 ${paymentMode === 'Credit' ? 'bg-red-500 text-white border-red-500 shadow-lg' : 'bg-white text-gray-600'}`}
+              >
+                <FileText size={18} /> Credit / Udhaar
+              </button>
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      {/* Summary Card */}
+      <div className="space-y-6">
+        <Card className="p-6 bg-slate-900 text-white border-none shadow-xl">
+          <h3 className="text-lg font-bold mb-4 border-b border-slate-700 pb-2">Order Summary</h3>
+          <div className="space-y-4">
+            <div className="flex justify-between items-center text-slate-300">
+              <span>Item</span>
+              <span>{inventory.find(i => i.id == selectedProduct)?.type}</span>
+            </div>
+            <div className="flex justify-between items-center text-slate-300">
+              <span>Rate</span>
+              <span>Rs {inventory.find(i => i.id == selectedProduct)?.rate}</span>
+            </div>
+            <div className="flex justify-between items-center text-slate-300">
+              <span>Quantity</span>
+              <span>x {qtyFull}</span>
+            </div>
+            <div className="border-t border-slate-700 my-2"></div>
+            <div className="flex justify-between items-center text-2xl font-bold text-emerald-400">
+              <span>Total</span>
+              <span>Rs {(inventory.find(i => i.id == selectedProduct)?.rate * qtyFull).toLocaleString()}</span>
+            </div>
+          </div>
+
+          <button 
+            onClick={handleTransaction}
+            className="w-full mt-8 bg-emerald-500 hover:bg-emerald-600 text-white p-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 shadow-lg shadow-emerald-900/50 transition-all"
+          >
+            <Save /> Confirm Transaction
+          </button>
+        </Card>
+
+        {/* Warning Logic */}
+        {qtyFull > qtyEmpty && (
+           <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+             <AlertCircle className="text-red-500 flex-shrink-0" size={20} />
+             <div>
+               <h4 className="font-bold text-red-700 text-sm">Cylinder Shortage</h4>
+               <p className="text-red-600 text-xs mt-1">
+                 Customer is returning fewer empty cylinders than issued. Make sure to collect deposit or record shortage.
+               </p>
+             </div>
+           </div>
+        )}
+      </div>
+    </div>
+  );
+
+  const InventoryView = () => (
+    <div className="space-y-6 animate-fade-in">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-gray-800">Cylinder Master & Stock</h2>
+        <Button variant="primary" icon={Plus}>Add New Type</Button>
+      </div>
+      
+      {/* Desktop Table */}
+      <div className="hidden md:block bg-white rounded-xl shadow-sm border overflow-hidden">
+        <table className="w-full text-left">
+          <thead className="bg-gray-50 border-b">
+            <tr>
+              <th className="p-4 font-semibold text-gray-600">Type / Size</th>
+              <th className="p-4 font-semibold text-gray-600">Refill Rate</th>
+              <th className="p-4 font-semibold text-gray-600">Security Deposit</th>
+              <th className="p-4 font-semibold text-center text-emerald-600">Full Stock</th>
+              <th className="p-4 font-semibold text-center text-amber-600">Empty Stock</th>
+              <th className="p-4 font-semibold text-gray-600">Total Asset</th>
+            </tr>
+          </thead>
+          <tbody>
+            {inventory.map((item, idx) => (
+              <tr key={item.id} className="border-b hover:bg-gray-50">
+                <td className="p-4 font-medium">{item.type}</td>
+                <td className="p-4">Rs {item.rate}</td>
+                <td className="p-4">Rs {item.deposit}</td>
+                <td className="p-4 text-center">
+                  <span className="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full font-bold">{item.full}</span>
+                </td>
+                <td className="p-4 text-center">
+                  <span className="bg-amber-100 text-amber-800 px-3 py-1 rounded-full font-bold">{item.empty}</span>
+                </td>
+                <td className="p-4 text-gray-500 font-mono">
+                  {item.full + item.empty} units
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Mobile Cards */}
+      <div className="md:hidden space-y-4">
+        {inventory.map((item) => (
+          <Card key={item.id} className="p-4">
+            <div className="flex justify-between items-start mb-2">
+              <h3 className="font-bold text-lg">{item.type}</h3>
+              <span className="text-sm text-gray-500">Total: {item.full + item.empty}</span>
+            </div>
+            <div className="grid grid-cols-2 gap-2 mt-4">
+              <div className="bg-emerald-50 p-2 rounded text-center">
+                <div className="text-xs text-emerald-600 uppercase font-bold">Full</div>
+                <div className="text-xl font-bold text-emerald-800">{item.full}</div>
+              </div>
+              <div className="bg-amber-50 p-2 rounded text-center">
+                <div className="text-xs text-amber-600 uppercase font-bold">Empty</div>
+                <div className="text-xl font-bold text-amber-800">{item.empty}</div>
+              </div>
+            </div>
+            <div className="mt-4 flex justify-between text-sm border-t pt-2">
+               <span>Rate: Rs {item.rate}</span>
+               <span>Deposit: Rs {item.deposit}</span>
+            </div>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+
+  const CustomerList = () => (
+    <div className="space-y-6 animate-fade-in">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-gray-800">Parties & Customers</h2>
+        <Button variant="primary" icon={Plus}>Add Party</Button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {customers.map(c => (
+          <Card key={c.id} className="p-5 hover:shadow-md transition-shadow">
+             <div className="flex justify-between items-start">
+               <div>
+                 <h3 className="font-bold text-gray-800">{c.name}</h3>
+                 <Badge type={c.type} />
+               </div>
+               <div className="bg-gray-100 p-2 rounded-full">
+                 <Users size={20} className="text-gray-500" />
+               </div>
+             </div>
+             
+             <div className="mt-6 space-y-3">
+               <div className="flex justify-between text-sm">
+                 <span className="text-gray-500">Route</span>
+                 <span className="font-medium">{c.route}</span>
+               </div>
+               <div className="flex justify-between text-sm">
+                 <span className="text-gray-500">Credit Limit</span>
+                 <span className="font-medium">Rs {c.limit.toLocaleString()}</span>
+               </div>
+               
+               <div className="pt-3 border-t">
+                 <div className="flex justify-between items-end">
+                   <span className="text-sm text-gray-500">Balance</span>
+                   <span className={`text-xl font-bold ${c.balance > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+                     Rs {c.balance.toLocaleString()}
+                   </span>
+                 </div>
+                 <div className="w-full bg-gray-200 h-1.5 rounded-full mt-2">
+                   <div 
+                     className={`h-1.5 rounded-full ${c.balance > c.limit * 0.8 ? 'bg-red-500' : 'bg-blue-500'}`} 
+                     style={{ width: `${Math.min((c.balance / c.limit) * 100, 100)}%` }}
+                   ></div>
+                 </div>
+               </div>
+             </div>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+
+  const LedgerView = () => (
+    <div className="space-y-6 animate-fade-in">
+       <h2 className="text-2xl font-bold text-gray-800">Financial Ledger</h2>
+       <Card className="overflow-hidden">
+         <div className="overflow-x-auto">
+           <table className="w-full text-left">
+             <thead className="bg-gray-900 text-white">
+               <tr>
+                 <th className="p-3">ID</th>
+                 <th className="p-3">Date</th>
+                 <th className="p-3">Party</th>
+                 <th className="p-3">Details</th>
+                 <th className="p-3 text-right">Debit (Rec)</th>
+                 <th className="p-3 text-right">Credit (Inc)</th>
+               </tr>
+             </thead>
+             <tbody className="divide-y">
+               {transactions.map(t => (
+                 <tr key={t.id} className="hover:bg-gray-50">
+                   <td className="p-3 font-mono text-xs text-gray-500">{t.id}</td>
+                   <td className="p-3 text-sm">{t.date}</td>
+                   <td className="p-3 font-medium">{t.customer}</td>
+                   <td className="p-3 text-sm text-gray-600">{t.type} - {t.items}</td>
+                   <td className="p-3 text-right font-mono text-gray-800">{t.dr > 0 ? t.dr.toLocaleString() : '-'}</td>
+                   <td className="p-3 text-right font-mono text-gray-800">{t.cr > 0 ? t.cr.toLocaleString() : '-'}</td>
+                 </tr>
+               ))}
+             </tbody>
+           </table>
+         </div>
+       </Card>
+    </div>
+  );
+
+  // --- NAVIGATION ---
+  
+  const NavItem = ({ id, label, icon: Icon }) => (
+    <button
+      onClick={() => { setActiveView(id); setIsMobileMenuOpen(false); }}
+      className={`flex items-center space-x-3 w-full p-3 rounded-lg transition-colors ${
+        activeView === id 
+          ? 'bg-blue-600 text-white shadow-md' 
+          : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+      }`}
+    >
+      <Icon size={20} />
+      <span className="font-medium">{label}</span>
+    </button>
+  );
+
+  return (
+    <div className={`min-h-screen bg-gray-50 font-sans flex ${isDriverMode ? 'text-lg' : 'text-base'}`}>
+      
+      {/* Sidebar (Desktop) */}
+      <aside className="hidden md:flex w-64 bg-slate-900 text-white flex-col fixed h-full z-10">
+        <div className="p-6 border-b border-slate-800">
+          <div className="flex items-center gap-2 text-blue-400">
+             <Package size={28} />
+             <h1 className="text-2xl font-bold tracking-tight text-white">Cylindra</h1>
+          </div>
+          <p className="text-xs text-slate-500 mt-1 uppercase tracking-wider">ERP System</p>
+        </div>
         
-        // Loop through items to calculate total watts based on current counts and input values
-        for (let item in counts) {
-            totalWatts += counts[item] * getWatts(item);
-        }
+        <nav className="flex-1 p-4 space-y-2">
+          <NavItem id="dashboard" label="Dashboard" icon={Monitor} />
+          <NavItem id="pos" label="Sales & Delivery" icon={Truck} />
+          <NavItem id="inventory" label="Cylinders" icon={RefreshCw} />
+          <NavItem id="customers" label="Parties" icon={Users} />
+          <NavItem id="ledger" label="Accounts" icon={FileText} />
+        </nav>
 
-        const resultSection = document.getElementById('result-section');
-        const emptyState = document.getElementById('empty-state');
-        const hours = parseInt(document.getElementById('backupHours').value);
-        
-        document.getElementById('hours-display').innerText = `${hours} گھنٹے`;
+        <div className="p-4 border-t border-slate-800">
+          <button 
+             onClick={() => setIsDriverMode(!isDriverMode)}
+             className="flex items-center gap-2 text-sm text-slate-400 hover:text-white w-full p-2"
+          >
+             {isDriverMode ? <Monitor size={16} /> : <Smartphone size={16} />}
+             Switch to {isDriverMode ? 'Office' : 'Driver'} Mode
+          </button>
+        </div>
+      </aside>
 
-        if (totalWatts === 0) {
-            resultSection.classList.add('hidden');
-            emptyState.classList.remove('hidden');
-            return;
-        }
+      {/* Mobile Header */}
+      <div className="md:hidden fixed top-0 w-full bg-slate-900 text-white z-20 flex justify-between items-center p-4 shadow-md">
+        <div className="flex items-center gap-2">
+          <Package size={24} className="text-blue-400" />
+          <h1 className="text-xl font-bold">Cylindra</h1>
+        </div>
+        <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+          {isMobileMenuOpen ? <X /> : <Menu />}
+        </button>
+      </div>
 
-        resultSection.classList.remove('hidden');
-        emptyState.classList.add('hidden');
+      {/* Mobile Menu Overlay */}
+      {isMobileMenuOpen && (
+        <div className="fixed inset-0 bg-slate-900 z-10 pt-20 px-6 space-y-4 md:hidden">
+          <NavItem id="dashboard" label="Dashboard" icon={Monitor} />
+          <NavItem id="pos" label="Sales & Delivery" icon={Truck} />
+          <NavItem id="inventory" label="Cylinders" icon={RefreshCw} />
+          <NavItem id="customers" label="Parties" icon={Users} />
+          <NavItem id="ledger" label="Accounts" icon={FileText} />
+          <button 
+             onClick={() => { setIsDriverMode(!isDriverMode); setIsMobileMenuOpen(false); }}
+             className="flex items-center space-x-3 w-full p-3 text-slate-400 mt-8 border-t border-slate-700 pt-8"
+          >
+             <Smartphone size={20} />
+             <span>Toggle Driver Mode</span>
+          </button>
+        </div>
+      )}
 
-        document.getElementById('total-watts').innerText = `${totalWatts} Watts`;
+      {/* Main Content Area */}
+      <main className={`flex-1 transition-all duration-300 ${isMobileMenuOpen ? 'opacity-50' : 'opacity-100'} md:ml-64 pt-20 md:pt-8 px-4 md:px-8 pb-10`}>
+        {/* Dynamic Header */}
+        <div className="flex justify-between items-end mb-8">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800 capitalize">{activeView.replace('-', ' ')}</h2>
+            <p className="text-gray-500 text-sm">
+              {isDriverMode ? 'Driver / Field Interface' : 'Administrator Control Panel'}
+            </p>
+          </div>
+          <div className="hidden md:flex items-center gap-3">
+             <div className="text-right">
+                <div className="text-sm font-bold text-gray-800">Admin User</div>
+                <div className="text-xs text-gray-500">Main Depot</div>
+             </div>
+             <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold">
+               AD
+             </div>
+          </div>
+        </div>
 
-        // --- 1. Inverter Size Recommendation ---
-        let requiredVA = totalWatts * 1.25; // 25% Safety margin
-        let inverterText = "1.2 KVA (12V)";
-        let systemVoltage = 12;
+        {/* Content Render */}
+        {activeView === 'dashboard' && <Dashboard />}
+        {activeView === 'pos' && <POS />}
+        {activeView === 'inventory' && <InventoryView />}
+        {activeView === 'customers' && <CustomerList />}
+        {activeView === 'ledger' && <LedgerView />}
+      </main>
 
-        if (requiredVA > 1000 && requiredVA <= 2200) {
-            inverterText = "2.4 KVA (24V)";
-            systemVoltage = 24;
-        } else if (requiredVA > 2200 && requiredVA <= 3500) {
-            inverterText = "3.2 KVA (24V/48V)";
-            systemVoltage = 24; // Sometimes 48V
-        } else if (requiredVA > 3500) {
-             inverterText = "5 KVA یا 6 KVA (48V)";
-             systemVoltage = 48;
-        } else if (requiredVA <= 1000) {
-             inverterText = "1.2 KVA (12V)";
-        }
-
-        document.getElementById('inverter-size').innerText = inverterText;
-
-        // --- 2. Battery Calculation ---
-        let continuousWatts = (counts.fan * getWatts('fan')) + 
-                              (counts.bulb * getWatts('bulb')) + 
-                              (counts.tv * getWatts('tv')) + 
-                              (counts.fridge * getWatts('fridge')) + 
-                              (counts.wifi * getWatts('wifi'));
-        
-        let batteryCalcWatts = totalWatts; 
-        
-        let requiredWh = batteryCalcWatts * hours;
-        let requiredAh = (requiredWh / systemVoltage) / 0.8; 
-        
-        let batteryText = "";
-        if (systemVoltage === 12) {
-            if (requiredAh < 100) batteryText = "1 x 100Ah";
-            else if (requiredAh < 180) batteryText = "1 x 185Ah (بڑی بیٹری)";
-            else batteryText = `2 x 185Ah (متوازی) یا 220Ah ٹیوبلر`;
-        } else if (systemVoltage === 24) {
-             if (requiredAh < 100) batteryText = "2 x 100Ah";
-             else batteryText = `2 x ${Math.ceil(requiredAh)}Ah (سیریز)`;
-        } else {
-            batteryText = `4 x ${Math.ceil(requiredAh)}Ah (سیریز)`;
-        }
-
-        document.getElementById('battery-rec').innerText = batteryText;
-
-        // --- 3. Solar Panel Calculation ---
-        let solarForLoad = totalWatts * 1.2; 
-        let nightEnergyToReplace = continuousWatts * hours * 1.3; 
-        let solarForCharging = nightEnergyToReplace / 5; 
-        
-        let totalSolarWattsNeeded = solarForLoad + solarForCharging;
-
-        // Get selected panel size
-        let panelSize = parseInt(document.getElementById('panel-size').value);
-        
-        // Calculate practical output (approx 75-80% efficiency for smaller/older tech, slightly better for 550W)
-        // Adjusting efficiency factor slightly based on size
-        let efficiency = 0.76; 
-        if(panelSize >= 500) efficiency = 0.78; // Newer split cell tech
-        
-        let practicalPlateOutput = panelSize * efficiency; 
-        let platesNeeded = Math.ceil(totalSolarWattsNeeded / practicalPlateOutput);
-        
-        document.getElementById('solar-rec').innerText = `${platesNeeded} پلیٹس`;
-        document.getElementById('panel-details').innerText = `${panelSize} واٹ والی پلیٹس کا حساب`;
-        document.getElementById('load-solar-watts').innerText = `~${Math.round(solarForLoad)} Watts`;
-        document.getElementById('charging-solar-watts').innerText = `~${Math.round(solarForCharging)} Watts`;
-
-    }
-</script>
-
-</body>
-</html>
+    </div>
+  );
+}
