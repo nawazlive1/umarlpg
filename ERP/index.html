@@ -1,679 +1,398 @@
-import React, { useState } from 'react';
-import { 
-  Truck, 
-  Users, 
-  Package, 
-  DollarSign, 
-  Menu, 
-  X, 
-  Plus, 
-  Minus, 
-  FileText, 
-  TrendingUp, 
-  AlertCircle, 
-  Save, 
-  RefreshCw,
-  Smartphone,
-  Monitor
-} from 'lucide-react';
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend, 
-  ResponsiveContainer
-} from 'recharts';
-
-// --- MOCK DATA ---
-
-const INITIAL_INVENTORY = [
-  { id: 1, type: '11.8kg Domestic', full: 150, empty: 45, rate: 2500, deposit: 4000 },
-  { id: 2, type: '45.4kg Commercial', full: 30, empty: 10, rate: 9500, deposit: 12000 },
-  { id: 3, type: '6kg Camping', full: 50, empty: 5, rate: 1200, deposit: 2000 },
-];
-
-const INITIAL_CUSTOMERS = [
-  { id: 101, name: 'Bismillah Hotel', type: 'Commercial', balance: 15000, limit: 50000, route: 'Route A' },
-  { id: 102, name: 'Ali General Store', type: 'Reseller', balance: 0, limit: 20000, route: 'Route B' },
-  { id: 103, name: 'Mrs. Khan (Home)', type: 'Domestic', balance: 2500, limit: 5000, route: 'Route A' },
-];
-
-const INITIAL_TRANSACTIONS = [
-  { id: 'INV-001', date: '2023-10-25', customer: 'Bismillah Hotel', type: 'Credit Sale', amount: 9500, items: '1x 45kg', dr: 9500, cr: 0 },
-  { id: 'INV-002', date: '2023-10-25', customer: 'Cash Walk-in', type: 'Cash Sale', amount: 2500, items: '1x 11.8kg', dr: 0, cr: 2500 },
-];
-
-// --- COMPONENTS ---
-
-const Card = ({ children, className = "" }) => (
-  <div className={`bg-white rounded-xl shadow-sm border border-gray-100 ${className}`}>
-    {children}
-  </div>
-);
-
-const StatCard = ({ title, value, subtext, icon: Icon, color }) => (
-  <Card className="p-4 flex items-center space-x-4">
-    <div className={`p-3 rounded-full ${color} bg-opacity-10`}>
-      <Icon className={`w-6 h-6 ${color.replace('bg-', 'text-')}`} />
-    </div>
-    <div>
-      <p className="text-gray-500 text-sm font-medium">{title}</p>
-      <h3 className="text-2xl font-bold text-gray-800">{value}</h3>
-      {subtext && <p className="text-xs text-gray-400 mt-1">{subtext}</p>}
-    </div>
-  </Card>
-);
-
-const Button = ({ children, onClick, variant = 'primary', className = "", disabled = false, icon: Icon }) => {
-  const baseStyle = "px-4 py-2 rounded-lg font-medium transition-all active:scale-95 flex items-center justify-center gap-2";
-  const variants = {
-    primary: "bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-200",
-    success: "bg-emerald-600 text-white hover:bg-emerald-700 shadow-md shadow-emerald-200",
-    danger: "bg-red-500 text-white hover:bg-red-600",
-    outline: "border border-gray-300 text-gray-700 hover:bg-gray-50",
-    ghost: "text-gray-600 hover:bg-gray-100"
-  };
-
-  return (
-    <button 
-      onClick={onClick} 
-      disabled={disabled}
-      className={`${baseStyle} ${variants[variant]} ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}
-    >
-      {Icon && <Icon size={18} />}
-      {children}
-    </button>
-  );
-};
-
-const Badge = ({ type }) => {
-  const styles = {
-    'Full': 'bg-emerald-100 text-emerald-800',
-    'Empty': 'bg-amber-100 text-amber-800',
-    'Credit': 'bg-red-100 text-red-800',
-    'Cash': 'bg-green-100 text-green-800',
-    'Commercial': 'bg-purple-100 text-purple-800',
-    'Domestic': 'bg-blue-100 text-blue-800'
-  };
-  return (
-    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${styles[type] || 'bg-gray-100 text-gray-800'}`}>
-      {type}
-    </span>
-  );
-};
-
-// --- MAIN APP ---
-
-export default function CylindraERP() {
-  const [activeView, setActiveView] = useState('dashboard');
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isDriverMode, setIsDriverMode] = useState(false); // Toggle between Office/Driver UI
-
-  // Core State
-  const [inventory, setInventory] = useState(INITIAL_INVENTORY);
-  const [customers, setCustomers] = useState(INITIAL_CUSTOMERS);
-  const [transactions, setTransactions] = useState(INITIAL_TRANSACTIONS);
-  
-  // Sale Form State
-  const [selectedCustomer, setSelectedCustomer] = useState('');
-  const [selectedProduct, setSelectedProduct] = useState(INITIAL_INVENTORY[0].id);
-  const [qtyFull, setQtyFull] = useState(1);
-  const [qtyEmpty, setQtyEmpty] = useState(1);
-  const [paymentMode, setPaymentMode] = useState('Cash');
-
-  // --- LOGIC HANDLERS ---
-
-  const handleTransaction = () => {
-    if (!selectedCustomer) return alert("Select a customer");
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cylindra ERP</title>
     
-    const product = inventory.find(i => i.id === parseInt(selectedProduct));
-    if (!product) return;
-
-    const totalAmount = product.rate * qtyFull;
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
     
-    // 1. Update Inventory
-    const updatedInventory = inventory.map(item => {
-      if (item.id === product.id) {
-        return {
-          ...item,
-          full: item.full - qtyFull,
-          empty: item.empty + qtyEmpty
+    <!-- React & ReactDOM (Global UMD Builds - More Stable) -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <!-- Babel Standalone -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="bg-gray-50">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // --- GLOBALS ---
+        const { useState } = React;
+
+        // --- INTERNAL ICONS (Replaces Lucide dependency for stability) ---
+        const Icons = {
+            Truck: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="16" height="13" x="2" y="5" rx="2"/><path d="M16 3h6v6h-6z"/><path d="M2 20h20"/><path d="M20 20h2"/><path d="M2 20h2"/></svg>,
+            Users: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
+            Package: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22v-9"/></svg>,
+            DollarSign: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>,
+            Menu: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>,
+            X: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>,
+            Plus: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>,
+            Minus: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/></svg>,
+            FileText: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><line x1="10" x2="8" y1="9" y2="9"/></svg>,
+            TrendingUp: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>,
+            AlertCircle: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>,
+            Save: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>,
+            RefreshCw: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>,
+            Smartphone: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg>,
+            Monitor: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="14" x="2" y="3" rx="2" ry="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg>
         };
-      }
-      return item;
-    });
-    setInventory(updatedInventory);
 
-    // 2. Update Customer Balance (If Credit)
-    if (paymentMode === 'Credit') {
-      const updatedCustomers = customers.map(cust => {
-        if (cust.id === parseInt(selectedCustomer)) {
-          return { ...cust, balance: cust.balance + totalAmount };
+        // --- MOCK DATA ---
+        const INITIAL_INVENTORY = [
+            { id: 1, type: '11.8kg Domestic', full: 150, empty: 45, rate: 2500, deposit: 4000 },
+            { id: 2, type: '45.4kg Commercial', full: 30, empty: 10, rate: 9500, deposit: 12000 },
+            { id: 3, type: '6kg Camping', full: 50, empty: 5, rate: 1200, deposit: 2000 },
+        ];
+
+        const INITIAL_CUSTOMERS = [
+            { id: 101, name: 'Bismillah Hotel', type: 'Commercial', balance: 15000, limit: 50000, route: 'Route A' },
+            { id: 102, name: 'Ali General Store', type: 'Reseller', balance: 0, limit: 20000, route: 'Route B' },
+            { id: 103, name: 'Mrs. Khan (Home)', type: 'Domestic', balance: 2500, limit: 5000, route: 'Route A' },
+        ];
+
+        const INITIAL_TRANSACTIONS = [
+            { id: 'INV-001', date: '2023-10-25', customer: 'Bismillah Hotel', type: 'Credit Sale', amount: 9500, items: '1x 45kg', dr: 9500, cr: 0 },
+            { id: 'INV-002', date: '2023-10-25', customer: 'Cash Walk-in', type: 'Cash Sale', amount: 2500, items: '1x 11.8kg', dr: 0, cr: 2500 },
+        ];
+
+        // --- COMPONENTS ---
+
+        const Card = ({ children, className = "" }) => (
+            <div className={`bg-white rounded-xl shadow-sm border border-gray-100 ${className}`}>
+                {children}
+            </div>
+        );
+
+        const StatCard = ({ title, value, subtext, icon: Icon, color }) => (
+            <Card className="p-4 flex items-center space-x-4">
+                <div className={`p-3 rounded-full ${color} bg-opacity-10`}>
+                    <Icon />
+                </div>
+                <div>
+                    <p className="text-gray-500 text-sm font-medium">{title}</p>
+                    <h3 className="text-2xl font-bold text-gray-800">{value}</h3>
+                    {subtext && <p className="text-xs text-gray-400 mt-1">{subtext}</p>}
+                </div>
+            </Card>
+        );
+
+        const Button = ({ children, onClick, variant = 'primary', className = "", disabled = false, icon: Icon }) => {
+            const baseStyle = "px-4 py-2 rounded-lg font-medium transition-all active:scale-95 flex items-center justify-center gap-2";
+            const variants = {
+                primary: "bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-200",
+                success: "bg-emerald-600 text-white hover:bg-emerald-700 shadow-md shadow-emerald-200",
+                danger: "bg-red-500 text-white hover:bg-red-600",
+                outline: "border border-gray-300 text-gray-700 hover:bg-gray-50",
+                ghost: "text-gray-600 hover:bg-gray-100"
+            };
+
+            return (
+                <button 
+                    onClick={onClick} 
+                    disabled={disabled}
+                    className={`${baseStyle} ${variants[variant]} ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}
+                >
+                    {Icon && <Icon />}
+                    {children}
+                </button>
+            );
+        };
+
+        const Badge = ({ type }) => {
+            const styles = {
+                'Full': 'bg-emerald-100 text-emerald-800',
+                'Empty': 'bg-amber-100 text-amber-800',
+                'Credit': 'bg-red-100 text-red-800',
+                'Cash': 'bg-green-100 text-green-800',
+                'Commercial': 'bg-purple-100 text-purple-800',
+                'Domestic': 'bg-blue-100 text-blue-800'
+            };
+            return (
+                <span className={`px-2 py-1 rounded-full text-xs font-semibold ${styles[type] || 'bg-gray-100 text-gray-800'}`}>
+                    {type}
+                </span>
+            );
+        };
+
+        const SimpleStockChart = ({ data }) => {
+            const maxVal = Math.max(...data.map(d => Math.max(d.full, d.empty)), 100);
+            
+            return (
+                <div className="h-64 w-full flex items-end justify-around space-x-4 border-b border-gray-200 pb-2 px-2">
+                    {data.map(item => (
+                        <div key={item.id} className="flex flex-col items-center w-full h-full justify-end group">
+                            <div className="flex space-x-1 items-end h-[90%] w-full justify-center">
+                                <div className="relative w-8 bg-emerald-500 rounded-t transition-all hover:bg-emerald-600" style={{height: `${(item.full/maxVal)*100}%`}}>
+                                    <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] px-1 rounded opacity-0 group-hover:opacity-100">{item.full}</div>
+                                </div>
+                                <div className="relative w-8 bg-amber-500 rounded-t transition-all hover:bg-amber-600" style={{height: `${(item.empty/maxVal)*100}%`}}>
+                                    <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] px-1 rounded opacity-0 group-hover:opacity-100">{item.empty}</div>
+                                </div>
+                            </div>
+                            <span className="text-xs text-gray-500 mt-2 truncate max-w-[80px] text-center font-medium">{item.type}</span>
+                        </div>
+                    ))}
+                </div>
+            )
+        };
+
+        // --- MAIN APP ---
+
+        function CylindraERP() {
+            const [activeView, setActiveView] = useState('dashboard');
+            const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+            const [isDriverMode, setIsDriverMode] = useState(false);
+
+            // Core State
+            const [inventory, setInventory] = useState(INITIAL_INVENTORY);
+            const [customers, setCustomers] = useState(INITIAL_CUSTOMERS);
+            const [transactions, setTransactions] = useState(INITIAL_TRANSACTIONS);
+            
+            // Sale Form State
+            const [selectedCustomer, setSelectedCustomer] = useState('');
+            const [selectedProduct, setSelectedProduct] = useState(INITIAL_INVENTORY[0].id);
+            const [qtyFull, setQtyFull] = useState(1);
+            const [qtyEmpty, setQtyEmpty] = useState(1);
+            const [paymentMode, setPaymentMode] = useState('Cash');
+
+            // --- LOGIC HANDLERS ---
+            const handleTransaction = () => {
+                if (!selectedCustomer) return alert("Select a customer");
+                
+                const product = inventory.find(i => i.id === parseInt(selectedProduct));
+                if (!product) return;
+
+                const totalAmount = product.rate * qtyFull;
+                
+                const updatedInventory = inventory.map(item => {
+                    if (item.id === product.id) {
+                        return {
+                            ...item,
+                            full: item.full - qtyFull,
+                            empty: item.empty + qtyEmpty
+                        };
+                    }
+                    return item;
+                });
+                setInventory(updatedInventory);
+
+                if (paymentMode === 'Credit') {
+                    const updatedCustomers = customers.map(cust => {
+                        if (cust.id === parseInt(selectedCustomer)) {
+                            return { ...cust, balance: cust.balance + totalAmount };
+                        }
+                        return cust;
+                    });
+                    setCustomers(updatedCustomers);
+                }
+
+                const newTx = {
+                    id: `INV-${Date.now().toString().slice(-4)}`,
+                    date: new Date().toISOString().split('T')[0],
+                    customer: customers.find(c => c.id === parseInt(selectedCustomer))?.name || 'Walk-in',
+                    type: `${paymentMode} Sale`,
+                    amount: totalAmount,
+                    items: `${qtyFull}x ${product.type} (Ret: ${qtyEmpty})`,
+                    dr: paymentMode === 'Credit' ? totalAmount : 0,
+                    cr: paymentMode === 'Cash' ? totalAmount : 0
+                };
+                setTransactions([newTx, ...transactions]);
+
+                setQtyFull(1);
+                setQtyEmpty(1);
+                alert("Transaction Processed Successfully!");
+                if (isDriverMode) setActiveView('dashboard');
+            };
+
+            // --- RENDER FUNCTIONS ---
+
+            const renderDashboard = () => {
+                const totalCash = transactions.reduce((acc, curr) => acc + curr.cr, 0);
+                const totalReceivables = customers.reduce((acc, curr) => acc + curr.balance, 0);
+                const totalCylinders = inventory.reduce((acc, curr) => acc + curr.full, 0);
+
+                return (
+                    <div className="space-y-6 animate-fade-in">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <StatCard title="Cash In Hand" value={`Rs ${totalCash.toLocaleString()}`} subtext="Today's Collection" icon={Icons.DollarSign} color="bg-emerald-500" />
+                            <StatCard title="Receivables" value={`Rs ${totalReceivables.toLocaleString()}`} subtext="Total Outstanding" icon={Icons.TrendingUp} color="bg-red-500" />
+                            <StatCard title="Full Cylinders" value={totalCylinders} subtext="Ready for sale" icon={Icons.Package} color="bg-blue-500" />
+                            <StatCard title="Empty Stock" value={inventory.reduce((acc, curr) => acc + curr.empty, 0)} subtext="Needs refilling" icon={Icons.RefreshCw} color="bg-amber-500" />
+                        </div>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            <Card className="lg:col-span-2 p-6">
+                                <h3 className="text-lg font-bold text-gray-800 mb-4">Stock Overview</h3>
+                                <SimpleStockChart data={inventory} />
+                                <div className="flex justify-center space-x-4 mt-4">
+                                    <div className="flex items-center text-sm"><span className="w-3 h-3 bg-emerald-500 rounded mr-2"></span> Full</div>
+                                    <div className="flex items-center text-sm"><span className="w-3 h-3 bg-amber-500 rounded mr-2"></span> Empty</div>
+                                </div>
+                            </Card>
+
+                            <div className="space-y-4">
+                                <Card className="p-4">
+                                    <h3 className="font-bold text-gray-700 mb-3">Quick Actions</h3>
+                                    <div className="grid grid-cols-1 gap-3">
+                                        <Button onClick={() => setActiveView('pos')} icon={Icons.Plus} variant="primary">New Sale</Button>
+                                        <Button onClick={() => setActiveView('inventory')} icon={Icons.Truck} variant="outline">Stock In/Out</Button>
+                                        <Button onClick={() => setActiveView('customers')} icon={Icons.Users} variant="outline">Add Customer</Button>
+                                    </div>
+                                </Card>
+                                <Card className="p-4 bg-slate-800 text-white">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <h3 className="font-bold">System Status</h3>
+                                        <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+                                    </div>
+                                    <div className="space-y-2 text-sm text-slate-300">
+                                        <div className="flex justify-between"><span>DB Sync</span><span className="text-green-400">Online</span></div>
+                                        <div className="flex justify-between"><span>Active Route</span><span>Route A (Ali)</span></div>
+                                    </div>
+                                </Card>
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+
+            const renderPOS = () => {
+                const product = inventory.find(i => i.id === parseInt(selectedProduct));
+                return (
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in">
+                        <Card className="lg:col-span-2 p-6">
+                            <div className="flex justify-between items-center mb-6">
+                                <h2 className="text-xl font-bold text-gray-800">New Sale / Delivery</h2>
+                                <span className="text-sm bg-blue-50 text-blue-600 px-3 py-1 rounded-full font-mono">#{Date.now().toString().slice(-6)}</span>
+                            </div>
+                            <div className="space-y-6">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Customer</label>
+                                    <select className="w-full p-3 border border-gray-300 rounded-lg outline-none" value={selectedCustomer} onChange={(e) => setSelectedCustomer(e.target.value)}>
+                                        <option value="">Select Customer / Shop</option>
+                                        {customers.map(c => (<option key={c.id} value={c.id}>{c.name} (Bal: {c.balance})</option>))}
+                                    </select>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Cylinder Size</label>
+                                        <select className="w-full p-3 border border-gray-300 rounded-lg" value={selectedProduct} onChange={(e) => setSelectedProduct(e.target.value)}>
+                                            {inventory.map(i => (<option key={i.id} value={i.id}>{i.type} - Rs {i.rate}</option>))}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Stock Available</label>
+                                        <div className="p-3 bg-gray-50 rounded-lg font-mono text-gray-600">{product?.full || 0} Full Units</div>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="p-4 border rounded-xl bg-blue-50 border-blue-100">
+                                        <label className="block text-sm font-bold text-blue-800 mb-2">Issue Full</label>
+                                        <div className="flex items-center space-x-3">
+                                            <button onClick={() => setQtyFull(Math.max(1, qtyFull-1))} className="p-2 bg-white rounded shadow text-blue-600 hover:bg-blue-100"><Icons.Minus /></button>
+                                            <span className="text-2xl font-bold text-gray-800">{qtyFull}</span>
+                                            <button onClick={() => setQtyFull(qtyFull+1)} className="p-2 bg-white rounded shadow text-blue-600 hover:bg-blue-100"><Icons.Plus /></button>
+                                        </div>
+                                    </div>
+                                    <div className="p-4 border rounded-xl bg-amber-50 border-amber-100">
+                                        <label className="block text-sm font-bold text-amber-800 mb-2">Receive Empty</label>
+                                        <div className="flex items-center space-x-3">
+                                            <button onClick={() => setQtyEmpty(Math.max(0, qtyEmpty-1))} className="p-2 bg-white rounded shadow text-amber-600 hover:bg-amber-100"><Icons.Minus /></button>
+                                            <span className="text-2xl font-bold text-gray-800">{qtyEmpty}</span>
+                                            <button onClick={() => setQtyEmpty(qtyEmpty+1)} className="p-2 bg-white rounded shadow text-amber-600 hover:bg-amber-100"><Icons.Plus /></button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Payment Mode</label>
+                                    <div className="flex space-x-4">
+                                        <button onClick={() => setPaymentMode('Cash')} className={`flex-1 p-3 rounded-lg border flex items-center justify-center gap-2 ${paymentMode === 'Cash' ? 'bg-green-600 text-white shadow-lg' : 'bg-white text-gray-600'}`}><Icons.DollarSign /> Cash</button>
+                                        <button onClick={() => setPaymentMode('Credit')} className={`flex-1 p-3 rounded-lg border flex items-center justify-center gap-2 ${paymentMode === 'Credit' ? 'bg-red-500 text-white shadow-lg' : 'bg-white text-gray-600'}`}><Icons.FileText /> Credit</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </Card>
+                        <div className="space-y-6">
+                            <Card className="p-6 bg-slate-900 text-white border-none shadow-xl">
+                                <h3 className="text-lg font-bold mb-4 border-b border-slate-700 pb-2">Order Summary</h3>
+                                <div className="space-y-4">
+                                    <div className="flex justify-between items-center text-slate-300"><span>Item</span><span>{product?.type}</span></div>
+                                    <div className="flex justify-between items-center text-slate-300"><span>Rate</span><span>Rs {product?.rate}</span></div>
+                                    <div className="flex justify-between items-center text-slate-300"><span>Quantity</span><span>x {qtyFull}</span></div>
+                                    <div className="border-t border-slate-700 my-2"></div>
+                                    <div className="flex justify-between items-center text-2xl font-bold text-emerald-400"><span>Total</span><span>Rs {((product?.rate || 0) * qtyFull).toLocaleString()}</span></div>
+                                </div>
+                                <button onClick={handleTransaction} className="w-full mt-8 bg-emerald-500 hover:bg-emerald-600 text-white p-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 shadow-lg transition-all"><Icons.Save /> Confirm Transaction</button>
+                            </Card>
+                            {qtyFull > qtyEmpty && (<div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3"><Icons.AlertCircle /><div><h4 className="font-bold text-red-700 text-sm">Shortage Alert</h4><p className="text-red-600 text-xs mt-1">Collecting fewer empty cylinders than issued.</p></div></div>)}
+                        </div>
+                    </div>
+                );
+            };
+
+            const renderInventoryView = () => (
+                <div className="space-y-6 animate-fade-in">
+                    <div className="flex justify-between items-center"><h2 className="text-2xl font-bold text-gray-800">Cylinders</h2><Button variant="primary" icon={Icons.Plus}>Add Type</Button></div>
+                    <div className="hidden md:block bg-white rounded-xl shadow-sm border overflow-hidden">
+                        <table className="w-full text-left">
+                            <thead className="bg-gray-50 border-b"><tr><th className="p-4 text-gray-600">Type</th><th className="p-4 text-gray-600">Rate</th><th className="p-4 text-center text-emerald-600">Full</th><th className="p-4 text-center text-amber-600">Empty</th><th className="p-4 text-gray-600">Total</th></tr></thead>
+                            <tbody>{inventory.map((item) => (<tr key={item.id} className="border-b hover:bg-gray-50"><td className="p-4 font-medium">{item.type}</td><td className="p-4">Rs {item.rate}</td><td className="p-4 text-center"><span className="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full font-bold">{item.full}</span></td><td className="p-4 text-center"><span className="bg-amber-100 text-amber-800 px-3 py-1 rounded-full font-bold">{item.empty}</span></td><td className="p-4 text-gray-500 font-mono">{item.full + item.empty}</td></tr>))}</tbody>
+                        </table>
+                    </div>
+                    <div className="md:hidden space-y-4">{inventory.map((item) => (<Card key={item.id} className="p-4"><div className="flex justify-between mb-2"><h3 className="font-bold">{item.type}</h3><span className="text-sm">Total: {item.full + item.empty}</span></div><div className="grid grid-cols-2 gap-2 mt-4"><div className="bg-emerald-50 p-2 rounded text-center"><div className="text-xs text-emerald-600 font-bold">Full</div><div className="text-xl font-bold text-emerald-800">{item.full}</div></div><div className="bg-amber-50 p-2 rounded text-center"><div className="text-xs text-amber-600 font-bold">Empty</div><div className="text-xl font-bold text-amber-800">{item.empty}</div></div></div></Card>))}</div>
+                </div>
+            );
+
+            const renderCustomerList = () => (
+                <div className="space-y-6 animate-fade-in">
+                    <div className="flex justify-between items-center"><h2 className="text-2xl font-bold text-gray-800">Customers</h2><Button variant="primary" icon={Icons.Plus}>Add Party</Button></div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {customers.map(c => (
+                            <Card key={c.id} className="p-5 hover:shadow-md transition-shadow">
+                                <div className="flex justify-between items-start"><div><h3 className="font-bold text-gray-800">{c.name}</h3><Badge type={c.type} /></div><div className="bg-gray-100 p-2 rounded-full"><Icons.Users /></div></div>
+                                <div className="mt-6 space-y-3"><div className="flex justify-between text-sm"><span className="text-gray-500">Route</span><span className="font-medium">{c.route}</span></div><div className="pt-3 border-t"><div className="flex justify-between items-end"><span className="text-sm text-gray-500">Balance</span><span className={`text-xl font-bold ${c.balance > 0 ? 'text-red-600' : 'text-emerald-600'}`}>Rs {c.balance.toLocaleString()}</span></div></div></div>
+                            </Card>
+                        ))}
+                    </div>
+                </div>
+            );
+
+            const renderLedgerView = () => (
+                <div className="space-y-6 animate-fade-in"><h2 className="text-2xl font-bold text-gray-800">Ledger</h2><Card className="overflow-hidden"><div className="overflow-x-auto"><table className="w-full text-left"><thead className="bg-gray-900 text-white"><tr><th className="p-3">ID</th><th className="p-3">Party</th><th className="p-3">Details</th><th className="p-3 text-right">Dr/Cr</th></tr></thead><tbody className="divide-y">{transactions.map(t => (<tr key={t.id} className="hover:bg-gray-50"><td className="p-3 font-mono text-xs">{t.id}</td><td className="p-3 font-medium">{t.customer}</td><td className="p-3 text-sm">{t.type} - {t.items}</td><td className="p-3 text-right font-mono">{t.dr > 0 ? `Dr ${t.dr}` : `Cr ${t.cr}`}</td></tr>))}</tbody></table></div></Card></div>
+            );
+
+            const NavItem = ({ id, label, icon: Icon }) => (
+                <button onClick={() => { setActiveView(id); setIsMobileMenuOpen(false); }} className={`flex items-center space-x-3 w-full p-3 rounded-lg transition-colors ${activeView === id ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}>
+                    <Icon /><span className="font-medium">{label}</span>
+                </button>
+            );
+
+            return (
+                <div className={`min-h-screen bg-gray-50 font-sans flex ${isDriverMode ? 'text-lg' : 'text-base'}`}>
+                    <aside className="hidden md:flex w-64 bg-slate-900 text-white flex-col fixed h-full z-10">
+                        <div className="p-6 border-b border-slate-800"><div className="flex items-center gap-2 text-blue-400"><Icons.Package /><h1 className="text-2xl font-bold tracking-tight text-white">Cylindra</h1></div><p className="text-xs text-slate-500 mt-1 uppercase tracking-wider">ERP System</p></div>
+                        <nav className="flex-1 p-4 space-y-2"><NavItem id="dashboard" label="Dashboard" icon={Icons.Monitor} /><NavItem id="pos" label="Sales & Delivery" icon={Icons.Truck} /><NavItem id="inventory" label="Cylinders" icon={Icons.RefreshCw} /><NavItem id="customers" label="Parties" icon={Icons.Users} /><NavItem id="ledger" label="Accounts" icon={Icons.FileText} /></nav>
+                        <div className="p-4 border-t border-slate-800"><button onClick={() => setIsDriverMode(!isDriverMode)} className="flex items-center gap-2 text-sm text-slate-400 hover:text-white w-full p-2">{isDriverMode ? <Icons.Monitor /> : <Icons.Smartphone />} Switch Mode</button></div>
+                    </aside>
+                    <div className="md:hidden fixed top-0 w-full bg-slate-900 text-white z-20 flex justify-between items-center p-4 shadow-md"><div className="flex items-center gap-2"><Icons.Package /><h1 className="text-xl font-bold">Cylindra</h1></div><button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>{isMobileMenuOpen ? <Icons.X /> : <Icons.Menu />}</button></div>
+                    {isMobileMenuOpen && (<div className="fixed inset-0 bg-slate-900 z-10 pt-20 px-6 space-y-4 md:hidden"><NavItem id="dashboard" label="Dashboard" icon={Icons.Monitor} /><NavItem id="pos" label="Sales & Delivery" icon={Icons.Truck} /><NavItem id="inventory" label="Cylinders" icon={Icons.RefreshCw} /><NavItem id="customers" label="Parties" icon={Icons.Users} /><NavItem id="ledger" label="Accounts" icon={Icons.FileText} /><button onClick={() => { setIsDriverMode(!isDriverMode); setIsMobileMenuOpen(false); }} className="flex items-center space-x-3 w-full p-3 text-slate-400 mt-8 border-t border-slate-700 pt-8"><Icons.Smartphone /><span>Toggle Driver Mode</span></button></div>)}
+                    <main className={`flex-1 transition-all duration-300 ${isMobileMenuOpen ? 'opacity-50' : 'opacity-100'} md:ml-64 pt-20 md:pt-8 px-4 md:px-8 pb-10`}>
+                        <div className="flex justify-between items-end mb-8"><div><h2 className="text-2xl font-bold text-gray-800 capitalize">{activeView.replace('-', ' ')}</h2><p className="text-gray-500 text-sm">{isDriverMode ? 'Driver / Field Interface' : 'Administrator Control Panel'}</p></div><div className="hidden md:flex items-center gap-3"><div className="text-right"><div className="text-sm font-bold text-gray-800">Admin User</div><div className="text-xs text-gray-500">Main Depot</div></div><div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold">AD</div></div></div>
+                        {activeView === 'dashboard' && renderDashboard()}
+                        {activeView === 'pos' && renderPOS()}
+                        {activeView === 'inventory' && renderInventoryView()}
+                        {activeView === 'customers' && renderCustomerList()}
+                        {activeView === 'ledger' && renderLedgerView()}
+                    </main>
+                </div>
+            );
         }
-        return cust;
-      });
-      setCustomers(updatedCustomers);
-    }
 
-    // 3. Log Transaction
-    const newTx = {
-      id: `INV-${Date.now().toString().slice(-4)}`,
-      date: new Date().toISOString().split('T')[0],
-      customer: customers.find(c => c.id === parseInt(selectedCustomer))?.name || 'Walk-in',
-      type: `${paymentMode} Sale`,
-      amount: totalAmount,
-      items: `${qtyFull}x ${product.type} (Ret: ${qtyEmpty})`,
-      dr: paymentMode === 'Credit' ? totalAmount : 0,
-      cr: paymentMode === 'Cash' ? totalAmount : 0
-    };
-    setTransactions([newTx, ...transactions]);
-
-    // Reset
-    setQtyFull(1);
-    setQtyEmpty(1);
-    alert("Transaction Processed Successfully!");
-    if (isDriverMode) setActiveView('dashboard');
-  };
-
-  // --- RENDER HELPERS ---
-  // Using render functions instead of components to preserve focus and avoid remounting issues
-
-  const renderDashboard = () => {
-    const totalCash = transactions.reduce((acc, curr) => acc + curr.cr, 0);
-    const totalReceivables = customers.reduce((acc, curr) => acc + curr.balance, 0);
-    const totalCylinders = inventory.reduce((acc, curr) => acc + curr.full, 0);
-
-    return (
-      <div className="space-y-6 animate-fade-in">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard 
-            title="Cash In Hand" 
-            value={`Rs ${totalCash.toLocaleString()}`} 
-            subtext="Today's Collection"
-            icon={DollarSign} 
-            color="bg-emerald-500" 
-          />
-          <StatCard 
-            title="Receivables" 
-            value={`Rs ${totalReceivables.toLocaleString()}`} 
-            subtext="Total Outstanding"
-            icon={TrendingUp} 
-            color="bg-red-500" 
-          />
-          <StatCard 
-            title="Full Cylinders" 
-            value={totalCylinders} 
-            subtext="Ready for sale"
-            icon={Package} 
-            color="bg-blue-500" 
-          />
-          <StatCard 
-            title="Empty Stock" 
-            value={inventory.reduce((acc, curr) => acc + curr.empty, 0)} 
-            subtext="Needs refilling"
-            icon={RefreshCw} 
-            color="bg-amber-500" 
-          />
-        </div>
-
-        {/* Charts & Quick Actions */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <Card className="lg:col-span-2 p-6">
-            <h3 className="text-lg font-bold text-gray-800 mb-4">Stock Overview</h3>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={inventory}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="type" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="full" fill="#10B981" name="Full" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="empty" fill="#F59E0B" name="Empty" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </Card>
-
-          <div className="space-y-4">
-            <Card className="p-4">
-              <h3 className="font-bold text-gray-700 mb-3">Quick Actions</h3>
-              <div className="grid grid-cols-1 gap-3">
-                <Button onClick={() => setActiveView('pos')} icon={Plus} variant="primary">New Sale</Button>
-                <Button onClick={() => setActiveView('inventory')} icon={Truck} variant="outline">Stock In/Out</Button>
-                <Button onClick={() => setActiveView('customers')} icon={Users} variant="outline">Add Customer</Button>
-              </div>
-            </Card>
-            <Card className="p-4 bg-slate-800 text-white">
-               <div className="flex justify-between items-center mb-2">
-                 <h3 className="font-bold">System Status</h3>
-                 <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
-               </div>
-               <div className="space-y-2 text-sm text-slate-300">
-                 <div className="flex justify-between">
-                   <span>DB Sync</span>
-                   <span className="text-green-400">Online</span>
-                 </div>
-                 <div className="flex justify-between">
-                   <span>Last Backup</span>
-                   <span>10:00 AM</span>
-                 </div>
-                 <div className="flex justify-between">
-                   <span>Active Route</span>
-                   <span>Route A (Ali)</span>
-                 </div>
-               </div>
-            </Card>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const renderPOS = () => {
-    // Safety check for product existence
-    const product = inventory.find(i => i.id === parseInt(selectedProduct));
-
-    return (
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in">
-        {/* Invoice Form */}
-        <Card className="lg:col-span-2 p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold text-gray-800">New Sale / Delivery</h2>
-            <span className="text-sm bg-blue-50 text-blue-600 px-3 py-1 rounded-full font-mono">#{Date.now().toString().slice(-6)}</span>
-          </div>
-
-          <div className="space-y-6">
-            {/* Customer Selection */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Customer</label>
-              <select 
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                value={selectedCustomer}
-                onChange={(e) => setSelectedCustomer(e.target.value)}
-              >
-                <option value="">Select Customer / Shop</option>
-                {customers.map(c => (
-                  <option key={c.id} value={c.id}>{c.name} (Bal: {c.balance})</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Product Selection */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Cylinder Size</label>
-                <select 
-                  className="w-full p-3 border border-gray-300 rounded-lg"
-                  value={selectedProduct}
-                  onChange={(e) => setSelectedProduct(e.target.value)}
-                >
-                  {inventory.map(i => (
-                    <option key={i.id} value={i.id}>{i.type} - Rs {i.rate}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Stock Available</label>
-                <div className="p-3 bg-gray-50 rounded-lg font-mono text-gray-600">
-                  {product?.full || 0} Full Units
-                </div>
-              </div>
-            </div>
-
-            {/* Quantity Logic */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="p-4 border rounded-xl bg-blue-50 border-blue-100">
-                <label className="block text-sm font-bold text-blue-800 mb-2">Issue Full</label>
-                <div className="flex items-center space-x-3">
-                  <button onClick={() => setQtyFull(Math.max(1, qtyFull-1))} className="p-2 bg-white rounded shadow text-blue-600 hover:bg-blue-100"><Minus size={16}/></button>
-                  <span className="text-2xl font-bold text-gray-800">{qtyFull}</span>
-                  <button onClick={() => setQtyFull(qtyFull+1)} className="p-2 bg-white rounded shadow text-blue-600 hover:bg-blue-100"><Plus size={16}/></button>
-                </div>
-              </div>
-              <div className="p-4 border rounded-xl bg-amber-50 border-amber-100">
-                <label className="block text-sm font-bold text-amber-800 mb-2">Receive Empty</label>
-                <div className="flex items-center space-x-3">
-                  <button onClick={() => setQtyEmpty(Math.max(0, qtyEmpty-1))} className="p-2 bg-white rounded shadow text-amber-600 hover:bg-amber-100"><Minus size={16}/></button>
-                  <span className="text-2xl font-bold text-gray-800">{qtyEmpty}</span>
-                  <button onClick={() => setQtyEmpty(qtyEmpty+1)} className="p-2 bg-white rounded shadow text-amber-600 hover:bg-amber-100"><Plus size={16}/></button>
-                </div>
-              </div>
-            </div>
-
-            {/* Payment */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Payment Mode</label>
-              <div className="flex space-x-4">
-                <button 
-                  onClick={() => setPaymentMode('Cash')}
-                  className={`flex-1 p-3 rounded-lg border flex items-center justify-center gap-2 ${paymentMode === 'Cash' ? 'bg-green-600 text-white border-green-600 shadow-lg' : 'bg-white text-gray-600'}`}
-                >
-                  <DollarSign size={18} /> Cash
-                </button>
-                <button 
-                  onClick={() => setPaymentMode('Credit')}
-                  className={`flex-1 p-3 rounded-lg border flex items-center justify-center gap-2 ${paymentMode === 'Credit' ? 'bg-red-500 text-white border-red-500 shadow-lg' : 'bg-white text-gray-600'}`}
-                >
-                  <FileText size={18} /> Credit / Udhaar
-                </button>
-              </div>
-            </div>
-          </div>
-        </Card>
-
-        {/* Summary Card */}
-        <div className="space-y-6">
-          <Card className="p-6 bg-slate-900 text-white border-none shadow-xl">
-            <h3 className="text-lg font-bold mb-4 border-b border-slate-700 pb-2">Order Summary</h3>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center text-slate-300">
-                <span>Item</span>
-                <span>{product?.type}</span>
-              </div>
-              <div className="flex justify-between items-center text-slate-300">
-                <span>Rate</span>
-                <span>Rs {product?.rate}</span>
-              </div>
-              <div className="flex justify-between items-center text-slate-300">
-                <span>Quantity</span>
-                <span>x {qtyFull}</span>
-              </div>
-              <div className="border-t border-slate-700 my-2"></div>
-              <div className="flex justify-between items-center text-2xl font-bold text-emerald-400">
-                <span>Total</span>
-                <span>Rs {((product?.rate || 0) * qtyFull).toLocaleString()}</span>
-              </div>
-            </div>
-
-            <button 
-              onClick={handleTransaction}
-              className="w-full mt-8 bg-emerald-500 hover:bg-emerald-600 text-white p-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 shadow-lg shadow-emerald-900/50 transition-all"
-            >
-              <Save /> Confirm Transaction
-            </button>
-          </Card>
-
-          {/* Warning Logic */}
-          {qtyFull > qtyEmpty && (
-            <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
-              <AlertCircle className="text-red-500 flex-shrink-0" size={20} />
-              <div>
-                <h4 className="font-bold text-red-700 text-sm">Cylinder Shortage</h4>
-                <p className="text-red-600 text-xs mt-1">
-                  Customer is returning fewer empty cylinders than issued. Make sure to collect deposit or record shortage.
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  };
-
-  const renderInventoryView = () => (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-800">Cylinder Master & Stock</h2>
-        <Button variant="primary" icon={Plus}>Add New Type</Button>
-      </div>
-      
-      {/* Desktop Table */}
-      <div className="hidden md:block bg-white rounded-xl shadow-sm border overflow-hidden">
-        <table className="w-full text-left">
-          <thead className="bg-gray-50 border-b">
-            <tr>
-              <th className="p-4 font-semibold text-gray-600">Type / Size</th>
-              <th className="p-4 font-semibold text-gray-600">Refill Rate</th>
-              <th className="p-4 font-semibold text-gray-600">Security Deposit</th>
-              <th className="p-4 font-semibold text-center text-emerald-600">Full Stock</th>
-              <th className="p-4 font-semibold text-center text-amber-600">Empty Stock</th>
-              <th className="p-4 font-semibold text-gray-600">Total Asset</th>
-            </tr>
-          </thead>
-          <tbody>
-            {inventory.map((item) => (
-              <tr key={item.id} className="border-b hover:bg-gray-50">
-                <td className="p-4 font-medium">{item.type}</td>
-                <td className="p-4">Rs {item.rate}</td>
-                <td className="p-4">Rs {item.deposit}</td>
-                <td className="p-4 text-center">
-                  <span className="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full font-bold">{item.full}</span>
-                </td>
-                <td className="p-4 text-center">
-                  <span className="bg-amber-100 text-amber-800 px-3 py-1 rounded-full font-bold">{item.empty}</span>
-                </td>
-                <td className="p-4 text-gray-500 font-mono">
-                  {item.full + item.empty} units
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Mobile Cards */}
-      <div className="md:hidden space-y-4">
-        {inventory.map((item) => (
-          <Card key={item.id} className="p-4">
-            <div className="flex justify-between items-start mb-2">
-              <h3 className="font-bold text-lg">{item.type}</h3>
-              <span className="text-sm text-gray-500">Total: {item.full + item.empty}</span>
-            </div>
-            <div className="grid grid-cols-2 gap-2 mt-4">
-              <div className="bg-emerald-50 p-2 rounded text-center">
-                <div className="text-xs text-emerald-600 uppercase font-bold">Full</div>
-                <div className="text-xl font-bold text-emerald-800">{item.full}</div>
-              </div>
-              <div className="bg-amber-50 p-2 rounded text-center">
-                <div className="text-xs text-amber-600 uppercase font-bold">Empty</div>
-                <div className="text-xl font-bold text-amber-800">{item.empty}</div>
-              </div>
-            </div>
-            <div className="mt-4 flex justify-between text-sm border-t pt-2">
-               <span>Rate: Rs {item.rate}</span>
-               <span>Deposit: Rs {item.deposit}</span>
-            </div>
-          </Card>
-        ))}
-      </div>
-    </div>
-  );
-
-  const renderCustomerList = () => (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-800">Parties & Customers</h2>
-        <Button variant="primary" icon={Plus}>Add Party</Button>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {customers.map(c => (
-          <Card key={c.id} className="p-5 hover:shadow-md transition-shadow">
-             <div className="flex justify-between items-start">
-               <div>
-                 <h3 className="font-bold text-gray-800">{c.name}</h3>
-                 <Badge type={c.type} />
-               </div>
-               <div className="bg-gray-100 p-2 rounded-full">
-                 <Users size={20} className="text-gray-500" />
-               </div>
-             </div>
-             
-             <div className="mt-6 space-y-3">
-               <div className="flex justify-between text-sm">
-                 <span className="text-gray-500">Route</span>
-                 <span className="font-medium">{c.route}</span>
-               </div>
-               <div className="flex justify-between text-sm">
-                 <span className="text-gray-500">Credit Limit</span>
-                 <span className="font-medium">Rs {c.limit.toLocaleString()}</span>
-               </div>
-               
-               <div className="pt-3 border-t">
-                 <div className="flex justify-between items-end">
-                   <span className="text-sm text-gray-500">Balance</span>
-                   <span className={`text-xl font-bold ${c.balance > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
-                     Rs {c.balance.toLocaleString()}
-                   </span>
-                 </div>
-                 <div className="w-full bg-gray-200 h-1.5 rounded-full mt-2">
-                   <div 
-                     className={`h-1.5 rounded-full ${c.balance > c.limit * 0.8 ? 'bg-red-500' : 'bg-blue-500'}`} 
-                     style={{ width: `${Math.min((c.balance / c.limit) * 100, 100)}%` }}
-                   ></div>
-                 </div>
-               </div>
-             </div>
-          </Card>
-        ))}
-      </div>
-    </div>
-  );
-
-  const renderLedgerView = () => (
-    <div className="space-y-6 animate-fade-in">
-       <h2 className="text-2xl font-bold text-gray-800">Financial Ledger</h2>
-       <Card className="overflow-hidden">
-         <div className="overflow-x-auto">
-           <table className="w-full text-left">
-             <thead className="bg-gray-900 text-white">
-               <tr>
-                 <th className="p-3">ID</th>
-                 <th className="p-3">Date</th>
-                 <th className="p-3">Party</th>
-                 <th className="p-3">Details</th>
-                 <th className="p-3 text-right">Debit (Rec)</th>
-                 <th className="p-3 text-right">Credit (Inc)</th>
-               </tr>
-             </thead>
-             <tbody className="divide-y">
-               {transactions.map(t => (
-                 <tr key={t.id} className="hover:bg-gray-50">
-                   <td className="p-3 font-mono text-xs text-gray-500">{t.id}</td>
-                   <td className="p-3 text-sm">{t.date}</td>
-                   <td className="p-3 font-medium">{t.customer}</td>
-                   <td className="p-3 text-sm text-gray-600">{t.type} - {t.items}</td>
-                   <td className="p-3 text-right font-mono text-gray-800">{t.dr > 0 ? t.dr.toLocaleString() : '-'}</td>
-                   <td className="p-3 text-right font-mono text-gray-800">{t.cr > 0 ? t.cr.toLocaleString() : '-'}</td>
-                 </tr>
-               ))}
-             </tbody>
-           </table>
-         </div>
-       </Card>
-    </div>
-  );
-
-  // --- NAVIGATION ---
-  
-  const NavItem = ({ id, label, icon: Icon }) => (
-    <button
-      onClick={() => { setActiveView(id); setIsMobileMenuOpen(false); }}
-      className={`flex items-center space-x-3 w-full p-3 rounded-lg transition-colors ${
-        activeView === id 
-          ? 'bg-blue-600 text-white shadow-md' 
-          : 'text-slate-400 hover:bg-slate-800 hover:text-white'
-      }`}
-    >
-      <Icon size={20} />
-      <span className="font-medium">{label}</span>
-    </button>
-  );
-
-  return (
-    <div className={`min-h-screen bg-gray-50 font-sans flex ${isDriverMode ? 'text-lg' : 'text-base'}`}>
-      
-      {/* Sidebar (Desktop) */}
-      <aside className="hidden md:flex w-64 bg-slate-900 text-white flex-col fixed h-full z-10">
-        <div className="p-6 border-b border-slate-800">
-          <div className="flex items-center gap-2 text-blue-400">
-             <Package size={28} />
-             <h1 className="text-2xl font-bold tracking-tight text-white">Cylindra</h1>
-          </div>
-          <p className="text-xs text-slate-500 mt-1 uppercase tracking-wider">ERP System</p>
-        </div>
-        
-        <nav className="flex-1 p-4 space-y-2">
-          <NavItem id="dashboard" label="Dashboard" icon={Monitor} />
-          <NavItem id="pos" label="Sales & Delivery" icon={Truck} />
-          <NavItem id="inventory" label="Cylinders" icon={RefreshCw} />
-          <NavItem id="customers" label="Parties" icon={Users} />
-          <NavItem id="ledger" label="Accounts" icon={FileText} />
-        </nav>
-
-        <div className="p-4 border-t border-slate-800">
-          <button 
-             onClick={() => setIsDriverMode(!isDriverMode)}
-             className="flex items-center gap-2 text-sm text-slate-400 hover:text-white w-full p-2"
-          >
-             {isDriverMode ? <Monitor size={16} /> : <Smartphone size={16} />}
-             Switch to {isDriverMode ? 'Office' : 'Driver'} Mode
-          </button>
-        </div>
-      </aside>
-
-      {/* Mobile Header */}
-      <div className="md:hidden fixed top-0 w-full bg-slate-900 text-white z-20 flex justify-between items-center p-4 shadow-md">
-        <div className="flex items-center gap-2">
-          <Package size={24} className="text-blue-400" />
-          <h1 className="text-xl font-bold">Cylindra</h1>
-        </div>
-        <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
-          {isMobileMenuOpen ? <X /> : <Menu />}
-        </button>
-      </div>
-
-      {/* Mobile Menu Overlay */}
-      {isMobileMenuOpen && (
-        <div className="fixed inset-0 bg-slate-900 z-10 pt-20 px-6 space-y-4 md:hidden">
-          <NavItem id="dashboard" label="Dashboard" icon={Monitor} />
-          <NavItem id="pos" label="Sales & Delivery" icon={Truck} />
-          <NavItem id="inventory" label="Cylinders" icon={RefreshCw} />
-          <NavItem id="customers" label="Parties" icon={Users} />
-          <NavItem id="ledger" label="Accounts" icon={FileText} />
-          <button 
-             onClick={() => { setIsDriverMode(!isDriverMode); setIsMobileMenuOpen(false); }}
-             className="flex items-center space-x-3 w-full p-3 text-slate-400 mt-8 border-t border-slate-700 pt-8"
-          >
-             <Smartphone size={20} />
-             <span>Toggle Driver Mode</span>
-          </button>
-        </div>
-      )}
-
-      {/* Main Content Area */}
-      <main className={`flex-1 transition-all duration-300 ${isMobileMenuOpen ? 'opacity-50' : 'opacity-100'} md:ml-64 pt-20 md:pt-8 px-4 md:px-8 pb-10`}>
-        {/* Dynamic Header */}
-        <div className="flex justify-between items-end mb-8">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-800 capitalize">{activeView.replace('-', ' ')}</h2>
-            <p className="text-gray-500 text-sm">
-              {isDriverMode ? 'Driver / Field Interface' : 'Administrator Control Panel'}
-            </p>
-          </div>
-          <div className="hidden md:flex items-center gap-3">
-             <div className="text-right">
-                <div className="text-sm font-bold text-gray-800">Admin User</div>
-                <div className="text-xs text-gray-500">Main Depot</div>
-             </div>
-             <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold">
-               AD
-             </div>
-          </div>
-        </div>
-
-        {/* Content Render */}
-        {activeView === 'dashboard' && renderDashboard()}
-        {activeView === 'pos' && renderPOS()}
-        {activeView === 'inventory' && renderInventoryView()}
-        {activeView === 'customers' && renderCustomerList()}
-        {activeView === 'ledger' && renderLedgerView()}
-      </main>
-
-    </div>
-  );
-}
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<CylindraERP />);
+    </script>
+</body>
+</html>
