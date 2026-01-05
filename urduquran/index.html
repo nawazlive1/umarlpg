@@ -283,4 +283,376 @@
             {name:"الشرح", type:"Makki", ayahs:8}, {name:"التين", type:"Makki", ayahs:8}, {name:"العلق", type:"Makki", ayahs:19},
             {name:"القدر", type:"Makki", ayahs:5}, {name:"البينة", type:"Madani", ayahs:8}, {name:"الزلزلة", type:"Madani", ayahs:8},
             {name:"العاديات", type:"Makki", ayahs:11}, {name:"القارعة", type:"Makki", ayahs:11}, {name:"التكاثر", type:"Makki", ayahs:8},
- 
+            {name:"العصر", type:"Makki", ayahs:3}, {name:"الهمزة", type:"Makki", ayahs:9}, {name:"الفيل", type:"Makki", ayahs:5},
+            {name:"قريش", type:"Makki", ayahs:4}, {name:"الماعون", type:"Makki", ayahs:7}, {name:"الكوثر", type:"Makki", ayahs:3},
+            {name:"الكافرون", type:"Makki", ayahs:6}, {name:"النصر", type:"Madani", ayahs:3}, {name:"المسد", type:"Makki", ayahs:5},
+            {name:"الإخلاص", type:"Makki", ayahs:4}, {name:"الفلق", type:"Makki", ayahs:5}, {name:"الناس", type:"Makki", ayahs:6}
+        ];
+
+        // --- State ---
+        let st = {
+            q: 0, s: 0, play: false, tab: 'surah', spd: 1.0, 
+            favs: JSON.parse(localStorage.getItem('favs') || '[]'),
+            shuffle: false, loop: false, timer: null
+        };
+        const audio = new Audio();
+        const speeds = [1.0, 1.25, 1.5, 2.0, 0.75];
+        let spdIdx = 0;
+
+        // Elements
+        const el = id => document.getElementById(id);
+        const visualizer = el('visualizer');
+
+        // --- Init ---
+        function init() {
+            if(localStorage.theme === 'dark' || (!localStorage.theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            }
+            
+            // Build Visualizer
+            visualizer.innerHTML = '';
+            for(let i=0; i<16; i++) {
+                let d = document.createElement('div');
+                d.className = 'bar h-3';
+                visualizer.appendChild(d);
+            }
+
+            // Events
+            el('play-btn').onclick = togglePlay;
+            el('prev-btn').onclick = () => changeTrack(-1);
+            el('next-btn').onclick = () => changeTrack(1);
+            el('shuffle-btn').onclick = toggleShuffle;
+            el('loop-btn').onclick = toggleLoop;
+            el('fav-btn').onclick = toggleFav;
+            el('speed-btn').onclick = toggleSpeed;
+            el('timer-btn').onclick = () => toggleModal('timer-modal');
+            el('search').oninput = (e) => render(e.target.value);
+            el('theme-btn').onclick = toggleTheme;
+            el('share-btn').onclick = shareTrack;
+            el('mute-btn').onclick = toggleMute;
+
+            // Audio Events
+            audio.ontimeupdate = updateProgress;
+            audio.onended = handleEnd;
+            audio.onwaiting = () => el('loader').classList.remove('hidden');
+            audio.onplaying = () => el('loader').classList.add('hidden');
+            audio.onerror = () => showToast('آڈیو لوڈ کرنے میں مسئلہ ہے');
+
+            // Sliders
+            el('seek-bar').oninput = (e) => { if(audio.duration) audio.currentTime = (e.target.value/100)*audio.duration; };
+            el('vol-bar').oninput = (e) => { audio.volume = e.target.value; updateVolIcon(); };
+
+            // Keyboard
+            document.addEventListener('keydown', (e) => {
+                if(e.code === 'Space') { e.preventDefault(); togglePlay(); }
+                if(e.code === 'ArrowRight') audio.currentTime += 5;
+                if(e.code === 'ArrowLeft') audio.currentTime -= 5;
+            });
+
+            render();
+            updateInfo();
+        }
+
+        // --- Core Logic ---
+        function getUrl(q, s) { return qaris[q].url + (s+1).toString().padStart(3,'0') + ".mp3"; }
+
+        function togglePlay() {
+            if(st.play) { audio.pause(); st.play = false; }
+            else playAudio();
+            updateUI();
+        }
+
+        function playAudio() {
+            const link = getUrl(st.q, st.s);
+            if(audio.src !== link) {
+                audio.src = link;
+                audio.playbackRate = st.spd;
+                el('loader').classList.remove('hidden');
+            }
+            audio.play().then(() => {
+                st.play = true;
+                updateUI();
+            }).catch(e => console.error(e));
+            updateInfo();
+        }
+
+        function changeTrack(dir) {
+            if(st.shuffle) {
+                st.s = Math.floor(Math.random() * 114);
+            } else {
+                st.s = (st.s + dir + 114) % 114;
+            }
+            playAudio();
+        }
+
+        function updateUI() {
+            const btn = el('play-btn');
+            const icon = btn.querySelector('i');
+            const spin = el('spinner');
+            
+            if(st.play) {
+                icon.className = "fa-solid fa-pause";
+                btn.classList.add('bg-emerald-700');
+                spin.classList.remove('paused');
+                startVisualizer();
+            } else {
+                icon.className = "fa-solid fa-play ml-1";
+                btn.classList.remove('bg-emerald-700');
+                spin.classList.add('paused');
+                stopVisualizer();
+            }
+            // Update Fav Icon State
+            const isFav = st.favs.some(f => f.q === st.q && f.s === st.s);
+            const favIcon = el('fav-btn').querySelector('i');
+            favIcon.className = isFav ? "fa-solid fa-heart text-red-500" : "fa-regular fa-heart";
+            
+            render(el('search').value);
+        }
+
+        function updateInfo() {
+            const surah = surahData[st.s];
+            el('track-title').innerText = "سورة " + surah.name;
+            el('qari-title').innerText = qaris[st.q].name;
+            el('meta-type').innerText = surah.type;
+            el('meta-ayahs').innerText = surah.ayahs + " آیات";
+            el('dl-btn').href = getUrl(st.q, st.s);
+            
+            updateUI();
+        }
+
+        function updateProgress() {
+            if(audio.duration) {
+                el('seek-bar').value = (audio.currentTime / audio.duration) * 100;
+                el('curr-time').innerText = fmt(audio.currentTime);
+                el('dur-time').innerText = fmt(audio.duration);
+            }
+        }
+
+        function handleEnd() {
+            if(st.loop) { audio.currentTime = 0; audio.play(); }
+            else changeTrack(1);
+        }
+
+        // --- Features ---
+        function toggleFav() {
+            const idx = st.favs.findIndex(f => f.q === st.q && f.s === st.s);
+            if(idx > -1) {
+                st.favs.splice(idx, 1);
+                showToast('محفوظ شدہ فہرست سے ہٹا دیا گیا');
+            } else {
+                st.favs.push({q: st.q, s: st.s});
+                showToast('محفوظ کر لیا گیا ❤️');
+            }
+            localStorage.setItem('favs', JSON.stringify(st.favs));
+            updateUI();
+        }
+
+        function toggleShuffle() {
+            st.shuffle = !st.shuffle;
+            el('shuffle-btn').classList.toggle('text-primary');
+            showToast(st.shuffle ? 'شفل آن' : 'شفل آف');
+        }
+
+        function toggleLoop() {
+            st.loop = !st.loop;
+            el('loop-btn').classList.toggle('text-primary');
+            showToast(st.loop ? 'لوپ آن' : 'لوپ آف');
+        }
+
+        function setSleep(min) {
+            clearTimeout(st.timer);
+            el('timer-display').classList.add('hidden');
+            if(min > 0) {
+                st.timer = setTimeout(() => {
+                    audio.pause();
+                    st.play = false;
+                    updateUI();
+                    showToast('ٹائمر مکمل، تلاوت بند');
+                }, min * 60000);
+                showToast(`ٹائمر سیٹ: ${min} منٹ`);
+                el('timer-display').innerText = min + "m";
+                el('timer-display').classList.remove('hidden');
+            } else {
+                showToast('ٹائمر ختم کر دیا گیا');
+            }
+            toggleModal('timer-modal');
+        }
+
+        function toggleSpeed() {
+            spdIdx = (spdIdx + 1) % speeds.length;
+            st.spd = speeds[spdIdx];
+            audio.playbackRate = st.spd;
+            el('speed-btn').innerText = st.spd + "x";
+        }
+        
+        function updateVolIcon() {
+            const v = audio.volume;
+            el('vol-text').innerText = Math.round(v * 100) + "%";
+            const icon = el('mute-btn').querySelector('i');
+            if(v === 0) icon.className = "fa-solid fa-volume-xmark";
+            else if(v < 0.5) icon.className = "fa-solid fa-volume-low";
+            else icon.className = "fa-solid fa-volume-high";
+        }
+        
+        function toggleMute() {
+            if(audio.volume > 0) {
+                audio.oldVol = audio.volume;
+                audio.volume = 0;
+                el('vol-bar').value = 0;
+            } else {
+                audio.volume = audio.oldVol || 1;
+                el('vol-bar').value = audio.volume;
+            }
+            updateVolIcon();
+        }
+
+        function shareTrack() {
+            const text = `سنیں: سورة ${surahData[st.s].name} - قاری ${qaris[st.q].name}\nLink: ${getUrl(st.q, st.s)}`;
+            navigator.clipboard.writeText(text);
+            showToast('لنک کاپی ہو گیا!');
+        }
+
+        // --- Visualizer Simulation ---
+        let visInterval;
+        function startVisualizer() {
+            clearInterval(visInterval);
+            visInterval = setInterval(() => {
+                Array.from(visualizer.children).forEach(b => {
+                    b.style.height = (Math.random() * 20 + 4) + 'px';
+                });
+            }, 100);
+        }
+        function stopVisualizer() {
+            clearInterval(visInterval);
+            Array.from(visualizer.children).forEach(b => b.style.height = '4px');
+        }
+
+        // --- List Rendering ---
+        function setTab(t) {
+            st.tab = t;
+            el('search').value = '';
+            
+            // Classes
+            ['surah', 'qari', 'fav'].forEach(k => {
+                const b = el(`tab-${k}`);
+                if(k === t) b.classList.add('tab-active');
+                else b.classList.remove('tab-active');
+            });
+            render();
+        }
+
+        function render(q = '') {
+            const box = el('list-box');
+            box.innerHTML = '';
+            const term = q.toLowerCase();
+
+            if(st.tab === 'fav') {
+                if(st.favs.length === 0) {
+                    box.innerHTML = `<div class="text-center text-gray-400 mt-10"><i class="fa-regular fa-heart text-4xl mb-2"></i><br>کوئی پسندیدہ تلاوت موجود نہیں</div>`;
+                    return;
+                }
+                st.favs.forEach((f) => {
+                    const div = createListItem(f.q, f.s, true);
+                    box.appendChild(div);
+                });
+            } else if(st.tab === 'surah') {
+                surahData.forEach((s, i) => {
+                    if(s.name.includes(term) || (i+1).toString().includes(term)) {
+                        const div = document.createElement('div');
+                        const active = i === st.s;
+                        div.className = `flex items-center justify-between p-3 rounded-xl cursor-pointer transition border border-transparent ${active ? 'bg-emerald-50 dark:bg-emerald-900/20 border-primary' : 'bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700'}`;
+                        div.onclick = () => { st.s = i; playAudio(); };
+                        div.innerHTML = `
+                            <div class="flex items-center gap-4">
+                                <div class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-xs font-sans text-gray-500">${i+1}</div>
+                                <div>
+                                    <h3 class="font-bold ${active ? 'text-primary' : ''}">${s.name}</h3>
+                                    <p class="text-[10px] text-gray-400 font-sans">${s.type} • ${s.ayahs} Ayahs</p>
+                                </div>
+                            </div>
+                            ${active && st.play ? '<i class="fa-solid fa-chart-simple text-primary animate-pulse"></i>' : ''}
+                        `;
+                        box.appendChild(div);
+                    }
+                });
+            } else { // Qari
+                qaris.forEach((qar, i) => {
+                    if(qar.name.includes(term)) {
+                        const div = document.createElement('div');
+                        const active = i === st.q;
+                        div.className = `flex items-center gap-3 p-3 rounded-xl cursor-pointer transition border border-transparent ${active ? 'bg-emerald-50 dark:bg-emerald-900/20 border-primary' : 'bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700'}`;
+                        div.onclick = () => { st.q = i; updateInfo(); if(st.play) playAudio(); render(el('search').value); };
+                        div.innerHTML = `
+                             <div class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 overflow-hidden">
+                                <i class="fa-solid fa-user"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-sm ${active ? 'text-primary' : ''}">${qar.name}</h3>
+                                <span class="text-[10px] text-primary bg-primary/10 px-1 rounded">HQ Audio</span>
+                            </div>
+                        `;
+                        box.appendChild(div);
+                    }
+                });
+            }
+        }
+
+        function createListItem(qIdx, sIdx, isFavList) {
+            const div = document.createElement('div');
+            const isActive = st.q === qIdx && st.s === sIdx;
+            div.className = `flex items-center justify-between p-3 rounded-xl cursor-pointer transition bg-white dark:bg-gray-800 mb-2 border border-transparent hover:border-primary`;
+            
+            div.onclick = () => { 
+                st.q = qIdx; st.s = sIdx; 
+                playAudio(); 
+                if(!isFavList) render(); // re-render to update active state
+            };
+
+            div.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-play-circle text-2xl text-gray-300 ${isActive ? 'text-primary' : ''}"></i>
+                    <div>
+                        <h3 class="font-bold text-sm">سورة ${surahData[sIdx].name}</h3>
+                        <p class="text-xs text-gray-500">${qaris[qIdx].name}</p>
+                    </div>
+                </div>
+                ${isFavList ? '<i class="fa-solid fa-heart text-red-500 text-sm"></i>' : ''}
+            `;
+            return div;
+        }
+
+        // --- Utils ---
+        function toggleTheme() {
+            document.documentElement.classList.toggle('dark');
+            localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+        }
+
+        function toggleModal(id) {
+            const m = el(id);
+            if(m.classList.contains('hidden')) {
+                m.classList.remove('hidden');
+                setTimeout(() => m.firstElementChild.classList.remove('scale-90', 'opacity-0'), 10);
+            } else {
+                m.firstElementChild.classList.add('scale-90', 'opacity-0');
+                setTimeout(() => m.classList.add('hidden'), 200);
+            }
+        }
+
+        function showToast(msg) {
+            const t = el('toast');
+            el('toast-msg').innerText = msg;
+            t.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => t.classList.add('translate-y-20', 'opacity-0'), 3000);
+        }
+
+        function fmt(s) {
+            if(isNaN(s)) return "00:00";
+            let m = Math.floor(s/60);
+            let sc = Math.floor(s%60);
+            return `${m}:${sc < 10 ? '0'+sc : sc}`;
+        }
+
+        init();
+    </script>
+</body>
+</html>
