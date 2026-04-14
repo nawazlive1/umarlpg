@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ur" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ویڈیو کالنگ ایپ</title>
+    <!-- PeerJS Library: دو ڈیوائسز کو کنیکٹ کرنے کے لیے -->
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a1a2e;
+            color: #ffffff;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #e94560;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #16213e;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+
+        .panel {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: #0f3460;
+            border-radius: 8px;
+            border: 1px solid #1a1a2e;
+        }
+
+        .id-display {
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            color: #4cd137;
+        }
+
+        #my-id {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 5px 10px;
+            border-radius: 5px;
+            letter-spacing: 1px;
+            font-weight: bold;
+        }
+
+        input {
+            padding: 12px;
+            margin: 5px;
+            border: none;
+            border-radius: 6px;
+            width: 60%;
+            max-width: 300px;
+            font-size: 16px;
+            outline: none;
+            text-align: center;
+        }
+
+        button {
+            padding: 12px 25px;
+            background-color: #e94560;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background-color: #d13450;
+            transform: scale(1.05);
+        }
+
+        .btn-success {
+            background-color: #4cd137;
+        }
+
+        .btn-success:hover {
+            background-color: #44bd32;
+        }
+
+        .videos {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .video-box {
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            flex: 1;
+            min-width: 300px;
+            height: 250px;
+            border: 3px solid #e94560;
+            position: relative;
+            box-shadow: 0 4px 15px rgba(233, 69, 96, 0.3);
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .label {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>ویڈیو اور آڈیو کالنگ ایپ 🎥📞</h1>
+
+        <!-- Step 1: اپنی آئی ڈی بنانے کا پینل -->
+        <div class="panel" id="setup-panel">
+            <h3>مرحلہ 1: اپنی مرضی کی آئی ڈی (ID) بنائیں</h3>
+            <p>مثال کے طور پر: shah123 (یہ آپ کا نمبر بن جائے گا)</p>
+            <input type="text" id="custom-id" placeholder="اپنی مختصر آئی ڈی یہاں لکھیں">
+            <br><br>
+            <button id="connect-btn" class="btn-success">آن لائن آئیں 🟢</button>
+        </div>
+
+        <!-- Step 2: کال کرنے کا پینل -->
+        <div class="panel" id="call-panel" style="display: none;">
+            <div class="id-display">
+                آپ کی موجودہ آئی ڈی: <span id="my-id">...</span>
+            </div>
+            <p>دوسرے شخص سے کال ملانے کے لیے اس کی آئی ڈی درج کریں:</p>
+            <input type="text" id="friend-id" placeholder="مثال: ali123">
+            <br><br>
+            <button id="call-btn">کال ملائیں 📞</button>
+        </div>
+
+        <div class="videos">
+            <!-- آپ کی اپنی ویڈیو یہاں چلے گی -->
+            <div class="video-box">
+                <div class="label">میری ویڈیو</div>
+                <video id="local-video" autoplay muted playsinline></video>
+            </div>
+
+            <!-- دوسرے شخص کی ویڈیو یہاں چلے گی -->
+            <div class="video-box" style="border-color: #4cd137;">
+                <div class="label" style="background: #4cd137; color: black;">دوسرے کی ویڈیو</div>
+                <video id="remote-video" autoplay playsinline></video>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const setupPanel = document.getElementById('setup-panel');
+        const callPanel = document.getElementById('call-panel');
+        const customIdInput = document.getElementById('custom-id');
+        const connectBtn = document.getElementById('connect-btn');
+
+        const myIdDisplay = document.getElementById('my-id');
+        const friendIdInput = document.getElementById('friend-id');
+        const callBtn = document.getElementById('call-btn');
+        const localVideo = document.getElementById('local-video');
+        const remoteVideo = document.getElementById('remote-video');
+
+        let localStream;
+        let peer;
+
+        // پہلے کیمرہ اور مائیک آن کر لیتے ہیں
+        navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+            .then(stream => {
+                localStream = stream;
+                localVideo.srcObject = stream;
+            })
+            .catch(err => {
+                console.error("Camera/Mic Error: ", err);
+                alert("براہ کرم براؤزر میں کیمرہ اور مائیک کی اجازت (Allow) دیں!");
+            });
+
+        // 1. بٹن دبائیں: اپنی مرضی کی آئی ڈی لے کر آن لائن آئیں
+        connectBtn.addEventListener('click', () => {
+            // آئی ڈی کے حروف کو چھوٹا کرنا اور خالی جگہ ختم کرنا
+            const desiredId = customIdInput.value.trim().toLowerCase();
+
+            if (!desiredId) {
+                alert("براہ کرم اپنی کوئی آئی ڈی لکھیں!");
+                return;
+            }
+            if (desiredId.includes(' ')) {
+                alert("آئی ڈی میں خالی جگہ (Space) نہیں آ سکتی!");
+                return;
+            }
+
+            // دیے گئے نام کے ساتھ PeerJS کو شروع کریں (Custom ID)
+            peer = new Peer(desiredId);
+
+            // جب آئی ڈی رجسٹر ہو جائے اور ایپ آن لائن ہو جائے
+            peer.on('open', id => {
+                myIdDisplay.innerText = id;
+                setupPanel.style.display = 'none'; // پہلا مرحلہ چھپائیں
+                callPanel.style.display = 'block'; // کال ملانے والا مرحلہ دکھائیں
+            });
+
+            // آئی ڈی پہلے سے موجود ہونے کی صورت میں ایرر
+            peer.on('error', err => {
+                if (err.type === 'unavailable-id') {
+                    alert('معذرت! یہ آئی ڈی پہلے سے کوئی اور استعمال کر رہا ہے، کوئی اور نام چنیں!');
+                } else {
+                    alert('ایرر: ' + err.type);
+                }
+            });
+
+            // 2. جب کوئی آپ کو کال کر رہا ہو (کال ریسیو کرنے کا فنکشن)
+            peer.on('call', call => {
+                if (!localStream) {
+                    alert("آپ کا کیمرہ ابھی ریڈی نہیں ہے!");
+                    return;
+                }
+                // کال خود بخود ریسیو کریں اور اپنی ویڈیو بھیجیں
+                call.answer(localStream);
+
+                // دوسرے شخص کی ویڈیو سکرین پر دکھائیں
+                call.on('stream', userVideoStream => {
+                    remoteVideo.srcObject = userVideoStream;
+                });
+            });
+        });
+
+        // 3. کال ملانے کا فنکشن (جب بٹن دبایا جائے)
+        callBtn.addEventListener('click', () => {
+            const friendId = friendIdInput.value.trim().toLowerCase();
+            if (!friendId) {
+                alert("براہ کرم دوست کی آئی ڈی خانے میں لکھیں!");
+                return;
+            }
+            if (!localStream) {
+                alert("کیمرہ ابھی لوڈ ہو رہا ہے!");
+                return;
+            }
+
+            // کال کو ڈائل کریں
+            const call = peer.call(friendId, localStream);
+
+            // جب دوسری طرف سے کال ریسیو ہو اور ویڈیو آئے
+            call.on('stream', userVideoStream => {
+                remoteVideo.srcObject = userVideoStream;
+            });
+        });
+    </script>
+</body>
+
+</html>
