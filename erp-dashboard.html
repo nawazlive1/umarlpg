@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="ur" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ERP سسٹم - ڈیش بورڈ</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkbg: '#0f172a',
+                        darkcard: '#1e293b',
+                        darkinput: '#334155',
+                    },
+                    fontFamily: {
+                        urdu: ['Noto Nastaliq Urdu', 'serif'],
+                        sans: ['Noto Sans Arabic', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;700&family=Noto+Sans+Arabic:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Noto Sans Arabic', sans-serif; }
+        h1, h2, h3, .urdu-text, button, input { font-family: 'Noto Nastaliq Urdu', serif; line-height: 2.0; }
+        
+        .sidebar { transition: all 0.3s; }
+        .sidebar.hidden { transform: translateX(-100%); }
+        
+        .group-card {
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .group-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        
+        .chart-container { position: relative; height: 300px; }
+        
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            padding: 20px;
+            color: white;
+            min-height: 120px;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-darkbg text-gray-800 dark:text-white transition-colors">
+
+    <div class="flex h-screen">
+        
+        <!-- SIDEBAR -->
+        <div id="sidebar" class="sidebar w-64 bg-white dark:bg-darkcard shadow-lg flex flex-col overflow-hidden z-40">
+            
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-emerald-600 to-teal-700 p-6 text-white">
+                <h1 class="text-2xl font-bold urdu-text">ERP سسٹم</h1>
+                <p class="text-xs opacity-80 mt-1">کاروباری منیجمنٹ</p>
+            </div>
+
+            <!-- Search Groups -->
+            <div class="p-4 border-b border-slate-200 dark:border-slate-700">
+                <input type="text" id="searchGroups" placeholder="گروپ تلاش کریں..." 
+                    class="w-full p-2 rounded-lg bg-slate-100 dark:bg-darkinput dark:text-white text-xs outline-none">
+            </div>
+
+            <!-- Groups List -->
+            <div id="groupsList" class="flex-1 overflow-y-auto p-4 space-y-2">
+                <p class="text-xs text-slate-400 text-center py-4">گروپ لوڈ ہو رہے ہیں...</p>
+            </div>
+
+            <!-- Add Group -->
+            <div class="p-4 border-t border-slate-200 dark:border-slate-700">
+                <button onclick="window.showAddGroupModal()" 
+                    class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded-lg text-sm urdu-text">
+                    + نیا گروپ شامل کریں
+                </button>
+            </div>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            
+            <!-- TOP HEADER -->
+            <header class="bg-white dark:bg-darkcard shadow-md p-4 flex justify-between items-center">
+                <div class="flex items-center gap-4">
+                    <button onclick="window.toggleSidebar()" class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">☰</button>
+                    <h2 id="pageTitle" class="text-2xl font-bold urdu-text">ڈیش بورڈ</h2>
+                </div>
+                
+                <div class="flex items-center gap-3">
+                    <button onclick="window.toggleDarkMode()" class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+                        <span id="themeIcon">🌙</span>
+                    </button>
+                    <div id="userInfo" class="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-lg">
+                        <div id="userAvatar" class="w-8 h-8 bg-emerald-600 text-white rounded-full flex items-center justify-center font-bold"></div>
+                        <span id="userName" class="text-sm font-bold">صارف</span>
+                    </div>
+                    <button onclick="window.logoutUser()" class="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg">🚪</button>
+                </div>
+            </header>
+
+            <!-- CONTENT AREA -->
+            <div class="flex-1 overflow-y-auto">
+                
+                <!-- DASHBOARD VIEW -->
+                <div id="dashboardView" class="p-6 space-y-6">
+                    
+                    <!-- Stats Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div class="stat-box bg-gradient-to-br from-emerald-500 to-teal-600">
+                            <p class="text-sm opacity-90">کل بیلنس</p>
+                            <h3 id="totalBalance" class="text-3xl font-bold mt-2">0</h3>
+                            <p id="totalGroups" class="text-xs opacity-80 mt-2">0 گروپ</p>
+                        </div>
+                        <div class="stat-box bg-gradient-to-br from-blue-500 to-cyan-600">
+                            <p class="text-sm opacity-90">کل آمدن</p>
+                            <h3 id="totalIncome" class="text-3xl font-bold mt-2">0</h3>
+                        </div>
+                        <div class="stat-box bg-gradient-to-br from-red-500 to-pink-600">
+                            <p class="text-sm opacity-90">کل خرچ</p>
+                            <h3 id="totalExpense" class="text-3xl font-bold mt-2">0</h3>
+                        </div>
+                        <div class="stat-box bg-gradient-to-br from-purple-500 to-indigo-600">
+                            <p class="text-sm opacity-90">نوٹس</p>
+                            <h3 id="totalNotes" class="text-3xl font-bold mt-2">0</h3>
+                        </div>
+                    </div>
+
+                    <!-- Charts -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-white dark:bg-darkcard p-6 rounded-xl shadow-md">
+                            <h3 class="text-lg font-bold mb-4 urdu-text">📊 گروپ کی کارکردگی</h3>
+                            <div class="chart-container">
+                                <canvas id="groupChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="bg-white dark:bg-darkcard p-6 rounded-xl shadow-md">
+                            <h3 class="text-lg font-bold mb-4 urdu-text">💰 آمدن بمقابلہ خرچ</h3>
+                            <div class="chart-container">
+                                <canvas id="incomeExpenseChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Groups Summary -->
+                    <div class="bg-white dark:bg-darkcard p-6 rounded-xl shadow-md">
+                        <h3 class="text-lg font-bold mb-4 urdu-text">📈 تمام گروپس کا خلاصہ</h3>
+                        <div id="groupsSummary" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <p class="text-center text-slate-400">ڈیٹا لوڈ ہو رہا ہے...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- GROUP DETAIL VIEW -->
+                <div id="groupDetailView" class="hidden p-6 space-y-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 id="groupDetailTitle" class="text-2xl font-bold urdu-text">گروپ کی تفصیلات</h2>
+                        <button onclick="window.backToDashboard()" class="px-4 py-2 bg-slate-200 dark:bg-slate-700 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-600">
+                            ← واپس
+                        </button>
+                    </div>
+
+                    <!-- Group Stats -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-gradient-to-br from-emerald-500 to-teal-600 text-white p-6 rounded-xl">
+                            <p class="text-sm opacity-90">بیلنس</p>
+                            <h3 id="groupBalance" class="text-3xl font-bold mt-2">0</h3>
+                        </div>
+                        <div class="bg-gradient-to-br from-blue-500 to-cyan-600 text-white p-6 rounded-xl">
+                            <p class="text-sm opacity-90">آمدن</p>
+                            <h3 id="groupIncome" class="text-3xl font-bold mt-2">0</h3>
+                        </div>
+                        <div class="bg-gradient-to-br from-red-500 to-pink-600 text-white p-6 rounded-xl">
+                            <p class="text-sm opacity-90">خرچ</p>
+                            <h3 id="groupExpense" class="text-3xl font-bold mt-2">0</h3>
+                        </div>
+                    </div>
+
+                    <!-- Transactions -->
+                    <div class="bg-white dark:bg-darkcard p-6 rounded-xl shadow-md">
+                        <h3 class="text-lg font-bold mb-4 urdu-text">💳 لین دین</h3>
+                        <div id="groupTransactions" class="space-y-3 max-h-96 overflow-y-auto">
+                            <p class="text-slate-400 text-center">کوئی لین دین نہیں</p>
+                        </div>
+                    </div>
+
+                    <!-- Tasks -->
+                    <div class="bg-white dark:bg-darkcard p-6 rounded-xl shadow-md">
+                        <h3 class="text-lg font-bold mb-4 urdu-text">📝 نوٹس</h3>
+                        <div id="groupTasks" class="space-y-3 max-h-96 overflow-y-auto">
+                            <p class="text-slate-400 text-center">کوئی نوٹس نہیں</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Group Modal -->
+    <div id="addGroupModal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-darkcard p-6 rounded-xl max-w-md w-full">
+            <h3 class="text-xl font-bold mb-4 urdu-text">نیا گروپ شامل کریں</h3>
+            <input type="text" id="newGroupName" placeholder="گروپ کا نام" 
+                class="w-full p-3 border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-darkinput dark:text-white mb-4 outline-none">
+            <div class="flex gap-3">
+                <button onclick="window.addGroup()" class="flex-1 bg-emerald-600 text-white font-bold py-2 rounded-lg hover:bg-emerald-700">
+                    شامل کریں
+                </button>
+                <button onclick="document.getElementById('addGroupModal').classList.add('hidden')" 
+                    class="flex-1 bg-slate-200 dark:bg-slate-700 font-bold py-2 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-600">
+                    منسوخ
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+        import { getFirestore, collection, query, where, onSnapshot, addDoc, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCwrfDXG8pRpkqDYht0EpRZ8h_ElRu0N_w",
+            authDomain: "mysmartdiarypk.firebaseapp.com",
+            projectId: "mysmartdiarypk",
+            storageBucket: "mysmartdiarypk.firebasestorage.app",
+            messagingSenderId: "989892082432",
+            appId: "1:989892082432:web:684da193fde4a5915b51e5"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+        let allGroups = [];
+        let selectedGroupId = null;
+        let groupsData = {};
+
+        // Dark Mode
+        window.toggleDarkMode = () => {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('darkMode', isDark);
+            document.getElementById('themeIcon').innerText = isDark ? '☀️' : '🌙';
+        };
+
+        if(localStorage.getItem('darkMode') === 'true') {
+            document.documentElement.classList.add('dark');
+            document.getElementById('themeIcon').innerText = '☀️';
+        }
+
+        // Sidebar
+        window.toggleSidebar = () => {
+            document.getElementById('sidebar').classList.toggle('hidden', window.innerWidth >= 768);
+        };
+
+        // Authentication
+        onAuthStateChanged(auth, (user) => {
+            if(user) {
+                currentUser = user;
+                const name = user.displayName || user.email.split('@')[0];
+                document.getElementById('userName').innerText = name;
+                document.getElementById('userAvatar').innerText = name.charAt(0).toUpperCase();
+                loadAllGroupsData();
+            } else {
+                window.location.href = 'diarynew/index.html';
+            }
+        });
+
+        window.logoutUser = () => {
+            if(confirm('کیا آپ لاگ آؤٹ کرنا چاہتے ہیں؟')) {
+                signOut(auth).then(() => {
+                    window.location.href = 'diarynew/index.html';
+                });
+            }
+        };
+
+        // Load All Groups
+        async function loadAllGroupsData() {
+            try {
+                // Get unique groups
+                const tasksSnap = await getDocs(collection(db, "tasks"));
+                const transSnap = await getDocs(collection(db, "transactions"));
+                
+                const groupsSet = new Set();
+                tasksSnap.forEach(d => {
+                    const g = d.data().groupId;
+                    if(g) groupsSet.add(g);
+                });
+                transSnap.forEach(d => {
+                    const g = d.data().groupId;
+                    if(g) groupsSet.add(g);
+                });
+
+                allGroups = Array.from(groupsSet);
+                renderGroupsList();
+                updateDashboard();
+                setupGroupsRealtime();
+            } catch(e) {
+                console.error('Error loading groups:', e);
+            }
+        }
+
+        // Render Groups List
+        function renderGroupsList() {
+            const list = document.getElementById('groupsList');
+            list.innerHTML = '';
+            
+            if(allGroups.length === 0) {
+                list.innerHTML = '<p class="text-xs text-slate-400 text-center py-4">کوئی گروپ نہیں</p>';
+                return;
+            }
+
+            allGroups.forEach(group => {
+                const data = groupsData[group] || { balance: 0, income: 0, expense: 0, tasks: 0 };
+                const el = document.createElement('div');
+                el.className = "group-card p-3 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer";
+                el.innerHTML = `
+                    <div class="font-bold text-sm urdu-text">${group}</div>
+                    <div class="text-xs text-slate-600 dark:text-slate-400 mt-1">
+                        💰 ${data.balance} | 📝 ${data.tasks}
+                    </div>
+                `;
+                el.onclick = () => window.showGroupDetail(group);
+                list.appendChild(el);
+            });
+        }
+
+        // Setup Real-time Updates
+        function setupGroupsRealtime() {
+            allGroups.forEach(groupId => {
+                // Tasks
+                const qTasks = query(collection(db, "tasks"), where("groupId", "==", groupId), where("visibility", "==", "public"));
+                onSnapshot(qTasks, (snap) => {
+                    if(!groupsData[groupId]) groupsData[groupId] = { balance: 0, income: 0, expense: 0, tasks: 0 };
+                    groupsData[groupId].tasks = snap.size;
+                    updateDashboard();
+                    renderGroupsList();
+                });
+
+                // Transactions
+                const qTrans = query(collection(db, "transactions"), where("groupId", "==", groupId), where("visibility", "==", "public"));
+                onSnapshot(qTrans, (snap) => {
+                    if(!groupsData[groupId]) groupsData[groupId] = { balance: 0, income: 0, expense: 0, tasks: 0 };
+                    
+                    let income = 0, expense = 0;
+                    snap.forEach(d => {
+                        const t = d.data();
+                        if(t.type === 'in') income += parseFloat(t.amount);
+                        else expense += parseFloat(t.amount);
+                    });
+                    
+                    groupsData[groupId].income = income;
+                    groupsData[groupId].expense = expense;
+                    groupsData[groupId].balance = income - expense;
+                    
+                    updateDashboard();
+                    renderGroupsList();
+                });
+            });
+        }
+
+        // Update Dashboard
+        function updateDashboard() {
+            let totalBal = 0, totalIn = 0, totalOut = 0, totalNotes = 0;
+            
+            Object.values(groupsData).forEach(g => {
+                totalBal += g.balance;
+                totalIn += g.income;
+                totalOut += g.expense;
+                totalNotes += g.tasks;
+            });
+
+            document.getElementById('totalBalance').innerText = totalBal.toLocaleString('ur-PK');
+            document.getElementById('totalIncome').innerText = totalIn.toLocaleString('ur-PK');
+            document.getElementById('totalExpense').innerText = totalOut.toLocaleString('ur-PK');
+            document.getElementById('totalNotes').innerText = totalNotes;
+            document.getElementById('totalGroups').innerText = allGroups.length + ' گروپ';
+
+            renderGroupsSummary();
+            updateCharts();
+        }
+
+        // Render Groups Summary
+        function renderGroupsSummary() {
+            const container = document.getElementById('groupsSummary');
+            container.innerHTML = '';
+
+            allGroups.forEach(group => {
+                const data = groupsData[group];
+                const el = document.createElement('div');
+                el.className = "bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-slate-800 dark:to-slate-700 p-4 rounded-lg cursor-pointer hover:shadow-lg transition";
+                el.onclick = () => window.showGroupDetail(group);
+                el.innerHTML = `
+                    <h4 class="font-bold text-lg urdu-text">${group}</h4>
+                    <div class="grid grid-cols-3 gap-2 mt-3 text-sm">
+                        <div>
+                            <p class="text-xs text-slate-600 dark:text-slate-400">بیلنس</p>
+                            <p class="font-bold text-emerald-600">${data.balance.toLocaleString('ur-PK')}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-600 dark:text-slate-400">آمدن</p>
+                            <p class="font-bold text-blue-600">${data.income.toLocaleString('ur-PK')}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-600 dark:text-slate-400">نوٹس</p>
+                            <p class="font-bold text-purple-600">${data.tasks}</p>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(el);
+            });
+        }
+
+        // Show Group Detail
+        window.showGroupDetail = async (groupId) => {
+            selectedGroupId = groupId;
+            document.getElementById('dashboardView').classList.add('hidden');
+            document.getElementById('groupDetailView').classList.remove('hidden');
+            document.getElementById('groupDetailTitle').innerText = groupId + ' کی تفصیلات';
+            document.getElementById('pageTitle').innerText = groupId;
+
+            const data = groupsData[groupId];
+            document.getElementById('groupBalance').innerText = data.balance.toLocaleString('ur-PK');
+            document.getElementById('groupIncome').innerText = data.income.toLocaleString('ur-PK');
+            document.getElementById('groupExpense').innerText = data.expense.toLocaleString('ur-PK');
+
+            // Load transactions
+            const qTrans = query(collection(db, "transactions"), where("groupId", "==", groupId));
+            const transSnap = await getDocs(qTrans);
+            const transList = document.getElementById('groupTransactions');
+            transList.innerHTML = '';
+
+            transSnap.forEach(d => {
+                const t = d.data();
+                const el = document.createElement('div');
+                el.className = `p-3 rounded-lg ${t.type === 'in' ? 'bg-green-50 dark:bg-green-900/20' : 'bg-red-50 dark:bg-red-900/20'}`;
+                el.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="font-bold text-sm">${t.description}</p>
+                            <p class="text-xs text-slate-600 dark:text-slate-400">${t.date}</p>
+                        </div>
+                        <p class="font-bold text-sm ${t.type === 'in' ? 'text-green-600' : 'text-red-600'}">
+                            ${t.type === 'in' ? '+' : '-'} ${t.amount.toLocaleString('ur-PK')}
+                        </p>
+                    </div>
+                `;
+                transList.appendChild(el);
+            });
+
+            // Load tasks
+            const qTasks = query(collection(db, "tasks"), where("groupId", "==", groupId));
+            const tasksSnap = await getDocs(qTasks);
+            const tasksList = document.getElementById('groupTasks');
+            tasksList.innerHTML = '';
+
+            tasksSnap.forEach(d => {
+                const t = d.data();
+                const el = document.createElement('div');
+                el.className = "p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg";
+                el.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="font-bold text-sm">${t.text}</p>
+                            <p class="text-xs text-slate-600 dark:text-slate-400">${t.dateDue}</p>
+                        </div>
+                        <span class="text-xs bg-blue-200 dark:bg-blue-800 px-2 py-1 rounded">${t.category}</span>
+                    </div>
+                `;
+                tasksList.appendChild(el);
+            });
+        };
+
+        window.backToDashboard = () => {
+            document.getElementById('groupDetailView').classList.add('hidden');
+            document.getElementById('dashboardView').classList.remove('hidden');
+            document.getElementById('pageTitle').innerText = 'ڈیش بورڈ';
+        };
+
+        // Add Group
+        window.showAddGroupModal = () => {
+            document.getElementById('addGroupModal').classList.remove('hidden');
+        };
+
+        window.addGroup = async () => {
+            const name = document.getElementById('newGroupName').value.trim().toUpperCase();
+            if(!name) return alert('برائے مہربانی گروپ کا نام لکھیں');
+
+            try {
+                await addDoc(collection(db, "groups"), {
+                    name: name,
+                    createdAt: serverTimestamp(),
+                    createdBy: currentUser.uid
+                });
+                document.getElementById('newGroupName').value = '';
+                document.getElementById('addGroupModal').classList.add('hidden');
+                allGroups.push(name);
+                renderGroupsList();
+                updateDashboard();
+            } catch(e) {
+                console.error(e);
+            }
+        };
+
+        // Charts
+        let groupChart = null, incomeExpenseChart = null;
+
+        function updateCharts() {
+            // Group Chart
+            const groupLabels = allGroups;
+            const groupBalances = allGroups.map(g => groupsData[g]?.balance || 0);
+
+            const groupCtx = document.getElementById('groupChart');
+            if(groupChart) groupChart.destroy();
+            groupChart = new Chart(groupCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: groupLabels,
+                    datasets: [{
+                        data: groupBalances,
+                        backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'],
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { font: { family: "'Noto Nastaliq Urdu', serif" } } }
+                    }
+                }
+            });
+
+            // Income vs Expense
+            const incomeExpenseCtx = document.getElementById('incomeExpenseChart');
+            if(incomeExpenseChart) incomeExpenseChart.destroy();
+            
+            let totalIncome = 0, totalExpense = 0;
+            allGroups.forEach(g => {
+                totalIncome += groupsData[g]?.income || 0;
+                totalExpense += groupsData[g]?.expense || 0;
+            });
+
+            incomeExpenseChart = new Chart(incomeExpenseCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['آمدن', 'خرچ'],
+                    datasets: [{
+                        label: 'رقم',
+                        data: [totalIncome, totalExpense],
+                        backgroundColor: ['#10b981', '#ef4444']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true, labels: { font: { family: "'Noto Nastaliq Urdu', serif" } } }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
